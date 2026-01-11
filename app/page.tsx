@@ -30,13 +30,13 @@ export default async function Home(){
 
             </div>
 
-            <Image alt="Banner Image" width={250} height={250} className="rounded" src={products.data[2].images[0]}/>
+            <Image alt="Banner Image" width={250} height={250} className="rounded" src={products.data[2]?.images?.[0] || "/placeholder-image.jpg"}/>
            </div>
            </section>
 
            <section  className="py-8">
-            <Button className="text-xl  text-center">Start Shopping</Button>
-               <Carousel products={products.data}/>
+                <Carousel products={products?.data || []} />
+
            </section>
         </div>
     )
