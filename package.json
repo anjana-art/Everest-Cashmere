@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "node vercel-build.js",
+    "build": "next build",
     "start": "next start -p 3001",
     "start:4000": "next start -p 4000",
     "lint": "eslint",
     "test:db": "ts-node test.ts",
     "studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
