@@ -3,8 +3,21 @@ import Stripe from "stripe";
 import { ProductCard } from "./product-card";
 import { useState } from "react";
 
+interface Product {
+  id: string;           // Database ID
+  stripeId: string;     // Stripe ID
+  name: string;
+  description: string | null;
+  price: number;        // Already in euros
+  images: string[];
+  metadata?: {
+    category?: string;
+    [key: string]: any;
+  };
+}
+
 interface Props{
-    products: Stripe.Product[];
+    products: Product[];
 }
 
 export const ProductList = ({products}:Props) => {

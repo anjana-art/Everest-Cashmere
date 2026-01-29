@@ -1,0 +1,317 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== USER ====================
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  password  String
+  isAdmin   Boolean   @default(false)  //session handeling for admin 
+
+  
+  // relationships
+  addresses   Address[]
+  userProfile UserProfile?
+  
+  // Orders
+  orders    Order[]
+  
+  // Cart
+  cart      Cart?
+  
+  // Wishlist - ADD THIS
+  wishlist  Wishlist?
+  
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@map("users")
+}
+
+// ==================== ADDRESS ====================
+model Address {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Address type
+  type          AddressType @default(SHIPPING)
+  isDefault     Boolean     @default(false)
+  
+  // Recipient info
+  fullName      String
+  company       String?
+  
+  // International address fields
+  addressLine1  String
+  addressLine2  String?
+  city          String
+  state         String?
+  country       String
+  countryCode   String?
+  postalCode    String
+  
+  // Contact info for this address
+  phone         String?
+  email         String?
+  
+  // Additional notes
+  instructions  String?
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("addresses")
+  @@unique([userId, type, isDefault])
+}
+
+// Address type enum
+enum AddressType {
+  SHIPPING
+  BILLING
+  HOME
+  WORK
+  OTHER
+}
+
+// ==================== USER PROFILE ====================
+model UserProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Personal Information
+  firstName   String?
+  lastName    String?
+  displayName String?
+  phoneNumber String?
+  dateOfBirth DateTime?
+  gender      String?
+  profileImage String?
+  
+  // Address Information (Main address)
+  country     String?
+  countryCode String?
+  addressLine1 String?
+  addressLine2 String?
+  city        String?
+  state       String?
+  postalCode  String?
+  
+  // Professional Information
+  company     String?
+  jobTitle    String?
+  website     String?
+  
+  // Social Profiles
+  facebook    String?
+  twitter     String?
+  instagram   String?
+  linkedin    String?
+  
+  // About/Bio
+  bio         String?
+  preferences Json?
+  
+  // Communication Preferences
+  newsletter  Boolean   @default(true)
+  smsAlerts   Boolean   @default(false)
+  emailAlerts Boolean   @default(true)
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("user_profiles")
+}
+
+// ==================== CART ====================
+model Cart {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@map("carts")
+}
+
+model CartItem {
+  id        String    @id @default(cuid())
+  cartId    String
+  cart      Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade) // ADD THIS
+  name      String
+  price     Decimal   @db.Decimal(10, 2)
+  quantity  Int       @default(1)
+  image     String?
+
+   // Variant info
+  color     String?   // Selected color
+  size      String?   // Selected size
+  
+  @@map("cart_items")
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  stripeId    String?     @unique
+  name        String
+  description String?
+  price       Decimal     @db.Decimal(10, 2)
+  images      String[]
+  category    String?
+  
+  // Product variants
+  availableColors String[] // Store as JSON array
+  availableSizes  String[] // Store as JSON array
+  
+  // Default variant (for simple products)
+  defaultColor String?
+  defaultSize  String?
+  
+  // Inventory & Active status
+  stock       Int       @default(0)
+  isActive    Boolean   @default(true)
+  
+  // Metadata
+  metadata    Json?     @db.JsonB
+  
+  // Relationships
+  wishlistItems WishlistItem[]
+  orderItems    OrderItem[]
+  cartItems     CartItem[]
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("products")
+}
+
+
+// ==================== WISHLIST ====================
+model Wishlist {
+  id        String        @id @default(cuid())
+  userId    String        @unique
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WishlistItem[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  @@map("wishlists")
+}
+
+model WishlistItem {
+  id        String    @id @default(cuid())
+  wishlistId String
+  wishlist  Wishlist  @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  addedAt   DateTime  @default(now())
+  
+  @@unique([wishlistId, productId])
+  @@map("wishlist_items")
+}
+
+// ==================== ORDER ====================
+model Order {
+  id                    String      @id @default(cuid())
+  userId                String
+  user                  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Order info
+  orderNumber           String      @unique @default(uuid())
+  total                 Decimal     @db.Decimal(10, 2)
+  subtotal              Decimal     @db.Decimal(10, 2)
+  tax                   Decimal     @db.Decimal(10, 2) @default(0)
+  shipping              Decimal     @db.Decimal(10, 2) @default(0)
+  discount              Decimal     @db.Decimal(10, 2) @default(0)
+  
+  // Order tracking status
+  status                OrderStatus @default(PENDING)
+  trackingStatus        TrackingStatus?  // New field for tracking
+  
+  // Payment info
+  paymentMethod         String?     @default("card")
+  stripeSessionId       String?     @unique
+  stripePaymentIntentId String?     @unique
+  stripeCustomerId      String?
+  
+  // Shipping & Delivery
+  shippingMethod        String?     @default("standard")
+  trackingNumber        String?
+  carrier               String?     // e.g., "UPS", "FedEx", "USPS"
+  estimatedDelivery     DateTime?   // New field
+  
+  // Addresses (stored as JSON)
+  shippingAddress       Json?       @db.JsonB
+  billingAddress        Json?       @db.JsonB
+  
+  // Items
+  items                 OrderItem[]
+  
+  // Timestamps
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  paidAt                DateTime?
+  preparingAt           DateTime?   // New field
+  shippedAt             DateTime?   // New field (fixed typo)
+  deliveredAt           DateTime?   // New field
+  cancelledAt           DateTime?
+  
+
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String    @id @default(cuid())
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade) // ADD THIS
+  name        String
+  price       Decimal   @db.Decimal(10, 2)
+  quantity    Int       @default(1)
+  image       String?
+  color       String?   // New: for variant tracking
+  size        String?   // New: for variant tracking
+
+   
+  
+  @@map("order_items")
+}
+
+// ==================== ENUMS ====================
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+// New enum for tracking
+enum TrackingStatus {
+  ORDER_RECEIVED
+  ORDER_PREPARING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  DELAYED
+}
