@@ -14,9 +14,5 @@
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "functions": {
-    "app/api/**/*": {
-      "maxDuration": 60
-    }
-  }
+ 
 }
