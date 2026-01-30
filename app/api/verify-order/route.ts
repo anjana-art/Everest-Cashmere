@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
+import { Prisma } from '@prisma/client';
 
 export async function POST(request: Request) {
   console.log('=== VERIFY ORDER API CALLED ===');
@@ -35,23 +36,27 @@ export async function POST(request: Request) {
     console.log('User ID:', user.id);
     
     // Check if order already exists
-    let order = await prisma.order.findUnique({
+    const existingOrder = await prisma.order.findUnique({
       where: { stripeSessionId: sessionId },
       include: { items: true }
     });
     
-    if (order) {
-      console.log('Order already exists:', order.id);
+    if (existingOrder) {
+      console.log('Order already exists:', existingOrder.id);
       return NextResponse.json({
         success: true,
         message: 'Order found',
-        order: order
+        order: existingOrder
       });
     }
     
-    // Retrieve session from Stripe
+    // Retrieve session from Stripe WITH EXPANDED PROPERTIES
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['line_items.data.price.product']
+      expand: [
+        'line_items.data.price.product',
+        'shipping_details',  // Add this to expand shipping
+        'customer_details'   // Add this to expand customer details
+      ]
     });
     
     if (session.payment_status !== 'paid') {
@@ -61,11 +66,15 @@ export async function POST(request: Request) {
       );
     }
     
+    // Debug: Check what properties exist
+    console.log('Session type:', typeof session);
+    console.log('Session keys:', Object.keys(session));
+    
     // Get line items
     const lineItems = session.line_items?.data || [];
     console.log('Number of line items:', lineItems.length);
     
-    // FIX: Get ALL products from database to find matching ones
+    // Get ALL products from database to find matching ones
     const allProducts = await prisma.product.findMany({
       select: {
         id: true,
@@ -160,12 +169,53 @@ export async function POST(request: Request) {
     // Generate order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     
+    // Prepare shipping and billing addresses
+    // Type the session as any to access expanded properties
+    const sessionAny = session as any;
+    
+    // Get shipping details (expanded in the retrieve call)
+    const shippingDetails = sessionAny.shipping_details;
+    console.log('Shipping details:', shippingDetails);
+    
+    const shippingAddress = shippingDetails 
+      ? JSON.stringify({
+          name: shippingDetails.name || '',
+          address: {
+            line1: shippingDetails.address?.line1 || '',
+            line2: shippingDetails.address?.line2 || '',
+            city: shippingDetails.address?.city || '',
+            state: shippingDetails.address?.state || '',
+            postalCode: shippingDetails.address?.postal_code || '',
+            country: shippingDetails.address?.country || ''
+          }
+        })
+      : Prisma.DbNull;
+    
+    // Get customer details (expanded in the retrieve call)
+    const customerDetails = sessionAny.customer_details;
+    console.log('Customer details:', customerDetails);
+    
+    const billingAddress = customerDetails
+      ? JSON.stringify({
+          name: customerDetails.name || '',
+          email: customerDetails.email || '',
+          address: {
+            line1: customerDetails.address?.line1 || '',
+            line2: customerDetails.address?.line2 || '',
+            city: customerDetails.address?.city || '',
+            state: customerDetails.address?.state || '',
+            postalCode: customerDetails.address?.postal_code || '',
+            country: customerDetails.address?.country || ''
+          }
+        })
+      : Prisma.DbNull;
+    
     // Create order in database
-    order = await prisma.order.create({
+    const newOrder = await prisma.order.create({
       data: {
         userId: user.id,
         stripeSessionId: sessionId,
-        stripeCustomerId: session.customer as string || null,
+        stripeCustomerId: typeof session.customer === 'string' ? session.customer : null,
         orderNumber: orderNumber,
         subtotal: subtotal,
         total: total,
@@ -177,8 +227,8 @@ export async function POST(request: Request) {
         items: {
           create: orderItems
         },
-        shippingAddress: session.shipping_details ? JSON.stringify(session.shipping_details) : null,
-        billingAddress: session.customer_details ? JSON.stringify(session.customer_details) : null,
+        shippingAddress: shippingAddress,
+        billingAddress: billingAddress,
         paidAt: new Date(),
         preparingAt: new Date()
       },
@@ -187,7 +237,7 @@ export async function POST(request: Request) {
       }
     });
     
-    console.log('Order created successfully:', order.id);
+    console.log('Order created successfully:', newOrder.id);
     
     // Clear user's cart
     try {
@@ -208,7 +258,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'Order created successfully',
-      order: order
+      order: newOrder
     });
     
   } catch (error: any) {

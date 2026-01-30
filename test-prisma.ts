@@ -5,8 +5,13 @@ async function main() {
   console.log('🔍 Testing lib/prisma.ts with Prisma 6.x...')
   
   try {
-    // Test 1: Simple raw query
-    const result = await prisma.$queryRaw`SELECT NOW() as current_time, version() as postgres_version`
+    // Test 1: Simple raw query with proper typing
+    interface RawQueryResult {
+      current_time: Date;
+      postgres_version: string;
+    }
+    
+    const result = await prisma.$queryRaw<RawQueryResult[]>`SELECT NOW() as current_time, version() as postgres_version`
     console.log('✅ Database connected!')
     console.log('Current time:', result[0].current_time)
     console.log('PostgreSQL version:', result[0].postgres_version)

@@ -1,4 +1,4 @@
-// app/profile/page.tsx - Updated for UserProfile model
+// app/profile/page.tsx - Fixed Version
 'use client';
 
 import { useState, useEffect } from "react";
@@ -107,7 +107,8 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleSaveProfile = async (userId:string) => {
+  // FIXED: Remove the userId parameter since onClick provides MouseEvent
+  const handleSaveProfile = async () => {
     setError("");
     setSuccess("");
     setIsSaving(true);
@@ -236,7 +237,7 @@ export default function ProfilePage() {
                       <span>Cancel</span>
                     </button>
                     <button
-                      onClick={handleSaveProfile}
+                      onClick={handleSaveProfile} // FIXED: No parameter needed
                       disabled={isSaving}
                       className="flex items-center space-x-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                     >

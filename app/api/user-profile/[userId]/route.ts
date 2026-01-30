@@ -4,11 +4,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: Promise<{ params: { userId: string } }>
+  context: { params: Promise<{ userId: string }> } // FIXED: Use context instead of destructuring
 ) {
   try {
-    // IMPORTANT: Await the params!
-    const { userId } = await params;
+    // Await the params from context
+    const { userId } = await context.params;
     
     if (!userId) {
       return NextResponse.json(
@@ -24,7 +24,7 @@ export async function GET(
         id: true,
         name: true,
         email: true,
-        userProfile: true, // Add this to get userProfile data
+        userProfile: true,
       }
     });
     
@@ -45,13 +45,13 @@ export async function GET(
   }
 }
 
-// PUT METHOD - Separate function, not inside GET
+// PUT METHOD
 export async function PUT(
   request: NextRequest,
-  { params }: Promise<{ params: { userId: string } }>
+  context: { params: Promise<{ userId: string }> } // FIXED: Use context instead of destructuring
 ) {
   try {
-    const { userId } = await params;
+    const { userId } = await context.params; // Await from context.params
     const requestUserId = request.headers.get('x-user-id');
     const body = await request.json();
     

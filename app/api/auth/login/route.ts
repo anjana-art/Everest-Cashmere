@@ -21,33 +21,31 @@ export async function POST(request: Request) {
       { 
         success: true, 
         user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        isAdmin: user.isAdmin
-      } ,
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          isAdmin: user.isAdmin
+        },
         message: 'Login successful' 
       },
       { status: 200 }
     )
     
-   response.cookies.set({
+    response.cookies.set({
       name: 'user',
       value: JSON.stringify({
         id: user.id,
         email: user.email,
         name: user.name,
-        isAdmin: user.isAdmin // Store admin status in cookie
+        isAdmin: user.isAdmin
       }),
-      httpOnly:false ,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 ,// 1 week
+      maxAge: 60 * 60 * 24 * 7,
       path: '/',
-
     });
     
-    // ✅ Also set a simple cookie for client if needed
     response.cookies.set('user-id', user.id, {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -55,8 +53,7 @@ export async function POST(request: Request) {
       path: '/',
     })
 
-     // ✅ Also set a simple cookie for client if needed
-    response.cookies.set('admin-check', user.isAdmin, {
+    response.cookies.set('admin-check', user.isAdmin.toString(), {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,

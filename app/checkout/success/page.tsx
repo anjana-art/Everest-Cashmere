@@ -1,15 +1,14 @@
 // app/checkout/success/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircleIcon, HomeIcon, ShoppingBagIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart-store';
 
-
-export default function SuccessPage() {
-  const router = useRouter();
+// Wrap the main content in a separate component that uses useSearchParams
+function SuccessPageContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [loading, setLoading] = useState(true);
@@ -17,8 +16,7 @@ export default function SuccessPage() {
   const [error, setError] = useState('');
   const [retryCount, setRetryCount] = useState(0);
 
-    const { clearCart } = useCartStore();
-
+  const { clearCart } = useCartStore();
 
   useEffect(() => {
     if (sessionId) {
@@ -29,8 +27,7 @@ export default function SuccessPage() {
     }
   }, [sessionId]);
 
-
-   useEffect(() => {
+  useEffect(() => {
     // Only run when order is successfully set
     if (order) {
       // Clear cart from Zustand store
@@ -43,14 +40,8 @@ export default function SuccessPage() {
       } catch (e) {
         console.warn('Failed to clear localStorage:', e);
       }
-      
-    
     }
-  }, [order, clearCart]); // This runs when 'order' state changes
-
-
-
-
+  }, [order, clearCart]);
 
   const verifyOrder = async (sessionId: string) => {
     console.log('Starting order verification for session:', sessionId);
@@ -353,3 +344,22 @@ export default function SuccessPage() {
     </div>
   );
 }
+
+// Main export component with Suspense boundary
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading checkout...</p>
+        </div>
+      </div>
+    }>
+      <SuccessPageContent />
+    </Suspense>
+  );
+}
+
+// Prevents prerendering
+export const dynamic = 'force-dynamic';

@@ -3,7 +3,21 @@ import styles from "./page.module.css";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Carousel } from "@/components/carousel";
-import { prisma } from "@/lib/prisma"; // Import your Prisma client
+import { prisma } from "@/lib/prisma";
+
+// Define the Product type matching your Carousel component
+interface Product {
+  id: string;
+  stripeId: string;
+  name: string;
+  description: string | null;
+  price: number;
+  images: string[];
+  metadata?: {
+    category?: string;
+    [key: string]: any;
+  };
+}
 
 export default async function Home() {
   // ✅ FETCH FROM YOUR DATABASE, NOT STRIPE
@@ -28,16 +42,28 @@ export default async function Home() {
     },
   });
 
-  // ✅ Format products for your components
-  const formattedProducts = dbProducts.map(product => ({
-    id: product.id, // Database ID
-    stripeId: product.stripeId || '', // Stripe ID (if exists)
-    name: product.name,
-    description: product.description,
-    price: Number(product.price), // Convert Decimal to number
-    images: product.images || [],
-    metadata: product.metadata || {},
-  }));
+  // ✅ Format products with the correct Product type
+  const formattedProducts: Product[] = dbProducts.map(product => {
+    // Handle metadata - convert from JsonValue to the expected structure
+    let metadata: { category?: string; [key: string]: any } = {};
+    
+    if (product.metadata && typeof product.metadata === 'object' && product.metadata !== null) {
+      metadata = product.metadata as { category?: string; [key: string]: any };
+    } else if (product.category) {
+      // If no metadata but we have category, use it
+      metadata = { category: product.category };
+    }
+    
+    return {
+      id: product.id,
+      stripeId: product.stripeId || '',
+      name: product.name,
+      description: product.description,
+      price: Number(product.price),
+      images: product.images || [],
+      metadata: metadata,
+    };
+  });
 
   // Get products for carousel (first 4)
   const carouselProducts = formattedProducts.slice(0, 4);
@@ -60,8 +86,7 @@ export default async function Home() {
       id: formattedProducts[0].id,
       name: formattedProducts[0].name,
       price: formattedProducts[0].price,
-      priceType: typeof formattedProducts[0].price,
-      images: formattedProducts[0].images?.length
+      metadata: formattedProducts[0].metadata
     } : null
   });
 

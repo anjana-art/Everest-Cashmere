@@ -1,12 +1,13 @@
-// app/login/page.tsx
+// app/login/page.tsx - FIXED VERSION
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/store/cart-store';
 
-export default function LoginPage() {
+// Inner component that uses useSearchParams
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
@@ -21,87 +22,84 @@ export default function LoginPage() {
   const cartItemsParam = searchParams.get('cartItems');
 
   useEffect(() => {
-  // If user is already logged in, redirect to callback URL
-  const user = localStorage.getItem('user');
-  if (user) {
-    router.push(callbackUrl);
-  }
-  
-  // If coming from checkout, restore cart items
-  const pendingCart = localStorage.getItem('pending-checkout-items');
-  if (pendingCart && callbackUrl.includes('checkout')) {
-    console.log('Cart items pending merge after login');
-    // You could show a message to the user
-  }
-}, [router, callbackUrl]);
-
- 
-
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
-
-  try {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Invalid credentials');
+    // If user is already logged in, redirect to callback URL
+    const user = localStorage.getItem('user');
+    if (user) {
+      router.push(callbackUrl);
     }
+    
+    // If coming from checkout, restore cart items
+    const pendingCart = localStorage.getItem('pending-checkout-items');
+    if (pendingCart && callbackUrl.includes('checkout')) {
+      console.log('Cart items pending merge after login');
+      // You could show a message to the user
+    }
+  }, [router, callbackUrl]);
 
-    // Store user data in localStorage (for client-side)
-    localStorage.setItem('user', JSON.stringify(data.user));
-    
-    // Clear any pending cart items
-    localStorage.removeItem('pending-checkout-items');
-    
-    // Merge cart if there are pending items
-    const pendingCart = localStorage.getItem('pendingCart');
-    if (pendingCart) {
-      try {
-        const pendingItems = JSON.parse(pendingCart);
-        
-        // Call API to merge cart on server
-        await fetch('/api/cart/merge', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ items: pendingItems })
-        });
-        
-        // Clear pending cart
-        localStorage.removeItem('pendingCart');
-      } catch (mergeError) {
-        console.error('Cart merge error:', mergeError);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid credentials');
       }
-    }
-    
-    // Show success message
-    alert('Login successful!');
-    
-    // ✅ FORCE PAGE REFRESH to update all components
-    if (callbackUrl) {
-      // Full page refresh - this will update user icon immediately
-      window.location.href = callbackUrl;
-    } else {
-      window.location.href = '/';
-    }
 
-  } catch (err: any) {
-    setError(err.message);
-    setLoading(false);
-  }
-};
-  
+      // Store user data in localStorage (for client-side)
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Clear any pending cart items
+      localStorage.removeItem('pending-checkout-items');
+      
+      // Merge cart if there are pending items
+      const pendingCart = localStorage.getItem('pendingCart');
+      if (pendingCart) {
+        try {
+          const pendingItems = JSON.parse(pendingCart);
+          
+          // Call API to merge cart on server
+          await fetch('/api/cart/merge', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ items: pendingItems })
+          });
+          
+          // Clear pending cart
+          localStorage.removeItem('pendingCart');
+        } catch (mergeError) {
+          console.error('Cart merge error:', mergeError);
+        }
+      }
+      
+      // Show success message
+      alert('Login successful!');
+      
+      // ✅ FORCE PAGE REFRESH to update all components
+      if (callbackUrl) {
+        // Full page refresh - this will update user icon immediately
+        window.location.href = callbackUrl;
+      } else {
+        window.location.href = '/';
+      }
+
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -241,5 +239,21 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main export component with Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading login...</p>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }

@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new product (keep your existing POST method, just update admin check)
+// POST - Create new product
 export async function POST(request: NextRequest) {
   try {
     console.log('➕ POST /api/admin/products called');
@@ -188,8 +188,9 @@ export async function POST(request: NextRequest) {
     const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900'];
     const validSizes = ['S', 'M', 'L'];
 
-    const invalidColors = availableColors.filter(color => !validColors.includes(color));
-    const invalidSizes = availableSizes.filter(size => !validSizes.includes(size));
+    // FIXED: Added type annotations
+    const invalidColors = availableColors.filter((color: string) => !validColors.includes(color));
+    const invalidSizes = availableSizes.filter((size: string) => !validSizes.includes(size));
 
     if (invalidColors.length > 0) {
       return NextResponse.json(
@@ -275,7 +276,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Add DELETE method
+// DELETE method
 export async function DELETE(request: NextRequest) {
   try {
     console.log('🗑️ DELETE /api/admin/products called');
@@ -344,7 +345,7 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-// Add this PATCH method to your existing route.ts file
+// PATCH method
 export async function PATCH(request: NextRequest) {
   try {
     console.log('✏️ PATCH /api/admin/products called');
@@ -389,7 +390,8 @@ export async function PATCH(request: NextRequest) {
         ? updateData.availableColors 
         : (updateData.availableColors ? [updateData.availableColors] : []);
       
-      const invalidColors = availableColors.filter(color => !validColors.includes(color));
+      // FIXED: Added type annotation
+      const invalidColors = availableColors.filter((color: string) => !validColors.includes(color));
       if (invalidColors.length > 0) {
         return NextResponse.json(
           { error: `Invalid colors: ${invalidColors.join(', ')}` },
@@ -406,7 +408,8 @@ export async function PATCH(request: NextRequest) {
         ? updateData.availableSizes
         : (updateData.availableSizes ? [updateData.availableSizes] : []);
       
-      const invalidSizes = availableSizes.filter(size => !validSizes.includes(size));
+      // FIXED: Added type annotation
+      const invalidSizes = availableSizes.filter((size: string) => !validSizes.includes(size));
       if (invalidSizes.length > 0) {
         return NextResponse.json(
           { error: `Invalid sizes: ${invalidSizes.join(', ')}` },
@@ -416,11 +419,13 @@ export async function PATCH(request: NextRequest) {
       updateData.availableSizes = availableSizes;
     }
 
-    // If price changes and product is synced to Stripe, mark as unsynced
-    if (updateData.price && existingProduct.stripeSynced) {
+   // If price changes, you might want to update Stripe (optional)
+    if (updateData.price) {
       const newPrice = parseFloat(updateData.price);
-      if (newPrice !== parseFloat(existingProduct.price.toString())) {
-        updateData.stripeSynced = false;
+      const oldPrice = parseFloat(existingProduct.price.toString());
+      if (newPrice !== oldPrice) {
+        console.log(`💰 Price changed from ${oldPrice} to ${newPrice}`);
+        // You can add Stripe update logic here if needed
       }
     }
 
@@ -460,4 +465,3 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
-

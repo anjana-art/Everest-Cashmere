@@ -3,6 +3,22 @@ import { ProductDetail } from "@/components/product-detail";
 import { notFound } from 'next/navigation';
 import { prisma } from "@/lib/prisma";
 
+// Define the Product type matching your ProductDetail component
+interface Product {
+  id: string;
+  stripeId: string;
+  name: string;
+  description: string | null;
+  price: number;
+  images: string[];
+  metadata?: {
+    category?: string;
+    [key: string]: any;
+  };
+  category?: string | null;
+  stock?: number;
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -37,7 +53,7 @@ export default async function ProductPage({
         defaultColor: true,
         defaultSize: true,
         stock: true,
-        isActive: true, // ✅ CORRECT FIELD NAME
+        isActive: true,
         metadata: true,
         createdAt: true,
         updatedAt: true,
@@ -75,16 +91,25 @@ export default async function ProductPage({
     // Convert price from Decimal to number
     const priceAsNumber = Number(product.price);
     
-    // Prepare product data for component
-    const formattedProduct = {
+    // Handle metadata - convert from JsonValue to the expected structure
+    let metadata: { category?: string; [key: string]: any } = {};
+    
+    if (product.metadata && typeof product.metadata === 'object' && product.metadata !== null) {
+      metadata = product.metadata as { category?: string; [key: string]: any };
+    } else if (product.category) {
+      // If no metadata but we have category, use it
+      metadata = { category: product.category };
+    }
+    
+    // Prepare product data for component with correct typing
+    const formattedProduct: Product = {
       id: product.id,
       stripeId: product.stripeId || product.id,
       name: product.name,
       description: product.description,
       price: priceAsNumber,
       images: product.images || [],
-      metadata: product.metadata || {},
-      // Include additional fields if needed
+      metadata: metadata,
       category: product.category,
       stock: product.stock,
     };
@@ -94,6 +119,7 @@ export default async function ProductPage({
       name: formattedProduct.name,
       price: formattedProduct.price,
       imageCount: formattedProduct.images.length,
+      metadata: formattedProduct.metadata,
     });
 
     return <ProductDetail product={formattedProduct} />;

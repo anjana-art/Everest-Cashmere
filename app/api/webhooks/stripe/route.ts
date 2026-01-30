@@ -1,8 +1,9 @@
-// app/api/webhooks/stripe/route.ts
+// app/api/webhooks/stripe/route.ts (FIXED VERSION)
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
+import { Prisma } from '@prisma/client';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -32,7 +33,10 @@ export async function POST(request: Request) {
       sessionId: session.id,
       customerEmail: session.customer_email,
       metadata: session.metadata,
-      paymentStatus: session.payment_status
+      paymentStatus: session.payment_status,
+      // Debug: check what properties exist
+      hasShipping: !!(session as any).shipping_details || !!(session as any).shipping,
+      hasCustomerDetails: !!(session as any).customer_details
     });
     
     try {
@@ -87,48 +91,74 @@ export async function POST(request: Request) {
         };
       });
       
+      // Type assertion to access properties that might exist
+      const sessionAny = session as any;
+      
+      // Prepare shipping address - check multiple possible property names
+      let shippingData = null;
+      if (sessionAny.shipping_details) {
+        shippingData = sessionAny.shipping_details;
+      } else if (sessionAny.shipping) {
+        shippingData = sessionAny.shipping;
+      }
+      
+      const shippingAddress = shippingData ? {
+        name: shippingData.name || '',
+        address: {
+          line1: shippingData.address?.line1 || '',
+          line2: shippingData.address?.line2 || '',
+          city: shippingData.address?.city || '',
+          state: shippingData.address?.state || '',
+          postalCode: shippingData.address?.postal_code || '',
+          country: shippingData.address?.country || ''
+        }
+      } : Prisma.DbNull;
+      
+      // Prepare billing address - check multiple possible property names
+      let billingData = null;
+      if (sessionAny.customer_details) {
+        billingData = sessionAny.customer_details;
+      } else if (session.customer_email) {
+        billingData = {
+          email: session.customer_email,
+          name: ''
+        };
+      }
+      
+      const billingAddress = billingData ? {
+        name: billingData.name || '',
+        email: billingData.email || '',
+        address: billingData.address ? {
+          line1: billingData.address.line1 || '',
+          line2: billingData.address.line2 || '',
+          city: billingData.address.city || '',
+          state: billingData.address.state || '',
+          postalCode: billingData.address.postal_code || '',
+          country: billingData.address.country || ''
+        } : undefined
+      } : Prisma.DbNull;
+      
       // Create order in database
       const order = await prisma.order.create({
         data: {
           userId: userId,
           stripeSessionId: session.id,
-          stripeCustomerId: session.customer as string || null,
+          stripeCustomerId: typeof session.customer === 'string' ? session.customer : null,
           orderNumber: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
           subtotal: subtotal,
           total: total,
           tax: tax,
-          shipping: 0, // Adjust if you have shipping
+          shipping: 0,
           status: 'PAID',
           trackingStatus: 'ORDER_RECEIVED',
           paymentMethod: 'card',
           items: {
             create: orderItems
           },
-          shippingAddress: session.shipping_details ? {
-            name: session.shipping_details.name || '',
-            address: {
-              line1: session.shipping_details.address?.line1 || '',
-              line2: session.shipping_details.address?.line2 || '',
-              city: session.shipping_details.address?.city || '',
-              state: session.shipping_details.address?.state || '',
-              postalCode: session.shipping_details.address?.postal_code || '',
-              country: session.shipping_details.address?.country || ''
-            }
-          } : null,
-          billingAddress: session.customer_details ? {
-            name: session.customer_details.name || '',
-            email: session.customer_details.email || '',
-            address: {
-              line1: session.customer_details.address?.line1 || '',
-              line2: session.customer_details.address?.line2 || '',
-              city: session.customer_details.address?.city || '',
-              state: session.customer_details.address?.state || '',
-              postalCode: session.customer_details.address?.postal_code || '',
-              country: session.customer_details.address?.country || ''
-            }
-          } : null,
+          shippingAddress: shippingAddress,
+          billingAddress: billingAddress,
           paidAt: new Date(),
-          preparingAt: new Date() // Start preparing immediately
+          preparingAt: new Date()
         },
         include: {
           items: true

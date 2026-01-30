@@ -1,11 +1,13 @@
-// app/products/page.tsx - FIXED VERSION (remove active filter)
+// app/products/page.tsx - FIXED VERSION
 import { ProductList } from "@/components/product-list";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
-interface DatabaseProduct {
+// Match the exact Product type expected by ProductList component
+// Check what ProductList expects and use the same interface
+interface Product {
   id: string;
-  stripeId: string;
+  stripeId: string; // Must be string, not string | null
   name: string;
   description: string | null;
   price: number;
@@ -27,42 +29,31 @@ export default async function ProductsPage() {
       metadata: true,
       category: true,
     },
-    // Remove the where clause entirely or use a valid field
     orderBy: {
       createdAt: 'desc',
     },
   });
 
-  console.log('📦 Products from database:', products.map(p => ({
-    id: p.id,
-    stripeId: p.stripeId,
-    name: p.name,
-    price: p.price,
-    areIdsDifferent: p.id !== p.stripeId
-  })));
+  console.log('📦 Products from database:', products.length);
 
-  // Check if any products have same ID as stripeId (problem!)
-  const problematicProducts = products.filter(p => p.id === p.stripeId);
-  if (problematicProducts.length > 0) {
-    console.warn('⚠️ WARNING: Some products have Stripe IDs as database IDs:', 
-      problematicProducts.map(p => p.name));
-  }
-
-  const formattedProducts: DatabaseProduct[] = products.map(product => ({
-    ...product,
-    price: Number(product.price),
+  // Convert to the Product type expected by ProductList
+  const formattedProducts: Product[] = products.map(product => ({
+    id: product.id,
+    // Ensure stripeId is always a string (not null)
+    stripeId: product.stripeId || product.id, // Use product.id as fallback if stripeId is null
+    name: product.name,
     description: product.description || null,
+    price: Number(product.price),
+    images: product.images || [],
+    metadata: product.metadata || {},
     category: product.category || null,
   }));
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex  items-center text-center mb-8">
-        <h1 className="text-3xl font-bold ">All Products</h1>
-        
-       
-        </div>
-      
+      <div className="flex items-center text-center mb-8">
+        <h1 className="text-3xl font-bold">All Products</h1>
+      </div>
       
       {formattedProducts.length === 0 ? (
         <div className="text-center py-12">

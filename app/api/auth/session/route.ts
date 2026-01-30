@@ -4,7 +4,8 @@ import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
+    // FIXED: cookies() returns a Promise, so we need to await it
+    const cookieStore = await cookies();
     const userCookie = cookieStore.get('user');
     
     if (!userCookie?.value) {

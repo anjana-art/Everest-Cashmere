@@ -1,7 +1,7 @@
-// lib/user-service.ts
+// lib/user-service.ts - FIXED VERSION
 import { Prisma } from '@prisma/client'
 import { AuthUtils } from './auth-utils'
-import 
+import { prisma } from './prisma'
 
 export class UserService {
   // Signup new user
@@ -344,14 +344,15 @@ export class UserService {
     return user?.isAdmin || false
   }
   
-  // Search users (admin only)
+  // Search users (admin only) - FIXED VERSION
   static async searchUsers(query: string, page: number = 1, limit: number = 20) {
     const skip = (page - 1) * limit
     
+    // FIXED: Use Prisma.QueryMode type for mode property
     const where = {
       OR: [
-        { email: { contains: query, mode: 'insensitive' } },
-        { name: { contains: query, mode: 'insensitive' } }
+        { email: { contains: query, mode: 'insensitive' as Prisma.QueryMode } },
+        { name: { contains: query, mode: 'insensitive' as Prisma.QueryMode } }
       ]
     }
     

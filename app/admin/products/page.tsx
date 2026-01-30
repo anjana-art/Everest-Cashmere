@@ -8,6 +8,7 @@ import {
   PencilIcon, 
   TrashIcon, 
   EyeIcon,
+  ShoppingBagIcon,
   EyeSlashIcon,
   ArrowPathIcon,
   MagnifyingGlassIcon,
