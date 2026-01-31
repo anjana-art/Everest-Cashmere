@@ -50,13 +50,18 @@ export async function POST(request: Request) {
       });
     }
     
-    // Retrieve session from Stripe WITH EXPANDED PROPERTIES
+    // Retrieve session from Stripe WITH ONLY LINE ITEMS EXPANDED
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: [
-        'line_items.data.price.product',
-        'shipping_details',  // Add this to expand shipping
-        'customer_details'   // Add this to expand customer details
-      ]
+      expand: ['line_items.data.price.product'] // Only expand line items
+    });
+    
+    console.log('Session retrieved:', {
+      id: session.id,
+      payment_status: session.payment_status,
+      shipping: session.shipping,
+      customer_details: session.customer_details,
+      hasShipping: !!session.shipping,
+      hasCustomerDetails: !!session.customer_details
     });
     
     if (session.payment_status !== 'paid') {
@@ -65,10 +70,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    
-    // Debug: Check what properties exist
-    console.log('Session type:', typeof session);
-    console.log('Session keys:', Object.keys(session));
     
     // Get line items
     const lineItems = session.line_items?.data || [];
@@ -169,12 +170,8 @@ export async function POST(request: Request) {
     // Generate order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     
-    // Prepare shipping and billing addresses
-    // Type the session as any to access expanded properties
-    const sessionAny = session as any;
-    
-    // Get shipping details (expanded in the retrieve call)
-    const shippingDetails = sessionAny.shipping_details;
+    // Prepare shipping address (available directly on session object)
+    const shippingDetails = session.shipping || session.shipping_details;
     console.log('Shipping details:', shippingDetails);
     
     const shippingAddress = shippingDetails 
@@ -191,22 +188,22 @@ export async function POST(request: Request) {
         })
       : Prisma.DbNull;
     
-    // Get customer details (expanded in the retrieve call)
-    const customerDetails = sessionAny.customer_details;
+    // Prepare billing address (available directly on session object)
+    const customerDetails = session.customer_details;
     console.log('Customer details:', customerDetails);
     
     const billingAddress = customerDetails
       ? JSON.stringify({
           name: customerDetails.name || '',
           email: customerDetails.email || '',
-          address: {
-            line1: customerDetails.address?.line1 || '',
-            line2: customerDetails.address?.line2 || '',
-            city: customerDetails.address?.city || '',
-            state: customerDetails.address?.state || '',
-            postalCode: customerDetails.address?.postal_code || '',
-            country: customerDetails.address?.country || ''
-          }
+          address: customerDetails.address ? {
+            line1: customerDetails.address.line1 || '',
+            line2: customerDetails.address.line2 || '',
+            city: customerDetails.address.city || '',
+            state: customerDetails.address.state || '',
+            postalCode: customerDetails.address.postal_code || '',
+            country: customerDetails.address.country || ''
+          } : {}
         })
       : Prisma.DbNull;
     
