@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { Prisma } from '@prisma/client';
+import Stripe from 'stripe';
 
 export async function POST(request: Request) {
   console.log('=== VERIFY ORDER API CALLED ===');
@@ -55,13 +56,22 @@ export async function POST(request: Request) {
       expand: ['line_items.data.price.product'] // Only expand line items
     });
     
+    // Type assertion to access shipping and customer_details
+    const sessionWithDetails = session as Stripe.Checkout.Session & {
+      shipping?: {
+        address?: Stripe.Address;
+        name?: string;
+      };
+      customer_details?: Stripe.Checkout.Session.CustomerDetails;
+    };
+    
     console.log('Session retrieved:', {
       id: session.id,
       payment_status: session.payment_status,
-      shipping: session.shipping,
-      customer_details: session.customer_details,
-      hasShipping: !!session.shipping,
-      hasCustomerDetails: !!session.customer_details
+      shipping: sessionWithDetails.shipping,
+      customer_details: sessionWithDetails.customer_details,
+      hasShipping: !!sessionWithDetails.shipping,
+      hasCustomerDetails: !!sessionWithDetails.customer_details
     });
     
     if (session.payment_status !== 'paid') {
@@ -171,7 +181,7 @@ export async function POST(request: Request) {
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     
     // Prepare shipping address (available directly on session object)
-    const shippingDetails = session.shipping || session.shipping_details;
+    const shippingDetails = sessionWithDetails.shipping;
     console.log('Shipping details:', shippingDetails);
     
     const shippingAddress = shippingDetails 
@@ -189,7 +199,7 @@ export async function POST(request: Request) {
       : Prisma.DbNull;
     
     // Prepare billing address (available directly on session object)
-    const customerDetails = session.customer_details;
+    const customerDetails = sessionWithDetails.customer_details;
     console.log('Customer details:', customerDetails);
     
     const billingAddress = customerDetails
