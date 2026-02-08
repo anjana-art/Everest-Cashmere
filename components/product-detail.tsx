@@ -23,6 +23,8 @@ interface Product {
   availableSizes?: string[];     // e.g., ['S', 'M', 'L']
   defaultColor?: string | null;  // e.g., 'black'
   defaultSize?: string | null;   // e.g., 'M'
+  // ADD THIS LINE: category field
+  category?: string | null;
 }
 
 interface Props {
@@ -294,9 +296,9 @@ export const ProductDetail = ({ product }: Props) => {
             <div className="space-y-6">
               {/* Product Title & Category */}
               <div>
-                {product.metadata?.category && (
+                {product.category && (
                   <span className="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full mb-3">
-                    {product.metadata.category}
+                    {product.category}
                   </span>
                 )}
                 <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
@@ -357,6 +359,7 @@ export const ProductDetail = ({ product }: Props) => {
               </div>
 
               {/* Size Selection - ONLY SHOW IF NOT HOME DECORE AND HAS SIZES */}
+              {/* FIXED: Added optional chaining to check category safely */}
               {product.category !== 'HOME_DECORE' && dbSizes.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-gray-900">
