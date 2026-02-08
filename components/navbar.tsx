@@ -1,72 +1,3 @@
-/* 'use client';
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import {ShoppingCartIcon, Bars3Icon, XMarkIcon} from "@heroicons/react/24/outline";
-import { useCartStore } from "@/store/cart-store";
-import { Button } from "./ui/button";
-
-export const Navbar = ()=>{
-    const [mobileOpen, setMobileOpen] = useState<boolean>(false);
-    const {items} = useCartStore();
-    const cartCount = items.reduce((acc, item)=>acc + item.quantity, 0);
-
-    useEffect(()=>{
-      const handelResize = () =>{
-        if(window.innerWidth >= 768){
-            setMobileOpen(false);
-        }
-      }
-        window.addEventListener("resize", handelResize);
-        return ()=> window.removeEventListener("resize", handelResize);
-    },[])
-
-    return(
-    <nav className="sticky top-0 z-50 bg-amber-100 shadow">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            
-            <Link href={"/"} className="hover:text-red-600 text-red-800 text-2xl ">Everesté</Link>
-            <p>- pure cashmere from the heighest peaks to the finest wardrobes.</p>
-            
-            <div className="hidden md:flex space-x-6">
-                <Link href={"/"} className="hover:text-blue-600 text-blue-950 text-xl">Home</Link>
-                <Link href={"/products"} className="hover:text-blue-600 text-blue-950 text-xl">Products</Link>
-                <Link href={"/checkout"}  className="hover:text-blue-600 text-blue-950 text-xl">Checkout</Link>
-                <Link href={"/about"}  className="hover:text-blue-600 text-blue-950 text-xl">About Us</Link>
-                <Link href={"/contact"}  className="hover:text-blue-600 text-blue-950 text-xl">Contact Us</Link>
-
-
-            </div>
-            
-            <div className="flex items-center space-x-4">
-               <Link className="relative" href={'/checkout'}>
-                  <ShoppingCartIcon className="h-6 w-6"/>
-                  {cartCount > 0 && <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                    {cartCount}
-                    </span>
-                    }
-               </Link>
-               <Button  variant='ghost' className="md:hidden" onClick={()=> setMobileOpen((prev)=> !prev)}>{mobileOpen ? <XMarkIcon className="h-6 w-6"/> : <Bars3Icon className="h-6 w-6"/>}</Button>
-            </div>
-            
-        </div>
-
-        { mobileOpen && 
-                <nav>
-                    <ul>
-                        <li><Link href={'/'}>Home</Link></li>
-                        <li><Link href={'/products'}>Products</Link></li>
-                        <li><Link href={'/cart'}>Cart</Link></li>
-                        <li><Link href={'/about'}>About Us</Link></li>
-
-                    </ul>
-                </nav>
-        }
-    </nav>
-    )
-
-
-} */
-
 'use client';
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -80,8 +11,9 @@ import {
   UserIcon,
   HeartIcon,
   ShoppingBagIcon,
-  Cog6ToothIcon, // Admin icon
-  ShieldCheckIcon // Alternative admin icon
+  Cog6ToothIcon,
+  ShieldCheckIcon,
+  XCircleIcon
 } from "@heroicons/react/24/outline";
 import { useCartStore } from "@/store/cart-store";
 import { Button } from "./ui/button";
@@ -89,6 +21,10 @@ import { Button } from "./ui/button";
 export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
+  const [showCategoryMenu, setShowCategoryMenu] = useState<boolean>(false);
+  const [showClothingSubmenu, setShowClothingSubmenu] = useState<boolean>(false);
+  const [showClothingTypeSubmenu, setShowClothingTypeSubmenu] = useState<boolean>(false);
+  const [showAccessoriesSubmenu, setShowAccessoriesSubmenu] = useState<boolean>(false);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const { items } = useCartStore();
@@ -97,14 +33,12 @@ export const Navbar = () => {
   // Check if user is logged in and admin on mount
   useEffect(() => {
     const checkUserAndAdmin = () => {
-      // Check for user in localStorage
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
           
-          // Check for admin cookie
           const cookies = document.cookie.split(';').reduce((acc, cookie) => {
             const [name, value] = cookie.trim().split('=');
             acc[name] = decodeURIComponent(value);
@@ -119,25 +53,12 @@ export const Navbar = () => {
     };
 
     checkUserAndAdmin();
-    
-    // Also check on page load/refresh
     window.addEventListener('load', checkUserAndAdmin);
     
     return () => {
       window.removeEventListener('load', checkUserAndAdmin);
     };
   }, []);
-
-  // Function to check admin status
-  const checkAdminStatus = () => {
-    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-      const [name, value] = cookie.trim().split('=');
-      acc[name] = decodeURIComponent(value);
-      return acc;
-    }, {} as Record<string, string>);
-    
-    return cookies['admin-check'] === 'true';
-  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -150,6 +71,9 @@ export const Navbar = () => {
       const target = event.target as HTMLElement;
       if (!target.closest('.user-menu') && !target.closest('.user-profile-button')) {
         setShowUserMenu(false);
+      }
+      if (!target.closest('.category-menu') && !target.closest('.category-button')) {
+        setShowCategoryMenu(false);
       }
     };
 
@@ -168,7 +92,16 @@ export const Navbar = () => {
     setUser(null);
     setIsAdmin(false);
     setShowUserMenu(false);
-    window.location.href = '/'; // Redirect to home page
+    window.location.href = '/';
+  };
+
+  // Close all menus
+  const closeAllMenus = () => {
+    setShowCategoryMenu(false);
+    setShowClothingSubmenu(false);
+    setShowClothingTypeSubmenu(false);
+    setShowAccessoriesSubmenu(false);
+    setShowUserMenu(false);
   };
 
   return (
@@ -188,13 +121,248 @@ export const Navbar = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-6">
           <Link href={"/"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">Home</Link>
-          <Link href={"/products"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">Products</Link>
+          
+          {/* Category Dropdown with fancy submenus */}
+          <div className="relative category-menu">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowCategoryMenu(!showCategoryMenu);
+                setShowClothingSubmenu(false);
+                setShowClothingTypeSubmenu(false);
+                setShowAccessoriesSubmenu(false);
+              }}
+              className="flex items-center space-x-1 hover:text-blue-600 text-blue-950 text-lg transition-colors category-button"
+            >
+              <span>Products</span>
+              <ChevronDownIcon className={`h-4 w-4 transition-transform ${showCategoryMenu ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {/* Main Category Menu */}
+            {showCategoryMenu && (
+              <div className="absolute left-0 mt-2 w-64 rounded-lg shadow-xl bg-white border border-gray-200 z-50">
+                <div className="p-4">
+                  {/* Header with close button */}
+                  <div className="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 className="font-semibold text-gray-800">Shop by Category</h3>
+                    <button
+                      onClick={() => setShowCategoryMenu(false)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <XCircleIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  {/* All Products */}
+                  <Link
+                    href="/products"
+                    className="flex items-center justify-between px-3 py-2.5 mb-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                    onClick={closeAllMenus}
+                  >
+                    <span className="font-medium text-gray-700 group-hover:text-blue-600">All Products</span>
+                    <ChevronDownIcon className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                  </Link>
+                  
+                  {/* Clothing Category */}
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowClothingSubmenu(!showClothingSubmenu);
+                        setShowAccessoriesSubmenu(false);
+                        setShowClothingTypeSubmenu(false);
+                      }}
+                      className="flex items-center justify-between w-full px-3 py-2.5 mb-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                    >
+                      <span className="font-medium text-gray-700 group-hover:text-blue-600">Clothing</span>
+                      <ChevronDownIcon className={`h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-transform ${showClothingSubmenu ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {/* Clothing Submenu */}
+                    {showClothingSubmenu && (
+                      <div className="absolute left-full top-0 ml-1 w-64 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
+                        <div className="p-3">
+                          <div className="flex justify-between items-center mb-2 pb-2 border-b">
+                            <h4 className="font-medium text-gray-700">Clothing</h4>
+                            <button
+                              onClick={() => setShowClothingSubmenu(false)}
+                              className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              <XCircleIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                          
+                          {/* Clothing Types */}
+                          <div className="mb-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowClothingTypeSubmenu(!showClothingTypeSubmenu);
+                              }}
+                              className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                            >
+                              <span>By Material Type</span>
+                              <ChevronDownIcon className={`h-3 w-3 transition-transform ${showClothingTypeSubmenu ? 'rotate-180' : ''}`} />
+                            </button>
+                            
+                            {showClothingTypeSubmenu && (
+                              <div className="ml-3 pl-2 border-l border-gray-200 mt-1">
+                                <Link
+                                  href="/products?category=CLOTHING&type=CASHMERE"
+                                  className="block px-2 py-1.5 text-xs text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  onClick={closeAllMenus}
+                                >
+                                  Cashmere
+                                </Link>
+                                <Link
+                                  href="/products?category=CLOTHING&type=CASHMERE_MARINO_WOOL"
+                                  className="block px-2 py-1.5 text-xs text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  onClick={closeAllMenus}
+                                >
+                                  Cashmere + Marino Wool
+                                </Link>
+                                <Link
+                                  href="/products?category=CLOTHING&type=MARINO_WOOL"
+                                  className="block px-2 py-1.5 text-xs text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  onClick={closeAllMenus}
+                                >
+                                  Marino Wool
+                                </Link>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Clothing by Gender */}
+                          <div>
+                            <p className="text-xs font-medium text-gray-500 mb-1">By Gender</p>
+                            <Link
+                              href="/products?category=CLOTHING&gender=MEN"
+                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              onClick={closeAllMenus}
+                            >
+                              Men's Clothing
+                            </Link>
+                            <Link
+                              href="/products?category=CLOTHING&gender=WOMEN"
+                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              onClick={closeAllMenus}
+                            >
+                              Women's Clothing
+                            </Link>
+                            <Link
+                              href="/products?category=CLOTHING&gender=UNISEX"
+                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors"
+                              onClick={closeAllMenus}
+                            >
+                              Unisex Clothing
+                            </Link>
+                          </div>
+                          
+                          {/* All Clothing */}
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <Link
+                              href="/products?category=CLOTHING"
+                              className="block px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              onClick={closeAllMenus}
+                            >
+                              All Clothing
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Home Decore */}
+                  <Link
+                    href="/products?category=HOME_DECORE"
+                    className="flex items-center justify-between px-3 py-2.5 mb-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                    onClick={closeAllMenus}
+                  >
+                    <span className="font-medium text-gray-700 group-hover:text-blue-600">Home Decore</span>
+                    <ChevronDownIcon className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                  </Link>
+                  
+                  {/* Accessories Category */}
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowAccessoriesSubmenu(!showAccessoriesSubmenu);
+                        setShowClothingSubmenu(false);
+                        setShowClothingTypeSubmenu(false);
+                      }}
+                      className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                    >
+                      <span className="font-medium text-gray-700 group-hover:text-blue-600">Accessories</span>
+                      <ChevronDownIcon className={`h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-transform ${showAccessoriesSubmenu ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {/* Accessories Submenu */}
+                    {showAccessoriesSubmenu && (
+                      <div className="absolute left-full top-0 ml-1 w-56 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
+                        <div className="p-3">
+                          <div className="flex justify-between items-center mb-2 pb-2 border-b">
+                            <h4 className="font-medium text-gray-700">Accessories</h4>
+                            <button
+                              onClick={() => setShowAccessoriesSubmenu(false)}
+                              className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              <XCircleIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                          
+                          {/* Accessories by Gender */}
+                          <div className="mb-2">
+                            <p className="text-xs font-medium text-gray-500 mb-1">By Gender</p>
+                            <Link
+                              href="/products?category=ACCESSORIES&type=MEN"
+                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              onClick={closeAllMenus}
+                            >
+                              Men
+                            </Link>
+                            <Link
+                              href="/products?category=ACCESSORIES&type=WOMEN"
+                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              onClick={closeAllMenus}
+                            >
+                              Women
+                            </Link>
+                            <Link
+                              href="/products?category=ACCESSORIES&type=UNISEX"
+                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors"
+                              onClick={closeAllMenus}
+                            >
+                              Unisex
+                            </Link>
+                          </div>
+                          
+                          {/* All Accessories */}
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <Link
+                              href="/products?category=ACCESSORIES"
+                              className="block px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              onClick={closeAllMenus}
+                            >
+                              All Accessories
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <Link href={"/checkout"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">Checkout</Link>
           <Link href={"/about"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">About Us</Link>
           <Link href={"/contact"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">Contact Us</Link>
         </div>
         
-        {/* Right Side Icons */}
+        {/* Right Side Icons - KEEPING YOUR ORIGINAL STYLING */}
         <div className="flex items-center space-x-4 md:space-x-6">
           {/* Admin Dashboard Button (Only for admins) */}
           {isAdmin && (
@@ -231,7 +399,7 @@ export const Navbar = () => {
             </span>
           </Link>
 
-          {/* User Profile */}
+          {/* User Profile - YOUR ORIGINAL STYLING */}
           <div className="relative">
             {user ? (
               // Logged in - show dropdown menu
@@ -354,7 +522,7 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - YOUR ORIGINAL STYLING */}
       {mobileOpen && (
         <div className="md:hidden bg-white border-t">
           <div className="px-4 py-3 space-y-1">
@@ -370,8 +538,81 @@ export const Navbar = () => {
               className="block py-3 px-3 text-blue-950 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" 
               onClick={() => setMobileOpen(false)}
             >
-              Products
+              All Products
             </Link>
+            
+            {/* Mobile Category Links */}
+            <div className="pl-3">
+              <div className="text-sm font-medium text-gray-500 py-2">Categories</div>
+              <Link 
+                href="/products?category=CLOTHING" 
+                className="block py-2 px-3 text-blue-950 hover:text-blue-600 hover:bg-blue-50 rounded-md" 
+                onClick={() => setMobileOpen(false)}
+              >
+                Clothing
+              </Link>
+              <div className="ml-4 pl-2 border-l border-gray-200">
+                <Link 
+                  href="/products?category=CLOTHING&gender=MEN" 
+                  className="block py-1 px-2 text-sm text-gray-600 hover:text-blue-600" 
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Men's Clothing
+                </Link>
+                <Link 
+                  href="/products?category=CLOTHING&gender=WOMEN" 
+                  className="block py-1 px-2 text-sm text-gray-600 hover:text-blue-600" 
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Women's Clothing
+                </Link>
+                <Link 
+                  href="/products?category=CLOTHING&gender=UNISEX" 
+                  className="block py-1 px-2 text-sm text-gray-600 hover:text-blue-600" 
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Unisex Clothing
+                </Link>
+              </div>
+              <Link 
+                href="/products?category=HOME_DECORE" 
+                className="block py-2 px-3 text-blue-950 hover:text-blue-600 hover:bg-blue-50 rounded-md" 
+                onClick={() => setMobileOpen(false)}
+              >
+                Home Decore
+              </Link>
+              <Link 
+                href="/products?category=ACCESSORIES" 
+                className="block py-2 px-3 text-blue-950 hover:text-blue-600 hover:bg-blue-50 rounded-md" 
+                onClick={() => setMobileOpen(false)}
+              >
+                Accessories
+              </Link>
+              <div className="ml-4 pl-2 border-l border-gray-200">
+                <Link 
+                  href="/products?category=ACCESSORIES&type=MEN" 
+                  className="block py-1 px-2 text-sm text-gray-600 hover:text-blue-600" 
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Men
+                </Link>
+                <Link 
+                  href="/products?category=ACCESSORIES&type=WOMEN" 
+                  className="block py-1 px-2 text-sm text-gray-600 hover:text-blue-600" 
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Women
+                </Link>
+                <Link 
+                  href="/products?category=ACCESSORIES&type=UNISEX" 
+                  className="block py-1 px-2 text-sm text-gray-600 hover:text-blue-600" 
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Unisex
+                </Link>
+              </div>
+            </div>
+            
             <Link 
               href={'/checkout'} 
               className="block py-3 px-3 text-blue-950 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" 

@@ -1,4 +1,3 @@
-// components/product-detail.tsx - UPDATED
 "use client";
 
 import Image from "next/image";
@@ -19,18 +18,44 @@ interface Product {
     category?: string;
     [key: string]: any;
   };
+  // NEW: Add these fields from database
+  availableColors?: string[];    // e.g., ['black', 'baby-pink', 'green']
+  availableSizes?: string[];     // e.g., ['S', 'M', 'L']
+  defaultColor?: string | null;  // e.g., 'black'
+  defaultSize?: string | null;   // e.g., 'M'
 }
 
 interface Props {
   product: Product;
 }
 
+// Color mapping from database values to display properties
+const COLOR_MAP: Record<string, { name: string, class: string }> = {
+  'baby-pink': { name: 'Baby Pink', class: 'bg-pink-200 border border-pink-300' },
+  'amber-200': { name: 'Amber', class: 'bg-amber-200 border border-amber-300' },
+  'black-300': { name: 'Dark Gray', class: 'bg-gray-400 border border-gray-500' },
+  'gray': { name: 'Gray', class: 'bg-gray-500 border border-gray-600' },
+  'sky-blue': { name: 'Sky Blue', class: 'bg-blue-300 border border-blue-400' },
+  'cream': { name: 'Cream', class: 'bg-amber-50 border border-gray-300' },
+  'black': { name: 'Black', class: 'bg-gray-900 border border-black' },
+  'green': { name: 'Green', class: 'bg-green-600 border border-green-700' },
+  'yellow-200': { name: 'Yellow', class: 'bg-yellow-300 border border-yellow-400' },
+  'red-900': { name: 'Red', class: 'bg-red-900 border border-red-950' },
+  // Legacy fallbacks (keep for compatibility)
+  'burgundy': { name: 'Burgundy', class: 'bg-red-900 border border-red-950' },
+  'white': { name: 'White', class: 'bg-white border border-gray-300' },
+};
+
 export const ProductDetail = ({ product }: Props) => {
   const { items, addItem, removeItem } = useCartStore();
   
-  // ✅ SET DEFAULTS FIRST
-  const defaultColor = "black";
-  const defaultSize = "m";
+  // ✅ GET COLORS & SIZES FROM DATABASE
+  const dbColors = product.availableColors || [];
+  const dbSizes = product.availableSizes || [];
+  
+  // ✅ SET DEFAULTS FROM DATABASE
+  const defaultColor = dbColors.length > 0 ? dbColors[0] : "";
+  const defaultSize = dbSizes.length > 0 ? dbSizes[0].toLowerCase() : "";
   
   const [selectedColor, setSelectedColor] = useState<string>(defaultColor);
   const [selectedSize, setSelectedSize] = useState<string>(defaultSize);
@@ -52,6 +77,10 @@ export const ProductDetail = ({ product }: Props) => {
   useEffect(() => {
     console.log('ProductDetail:', {
       id: product?.id,
+      dbColors,
+      dbSizes,
+      defaultColor,
+      defaultSize,
       selectedColor,
       selectedSize,
       cartQuantity,
@@ -161,20 +190,6 @@ export const ProductDetail = ({ product }: Props) => {
     }
   };
 
-  // Color options
-  const colorOptions = [
-    { name: "Black", value: "black", class: "bg-gray-700" },
-    { name: "White", value: "white", class: "bg-pink-200 border border-gray-300" },
-    { name: "Burgundy", value: "burgundy", class: "bg-red-900" },
-  ];
-
-  // Size options
-  const sizeOptions = [
-    { value: "s", label: "S" },
-    { value: "m", label: "M" },
-    { value: "l", label: "L" },
-  ];
-
   // Care description
   const careDescription = "Machine wash cold with similar colors. Tumble dry low. Do not bleach. Iron on low heat if needed.";
 
@@ -184,15 +199,15 @@ export const ProductDetail = ({ product }: Props) => {
       return;
     }
 
-    // ✅ USE SELECTED COLOR & SIZE (not defaults directly)
+    // ✅ USE SELECTED COLOR & SIZE (from database)
     addItem({
       id: product.id,
       name: product.name,
       price: product.price,
       imageUrl: product.images?.[0] || '',
       quantity: 1,
-      color: selectedColor, // Use selected, not default
-      size: selectedSize,   // Use selected, not default
+      color: selectedColor, // From database
+      size: selectedSize,   // From database
     });
   };
 
@@ -301,51 +316,73 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* Color Selection */}
+              {/* Color Selection - UPDATED: Show ONLY available colors from database */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-gray-900">Color: <span className="font-normal capitalize">{selectedColor}</span></h3>
-                <div className="flex gap-3">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color.value}
-                      onClick={() => setSelectedColor(color.value)}
-                      className={`relative w-10 h-10 rounded-full ${color.class} ${
-                        selectedColor === color.value 
-                          ? 'ring-2 ring-offset-2 ring-blue-500' 
-                          : 'hover:ring-2 hover:ring-offset-2 hover:ring-gray-300'
-                      }`}
-                      aria-label={`Select ${color.name} color`}
-                      title={color.name}
-                    >
-                      {selectedColor === color.value && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-3 h-3 bg-white rounded-full"></div>
-                        </div>
-                      )}
-                    </button>
-                  ))}
+                <h3 className="font-semibold text-gray-900">
+                  Color: <span className="font-normal capitalize">
+                    {selectedColor ? (COLOR_MAP[selectedColor]?.name || selectedColor) : "Select a color"}
+                  </span>
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {dbColors.length > 0 ? (
+                    dbColors.map((colorValue) => {
+                      const colorInfo = COLOR_MAP[colorValue] || { 
+                        name: colorValue, 
+                        class: `bg-${colorValue.includes('gray') ? 'gray' : colorValue.split('-')[0] || 'gray'}-500 border border-gray-300`
+                      };
+                      return (
+                        <button
+                          key={colorValue}
+                          onClick={() => setSelectedColor(colorValue)}
+                          className={`relative w-10 h-10 rounded-full ${colorInfo.class} ${
+                            selectedColor === colorValue 
+                              ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' 
+                              : 'hover:ring-2 hover:ring-offset-2 hover:ring-gray-300'
+                          } transition-all duration-200`}
+                          aria-label={`Select ${colorInfo.name} color`}
+                          title={colorInfo.name}
+                        >
+                          {selectedColor === colorValue && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-3 h-3 bg-white rounded-full"></div>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <p className="text-gray-500 text-sm">No colors available</p>
+                  )}
                 </div>
               </div>
 
-              {/* Size Selection */}
-              <div className="space-y-3">
-                <h3 className="font-semibold text-gray-900">Size: <span className="font-normal uppercase">{selectedSize}</span></h3>
-                <div className="grid grid-cols-3 max-w-xs">
-                  {sizeOptions.map((size) => (
-                    <button
-                      key={size.value}
-                      onClick={() => setSelectedSize(size.value)}
-                      className={`py-3 px-2 text-center rounded-lg border ${
-                        selectedSize === size.value
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
-                      } font-medium transition-colors`}
-                    >
-                      {size.label}
-                    </button>
-                  ))}
+              {/* Size Selection - ONLY SHOW IF NOT HOME DECORE AND HAS SIZES */}
+              {product.category !== 'HOME_DECORE' && dbSizes.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900">
+                    Size: <span className="font-normal uppercase">{selectedSize || "Select a size"}</span>
+                  </h3>
+                  <div className="flex flex-wrap gap-2 max-w-xs">
+                    {dbSizes.map((sizeValue) => {
+                      const size = sizeValue.toUpperCase();
+                      const sizeLower = sizeValue.toLowerCase();
+                      return (
+                        <button
+                          key={sizeValue}
+                          onClick={() => setSelectedSize(sizeLower)}
+                          className={`py-3 px-4 text-center rounded-lg border font-medium transition-all duration-200 min-w-[60px] ${
+                            selectedSize === sizeLower
+                              ? 'bg-blue-600 text-white border-blue-600 scale-105'
+                              : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Quantity Selection */}
               <div className="space-y-3">
@@ -412,7 +449,7 @@ export const ProductDetail = ({ product }: Props) => {
                     <p className="text-blue-700 font-medium">
                       You have {cartQuantity} of this item in your cart
                       <span className="block text-sm text-blue-600 mt-1">
-                        (Color: {selectedColor}, Size: {selectedSize})
+                        (Color: {COLOR_MAP[selectedColor]?.name || selectedColor}, Size: {selectedSize.toUpperCase()})
                       </span>
                     </p>
                     <Button

@@ -1,4 +1,4 @@
-// app/admin/products/add/page.tsx
+// app/admin/products/add/page.tsx - COMPLETE REPLACEMENT
 'use client';
 
 import { useState } from 'react';
@@ -34,8 +34,11 @@ export default function AddProductPage() {
     name: '',
     description: '',
     price: '',
-    images: [] as string[], // This will store base64 images
+    images: [] as string[],
     category: '',
+    clothingType: '',
+    gender: '',
+    accessoriesType: '',
     availableColors: [] as string[],
     availableSizes: [] as string[],
     defaultColor: '',
@@ -62,8 +65,11 @@ export default function AddProductPage() {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        images: formData.images, // This is now base64 images
+        images: formData.images,
         category: formData.category || null,
+        clothingType: formData.clothingType || null,
+        gender: formData.gender || null,
+        accessoriesType: formData.accessoriesType || null,
         availableColors: formData.availableColors,
         availableSizes: formData.availableSizes,
         defaultColor: formData.defaultColor || formData.availableColors[0] || null,
@@ -116,6 +122,17 @@ export default function AddProductPage() {
       availableSizes: prev.availableSizes.includes(size)
         ? prev.availableSizes.filter(s => s !== size)
         : [...prev.availableSizes, size]
+    }));
+  };
+
+  // Reset type fields when category changes
+  const handleCategoryChange = (category: string) => {
+    setFormData(prev => ({
+      ...prev,
+      category,
+      clothingType: '',
+      gender: '',
+      accessoriesType: '',
     }));
   };
 
@@ -192,19 +209,81 @@ export default function AddProductPage() {
               />
             </div>
 
+            {/* Category Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
+                Category *
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., Clothing, Electronics"
-              />
+                required
+              >
+                <option value="">Select Category *</option>
+                <option value="CLOTHING">Clothing</option>
+                <option value="HOME_DECORE">Home Decore</option>
+                <option value="ACCESSORIES">Accessories</option>
+              </select>
             </div>
 
+            {/* Conditional: Clothing Type & Gender */}
+            {formData.category === 'CLOTHING' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Clothing Type
+                  </label>
+                  <select
+                    value={formData.clothingType}
+                    onChange={(e) => setFormData({...formData, clothingType: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select Clothing Type</option>
+                    <option value="CASHMERE">Cashmere</option>
+                    <option value="CASHMERE_MARINO_WOOL">Cashmere + Marino Wool</option>
+                    <option value="MARINO_WOOL">Marino Wool</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gender
+                  </label>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="MEN">Men</option>
+                    <option value="WOMEN">Women</option>
+                    <option value="UNISEX">Unisex</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* Conditional: Accessories Type */}
+            {formData.category === 'ACCESSORIES' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Accessories Type
+                </label>
+                <select
+                  value={formData.accessoriesType}
+                  onChange={(e) => setFormData({...formData, accessoriesType: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select Accessories Type</option>
+                  <option value="MEN">Men</option>
+                  <option value="WOMEN">Women</option>
+                  <option value="UNISEX">Unisex</option>
+                </select>
+              </div>
+            )}
+
+            {/* Stock field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Stock Quantity
@@ -220,7 +299,7 @@ export default function AddProductPage() {
           </div>
         </div>
 
-        {/* Images - SIMPLIFIED */}
+        {/* Images */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Product Images *</h2>
           <p className="text-sm text-gray-600 mb-4">

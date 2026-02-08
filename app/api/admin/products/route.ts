@@ -1,4 +1,4 @@
-// app/api/admin/products/route.ts
+// app/api/admin/products/route.ts - COMPLETE REPLACEMENT
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -7,7 +7,6 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
   try {
     console.log('🔐 === STARTING ADMIN CHECK ===');
     
-    // Option 1: Check admin token from headers (for testing/API access)
     const adminToken = request.headers.get('x-admin-token');
     console.log('🔑 Admin token from headers:', adminToken ? 'Present' : 'Missing');
     
@@ -16,7 +15,6 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
       return true;
     }
 
-    // Option 2: Check cookies from request headers directly
     const cookieHeader = request.headers.get('cookie');
     console.log('🍪 Raw cookie header:', cookieHeader);
     
@@ -25,7 +23,6 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
       return false;
     }
 
-    // Parse cookies manually
     const cookies: Record<string, string> = {};
     cookieHeader.split(';').forEach(cookie => {
       const [name, ...rest] = cookie.trim().split('=');
@@ -37,13 +34,11 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
 
     console.log('📋 Parsed cookies:', Object.keys(cookies));
     
-    // Check admin-check cookie first (simpler)
     if (cookies['admin-check'] === 'true') {
       console.log('✅ Admin access via admin-check cookie');
       return true;
     }
     
-    // Check user cookie
     const userCookie = cookies['user'];
     console.log('👤 User cookie found:', !!userCookie);
     
@@ -74,7 +69,6 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
 
     console.log('🔍 Looking up user in database with ID:', user.id);
     
-    // Get user from database to check admin status
     const dbUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: { isAdmin: true, email: true }
@@ -175,6 +169,59 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate category if provided
+    if (body.category) {
+      const validCategories = ['CLOTHING', 'HOME_DECORE', 'ACCESSORIES'];
+      if (!validCategories.includes(body.category)) {
+        return NextResponse.json(
+          { error: `Invalid category. Must be one of: ${validCategories.join(', ')}` },
+          { status: 400 }
+        );
+      }
+
+      // Validate clothing type if category is CLOTHING
+      if (body.category === 'CLOTHING' && body.clothingType) {
+        const validClothingTypes = ['CASHMERE', 'CASHMERE_MARINO_WOOL', 'MARINO_WOOL'];
+        if (!validClothingTypes.includes(body.clothingType)) {
+          return NextResponse.json(
+            { error: `Invalid clothing type. Must be one of: ${validClothingTypes.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Validate gender if category is CLOTHING
+      if (body.category === 'CLOTHING' && body.gender) {
+        const validGenders = ['MEN', 'WOMEN', 'UNISEX'];
+        if (!validGenders.includes(body.gender)) {
+          return NextResponse.json(
+            { error: `Invalid gender. Must be one of: ${validGenders.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Validate accessories type if category is ACCESSORIES
+      if (body.category === 'ACCESSORIES' && body.accessoriesType) {
+        const validAccessoriesTypes = ['MEN', 'WOMEN', 'UNISEX'];
+        if (!validAccessoriesTypes.includes(body.accessoriesType)) {
+          return NextResponse.json(
+            { error: `Invalid accessories type. Must be one of: ${validAccessoriesTypes.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Clear type fields if category doesn't match
+      if (body.category !== 'CLOTHING') {
+        body.clothingType = null;
+        body.gender = null;
+      }
+      if (body.category !== 'ACCESSORIES') {
+        body.accessoriesType = null;
+      }
+    }
+
     // Process colors and sizes
     const availableColors = Array.isArray(body.availableColors) 
       ? body.availableColors 
@@ -188,7 +235,6 @@ export async function POST(request: NextRequest) {
     const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900'];
     const validSizes = ['S', 'M', 'L'];
 
-    // FIXED: Added type annotations
     const invalidColors = availableColors.filter((color: string) => !validColors.includes(color));
     const invalidSizes = availableSizes.filter((size: string) => !validSizes.includes(size));
 
@@ -240,7 +286,10 @@ export async function POST(request: NextRequest) {
         description: (body.description || '').trim(),
         price: price,
         images: images.map((img: string) => img.trim()),
-        category: body.category ? body.category.trim() : null,
+        category: body.category || null,
+        clothingType: body.clothingType || null,
+        gender: body.gender || null,
+        accessoriesType: body.accessoriesType || null,
         availableColors: availableColors,
         availableSizes: availableSizes,
         defaultColor: body.defaultColor || availableColors[0] || null,
@@ -251,7 +300,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('✅ Product created:', product.id);
+    console.log('✅ Product created:', {
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      clothingType: product.clothingType,
+      gender: product.gender,
+      accessoriesType: product.accessoriesType
+    });
     
     return NextResponse.json({
       success: true,
@@ -383,6 +439,59 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Validate category if provided
+    if (updateData.category !== undefined) {
+      const validCategories = ['CLOTHING', 'HOME_DECORE', 'ACCESSORIES'];
+      if (updateData.category && !validCategories.includes(updateData.category)) {
+        return NextResponse.json(
+          { error: `Invalid category. Must be one of: ${validCategories.join(', ')}` },
+          { status: 400 }
+        );
+      }
+
+      // Validate clothing type if category is CLOTHING
+      if (updateData.category === 'CLOTHING' && updateData.clothingType) {
+        const validClothingTypes = ['CASHMERE', 'CASHMERE_MARINO_WOOL', 'MARINO_WOOL'];
+        if (!validClothingTypes.includes(updateData.clothingType)) {
+          return NextResponse.json(
+            { error: `Invalid clothing type. Must be one of: ${validClothingTypes.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Validate gender if category is CLOTHING
+      if (updateData.category === 'CLOTHING' && updateData.gender) {
+        const validGenders = ['MEN', 'WOMEN', 'UNISEX'];
+        if (!validGenders.includes(updateData.gender)) {
+          return NextResponse.json(
+            { error: `Invalid gender. Must be one of: ${validGenders.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Validate accessories type if category is ACCESSORIES
+      if (updateData.category === 'ACCESSORIES' && updateData.accessoriesType) {
+        const validAccessoriesTypes = ['MEN', 'WOMEN', 'UNISEX'];
+        if (!validAccessoriesTypes.includes(updateData.accessoriesType)) {
+          return NextResponse.json(
+            { error: `Invalid accessories type. Must be one of: ${validAccessoriesTypes.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Clear type fields if category doesn't match
+      if (updateData.category !== 'CLOTHING') {
+        updateData.clothingType = null;
+        updateData.gender = null;
+      }
+      if (updateData.category !== 'ACCESSORIES') {
+        updateData.accessoriesType = null;
+      }
+    }
+
     // Validate colors if provided
     if (updateData.availableColors !== undefined) {
       const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900'];
@@ -390,7 +499,6 @@ export async function PATCH(request: NextRequest) {
         ? updateData.availableColors 
         : (updateData.availableColors ? [updateData.availableColors] : []);
       
-      // FIXED: Added type annotation
       const invalidColors = availableColors.filter((color: string) => !validColors.includes(color));
       if (invalidColors.length > 0) {
         return NextResponse.json(
@@ -408,7 +516,6 @@ export async function PATCH(request: NextRequest) {
         ? updateData.availableSizes
         : (updateData.availableSizes ? [updateData.availableSizes] : []);
       
-      // FIXED: Added type annotation
       const invalidSizes = availableSizes.filter((size: string) => !validSizes.includes(size));
       if (invalidSizes.length > 0) {
         return NextResponse.json(
@@ -419,28 +526,37 @@ export async function PATCH(request: NextRequest) {
       updateData.availableSizes = availableSizes;
     }
 
-   // If price changes, you might want to update Stripe (optional)
+    // If price changes
     if (updateData.price) {
       const newPrice = parseFloat(updateData.price);
       const oldPrice = parseFloat(existingProduct.price.toString());
       if (newPrice !== oldPrice) {
         console.log(`💰 Price changed from ${oldPrice} to ${newPrice}`);
-        // You can add Stripe update logic here if needed
       }
     }
+
+    // Prepare update data
+    const dataToUpdate: any = {
+      ...updateData,
+      // Handle numeric conversions
+      ...(updateData.price && { price: parseFloat(updateData.price) }),
+      ...(updateData.stock !== undefined && { stock: parseInt(updateData.stock) }),
+    };
 
     // Update product
     const product = await prisma.product.update({
       where: { id },
-      data: {
-        ...updateData,
-        // Handle numeric conversions
-        ...(updateData.price && { price: parseFloat(updateData.price) }),
-        ...(updateData.stock !== undefined && { stock: parseInt(updateData.stock) }),
-      },
+      data: dataToUpdate,
     });
 
-    console.log('✅ Product updated:', product.id);
+    console.log('✅ Product updated:', {
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      clothingType: product.clothingType,
+      gender: product.gender,
+      accessoriesType: product.accessoriesType
+    });
     
     return NextResponse.json({
       success: true,

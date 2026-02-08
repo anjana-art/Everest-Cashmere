@@ -1,4 +1,3 @@
-// app/admin/products/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -80,7 +79,8 @@ export default function AdminProductsPage() {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      const response = await fetch(`/api/admin/products?id=${productId}`, {
+      // CHANGE 1: Updated DELETE endpoint
+      const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'DELETE',
       });
 
@@ -95,12 +95,12 @@ export default function AdminProductsPage() {
 
   const handleToggleActive = async (productId: string, currentStatus: boolean) => {
     try {
-      const response = await fetch('/api/admin/products', {
+      // CHANGE 2: Updated PATCH endpoint and removed id from body
+      const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: productId,
-          isActive: !currentStatus,
+          isActive: !currentStatus, // CHANGED: Removed id field
         }),
       });
 
@@ -407,6 +407,6 @@ export default function AdminProductsPage() {
           </>
         )}
       </div>
-    </div>
+    </div> 
   );
 }

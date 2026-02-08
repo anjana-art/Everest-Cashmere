@@ -17,6 +17,10 @@ interface Product {
   };
   category?: string | null;
   stock?: number;
+  availableColors?: string[];
+  availableSizes?: string[];
+  defaultColor?: string | null;
+  defaultSize?: string | null;
 }
 
 export default async function ProductPage({
@@ -65,9 +69,12 @@ export default async function ProductPage({
       exists: !!product,
       id: product?.id,
       name: product?.name,
+      category: product?.category,
       isActive: product?.isActive,
       stock: product?.stock,
       hasImages: product?.images?.length,
+      availableColors: product?.availableColors,
+      availableSizes: product?.availableSizes,
     });
 
     // If product not found
@@ -101,6 +108,9 @@ export default async function ProductPage({
       metadata = { category: product.category };
     }
     
+    // ✅ CHECK IF PRODUCT IS HOME_DECORE - hide sizes
+    const isHomeDecore = product.category === 'HOME_DECORE';
+    
     // Prepare product data for component with correct typing
     const formattedProduct: Product = {
       id: product.id,
@@ -112,14 +122,24 @@ export default async function ProductPage({
       metadata: metadata,
       category: product.category,
       stock: product.stock,
+      // ✅ Always pass colors
+      availableColors: product.availableColors || [],
+      // ✅ Only pass sizes if NOT home decore
+      availableSizes: isHomeDecore ? [] : (product.availableSizes || []),
+      defaultColor: product.defaultColor,
+      defaultSize: isHomeDecore ? null : product.defaultSize,
     };
 
     console.log('✅ Sending to ProductDetail:', {
       id: formattedProduct.id,
       name: formattedProduct.name,
+      category: formattedProduct.category,
       price: formattedProduct.price,
       imageCount: formattedProduct.images.length,
       metadata: formattedProduct.metadata,
+      availableColors: formattedProduct.availableColors,
+      availableSizes: formattedProduct.availableSizes, // Will be empty for HOME_DECORE
+      isHomeDecore: isHomeDecore,
     });
 
     return <ProductDetail product={formattedProduct} />;

@@ -168,6 +168,30 @@ model CartItem {
   @@map("cart_items")
 }
 
+enum ProductCategory {
+  CLOTHING
+  HOME_DECORE
+  ACCESSORIES
+}
+
+enum ClothingType {
+  CASHMERE
+  CASHMERE_MARINO_WOOL
+  MARINO_WOOL
+}
+
+enum AccessoriesType {
+  MEN
+  WOMEN
+  UNISEX
+}
+
+enum Gender {
+  MEN
+  WOMEN
+  UNISEX
+}
+
 model Product {
   id          String      @id @default(cuid())
   stripeId    String?     @unique
@@ -175,7 +199,13 @@ model Product {
   description String?
   price       Decimal     @db.Decimal(10, 2)
   images      String[]
-  category    String?
+  category    ProductCategory?  // Changed from String?
+  
+  // ADD THESE TWO LINES:
+  clothingType    ClothingType?
+  gender          Gender?            // ADD THIS LINE
+
+  accessoriesType AccessoriesType?
   
   // Product variants
   availableColors String[] // Store as JSON array

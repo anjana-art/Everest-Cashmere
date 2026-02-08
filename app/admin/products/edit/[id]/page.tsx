@@ -1,4 +1,3 @@
-// app/admin/products/edit/[id]/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -33,6 +32,9 @@ interface Product {
   price: number;
   images: string[];
   category: string | null;
+  clothingType: string | null;
+  gender: string | null;
+  accessoriesType: string | null;
   availableColors: string[];
   availableSizes: string[];
   defaultColor: string | null;
@@ -40,8 +42,8 @@ interface Product {
   stock: number;
   isActive: boolean;
   stripeId: string | null;
-  stripeSynced: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export default function EditProductPage() {
@@ -60,6 +62,9 @@ export default function EditProductPage() {
     price: '',
     images: [] as string[],
     category: '',
+    clothingType: '',
+    gender: '',
+    accessoriesType: '',
     availableColors: [] as string[],
     availableSizes: [] as string[],
     defaultColor: '',
@@ -77,26 +82,22 @@ export default function EditProductPage() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/products`);
+      const response = await fetch(`/api/admin/products/${productId}`);
       
       if (!response.ok) throw new Error('Failed to fetch product');
       
-      const data = await response.json();
-      
-      // Find the specific product from the list
-      const product = data.products.find((p: Product) => p.id === productId);
-      
-      if (!product) {
-        throw new Error('Product not found');
-      }
+      const product = await response.json();
 
-      // Set form data
+      // Set form data with all fields
       setFormData({
         name: product.name,
         description: product.description || '',
         price: product.price.toString(),
         images: product.images || [],
         category: product.category || '',
+        clothingType: product.clothingType || '',
+        gender: product.gender || '',
+        accessoriesType: product.accessoriesType || '',
         availableColors: product.availableColors || [],
         availableSizes: product.availableSizes || [],
         defaultColor: product.defaultColor || '',
@@ -106,7 +107,7 @@ export default function EditProductPage() {
       });
       
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to load product');
     } finally {
       setLoading(false);
     }
@@ -126,13 +127,16 @@ export default function EditProductPage() {
     }
 
     try {
+      // CHANGE: Removed id from request body since it's in the URL
       const productData = {
-        id: productId,
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
         images: formData.images,
         category: formData.category || null,
+        clothingType: formData.clothingType || null,
+        gender: formData.gender || null,
+        accessoriesType: formData.accessoriesType || null,
         availableColors: formData.availableColors,
         availableSizes: formData.availableSizes,
         defaultColor: formData.defaultColor || formData.availableColors[0] || null,
@@ -141,7 +145,7 @@ export default function EditProductPage() {
         isActive: formData.isActive,
       };
 
-      const response = await fetch('/api/admin/products', {
+      const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -184,6 +188,17 @@ export default function EditProductPage() {
       availableSizes: prev.availableSizes.includes(size)
         ? prev.availableSizes.filter(s => s !== size)
         : [...prev.availableSizes, size]
+    }));
+  };
+
+  // Reset type fields when category changes
+  const handleCategoryChange = (category: string) => {
+    setFormData(prev => ({
+      ...prev,
+      category,
+      clothingType: category === 'CLOTHING' ? prev.clothingType : '',
+      gender: category === 'CLOTHING' ? prev.gender : '',
+      accessoriesType: category === 'ACCESSORIES' ? prev.accessoriesType : '',
     }));
   };
 
@@ -279,19 +294,81 @@ export default function EditProductPage() {
               />
             </div>
 
+            {/* Category Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
+                Category *
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., Clothing, Electronics"
-              />
+                required
+              >
+                <option value="">Select Category *</option>
+                <option value="CLOTHING">Clothing</option>
+                <option value="HOME_DECORE">Home Decore</option>
+                <option value="ACCESSORIES">Accessories</option>
+              </select>
             </div>
 
+            {/* Conditional: Clothing Type & Gender */}
+            {formData.category === 'CLOTHING' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Clothing Type
+                  </label>
+                  <select
+                    value={formData.clothingType}
+                    onChange={(e) => setFormData({...formData, clothingType: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select Clothing Type</option>
+                    <option value="CASHMERE">Cashmere</option>
+                    <option value="CASHMERE_MARINO_WOOL">Cashmere + Marino Wool</option>
+                    <option value="MARINO_WOOL">Marino Wool</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gender
+                  </label>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="MEN">Men</option>
+                    <option value="WOMEN">Women</option>
+                    <option value="UNISEX">Unisex</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* Conditional: Accessories Type */}
+            {formData.category === 'ACCESSORIES' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Accessories Type
+                </label>
+                <select
+                  value={formData.accessoriesType}
+                  onChange={(e) => setFormData({...formData, accessoriesType: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select Accessories Type</option>
+                  <option value="MEN">Men</option>
+                  <option value="WOMEN">Women</option>
+                  <option value="UNISEX">Unisex</option>
+                </select>
+              </div>
+            )}
+
+            {/* Stock field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Stock Quantity
@@ -307,7 +384,7 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        {/* Images - UPDATED */}
+        {/* Images */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Product Images *</h2>
           <p className="text-sm text-gray-600 mb-4">
