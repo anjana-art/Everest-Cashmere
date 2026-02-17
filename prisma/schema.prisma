@@ -23,6 +23,7 @@ model User {
   // relationships
   addresses   Address[]
   userProfile UserProfile?
+  ratings  Rating[]
   
   // Orders
   orders    Order[]
@@ -226,6 +227,8 @@ model Product {
   wishlistItems WishlistItem[]
   orderItems    OrderItem[]
   cartItems     CartItem[]
+  ratings       Rating[]
+
   
   // Timestamps
   createdAt     DateTime  @default(now())
@@ -348,3 +351,45 @@ enum TrackingStatus {
   DELIVERED
   DELAYED
 }
+
+// ==================== RATING & REVIEWS ====================
+model Rating {
+  id          String   @id @default(cuid())
+  productId   String
+  userId      String
+  
+  // Rating details (1-5 stars)
+  rating      Int      @default(5) // 1-5 stars
+  
+  // Optional review text
+  review      String?
+  
+  // Review metadata
+  helpfulVotes Int     @default(0) // Number of people who found this helpful
+  verifiedPurchase Boolean @default(false) // Whether user purchased this item
+  
+  // Review status
+  status      ReviewStatus @default(PENDING) // For moderation
+  
+  // Relationships
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  
+
+  @@unique([productId, userId]) // One rating per user per product
+  @@map("ratings")
+}
+
+// Review status enum for moderation
+enum ReviewStatus {
+  PENDING    // Awaiting moderation
+  APPROVED   // Visible to public
+  REJECTED   // Not visible (spam/inappropriate)
+  REPORTED   // Reported by users
+} 
+

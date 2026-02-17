@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import { HeartIcon, ShoppingBagIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { PlaceholderImage } from "./placeholder-image";
+import { ProductRating } from '@/components/ProductRating';
+
 
 interface Product {
   id: string;           // Database ID
@@ -303,6 +305,14 @@ export const ProductCard = ({ product }: Props) => {
           </div>
         </div>
       </Link>
+      
+      {/*display ratings */}
+       {/*  <section className="mt-12">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
+            <ProductRating productId={product.id} />
+          </div>
+        </section> */}
 
       {/* Action Buttons (Outside Link) */}
       <div className="absolute top-3 right-3">

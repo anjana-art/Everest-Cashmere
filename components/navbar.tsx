@@ -105,13 +105,19 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-amber-100 shadow">
-      <div className="container mx-auto flex items-center justify-between px-4 py-4">
+    <nav className="sticky top-0 z-50 bg-amber-50 shadow">
+      <div className="container mx-auto flex items-center justify-between px-2 py-2">
         
         {/* Logo Section */}
         <div className="flex items-center space-x-2">
-          <Link href={"/"} className="hover:text-red-600 text-red-800 text-2xl font-bold">
-            Everesté
+                  <Link href="/" className="inline-block">
+            <div className="h-20 w-20 overflow-hidden rounded-full">
+              <img 
+                src="/evereste_logo_new.png" 
+                alt="Everesté Logo" 
+                className="h-full w-full object-contain"
+              />
+            </div>
           </Link>
           <p className="hidden lg:inline text-blue-950 text-sm italic max-w-xs">
             - pure cashmere from the highest peaks to the finest wardrobes.
