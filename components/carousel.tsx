@@ -39,7 +39,7 @@ export const Carousel = ({ products = [] }: Props) => {
   if (!products || products.length === 0) {
     return (
       <Card className="flex flex-col relative overflow-hidden rounded-lg shadow-md border-gray-300 min-h-80">
-        <div className="relative h-80 w-full aspect-video">
+        <div className="relative h-80 w-full">
           <PlaceholderImage /> {/* Use placeholder here */}
         </div>
       </Card>
@@ -51,33 +51,28 @@ export const Carousel = ({ products = [] }: Props) => {
 
   return (
     <Link href={productUrl}>
-      <Card className="flex flex-col relative overflow-hidden rounded-lg shadow-md border-gray-300 hover:shadow-xl transition-shadow duration-300">
-        {/* Image Container */}
-        <div className="relative h-80 w-full aspect-video">
+      <Card className="flex flex-col relative overflow-hidden rounded-lg shadow-md border-gray-300 hover:shadow-xl transition-shadow duration-300 group">
+        {/* Image Container - full background */}
+        <div className="relative h-80 w-full">
           {currentProduct?.images?.[0] ? (
             <Image
               src={currentProduct.images[0]}
               alt={currentProduct.name || "Product image"}
               fill
               style={{ objectFit: "contain" }}
-              className="transition-opacity duration-500 ease-in-out"
+              className=" object-contain transition-opacity duration-500 ease-in-out group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority
             />
           ) : (
             <PlaceholderImage />
           )}
-        </div>
-        
-        <CardContent className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 p-4">
-          <CardTitle className="text-2xl font-bold text-amber-600 mb-2 text-center">
+          
+          {/* Title at the top - no overlay */}
+          <CardTitle className="absolute top-0 left-4 right-4 text-2xl font-2xl text-red-900 drop-shadow-lg z-10">
             {currentProduct?.name || "Product Name"}
           </CardTitle>
-          <p className="text-xl font-medium text-gray-600">
-            €{(typeof currentProduct.price === 'number' && !isNaN(currentProduct.price)) 
-              ? currentProduct.price.toFixed(2) 
-              : '0.00'}
-          </p>
-        </CardContent>
+        </div>
       </Card>
     </Link>
   );

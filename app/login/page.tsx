@@ -1,10 +1,11 @@
-// app/login/page.tsx - FIXED VERSION
+// app/login/page.tsx - FIXED VERSION WITH HOME BUTTON
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/store/cart-store';
+import { Home } from 'lucide-react'; // Make sure to install lucide-react or use any icon
 
 // Inner component that uses useSearchParams
 function LoginPageContent() {
@@ -102,7 +103,16 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Home Button */}
+      <Link 
+        href="/" 
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group"
+        aria-label="Go to home page"
+      >
+    <p className='font-bold text-red-900'>Back to Home Page</p> <Home className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
+      </Link>
+
       <div className="max-w-md w-full">
         {/* Logo/Header */}
         <div className="text-center mb-10">
@@ -246,7 +256,15 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 relative">
+        {/* Home Button in loading state too */}
+        <Link 
+          href="/" 
+          className="absolute top-4 left-4 sm:top-6 sm:left-6 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group z-10"
+          aria-label="Go to home page"
+        >
+          <Home className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
+        </Link>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading login...</p>

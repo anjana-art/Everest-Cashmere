@@ -1,8 +1,9 @@
 // app/signup/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Home } from 'lucide-react'; // Make sure to install lucide-react
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showThankYou, setShowThankYou] = useState(false);
   const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
     uppercase: false,
@@ -20,6 +22,16 @@ export default function SignupPage() {
     number: false,
     special: false,
   });
+
+  // Auto-hide thank you message after 3 seconds
+  useEffect(() => {
+    if (showThankYou) {
+      const timer = setTimeout(() => {
+        setShowThankYou(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showThankYou]);
 
   // Validate password strength
   const validatePassword = (password: string) => {
@@ -94,13 +106,15 @@ export default function SignupPage() {
         throw new Error(errorMessage);
       }
 
-      setSuccess('Account created successfully! Redirecting to login...');
+      // Show thank you message
+      setShowThankYou(true);
+      setSuccess('Account created successfully!');
       setFormData({ name: '', email: '', password: '' });
       
-      // Redirect after 2 seconds
+      // Redirect after 3 seconds (when thank you message disappears)
       setTimeout(() => {
         window.location.href = '/login';
-      }, 2000);
+      }, 3000);
 
     } catch (err: any) {
       // Show user-friendly error message
@@ -127,7 +141,38 @@ export default function SignupPage() {
   const passwordStrength = getPasswordStrength();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Home Button */}
+      <Link 
+        href="/" 
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group z-10"
+        aria-label="Go to home page"
+      >
+        <Home className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
+      </Link>
+
+      {/* Thank You Popup Message */}
+      {showThankYou && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 animate-fade-in">
+          <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-8 py-6 rounded-2xl shadow-2xl text-center">
+            <div className="flex justify-center mb-3">
+              <div className="bg-white/20 p-3 rounded-full">
+                <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-3xl font-bold mb-2">Thank you for Joining!!</h3>
+            <p className="text-lg opacity-90">Redirecting to login...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Overlay when thank you message is shown */}
+      {showThankYou && (
+        <div className="fixed inset-0 bg-black/50 z-40 animate-fade-in" />
+      )}
+
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-red-900">
@@ -155,8 +200,8 @@ export default function SignupPage() {
               </div>
             )}
 
-            {/* Success Message */}
-            {success && (
+            {/* Success Message (in case you still want to show it) */}
+            {success && !showThankYou && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
                 <div className="flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -310,6 +355,23 @@ export default function SignupPage() {
           </p>
         </form>
       </div>
+
+      {/* Add animation styles */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
