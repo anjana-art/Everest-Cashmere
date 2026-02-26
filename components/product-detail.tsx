@@ -6,6 +6,7 @@ import { useCartStore } from "@/store/cart-store";
 import { useState, useEffect } from "react";
 import { HeartIcon, ShoppingBagIcon, PlusIcon, TruckIcon, ShieldCheckIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
+import { useRouter } from "next/navigation";
 
 interface Product {
   id: string;           // Database ID
@@ -49,6 +50,7 @@ const COLOR_MAP: Record<string, { name: string, class: string }> = {
 };
 
 export const ProductDetail = ({ product }: Props) => {
+  const router = useRouter();
   const { items, addItem, removeItem } = useCartStore();
   
   // ✅ GET COLORS & SIZES FROM DATABASE
@@ -211,6 +213,30 @@ export const ProductDetail = ({ product }: Props) => {
       color: selectedColor, // From database
       size: selectedSize,   // From database
     });
+  };
+
+  // NEW: Buy Now function - adds item and redirects to checkout
+  const onBuyNow = () => {
+    if (!product) {
+      alert('Product data is missing');
+      return;
+    }
+
+    // Add the item to cart with selected quantity
+    for (let i = 0; i < quantity; i++) {
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        imageUrl: product.images?.[0] || '',
+        quantity: 1,
+        color: selectedColor,
+        size: selectedSize,
+      });
+    }
+
+    // Redirect to checkout page
+    router.push('/checkout');
   };
 
   const onRemoveItem = () => {
@@ -437,8 +463,9 @@ export const ProductDetail = ({ product }: Props) => {
                     <span>Add to Cart</span>
                   </Button>
 
-                  {/* Buy Now Button */}
+                  {/* Buy Now Button - UPDATED with onClick handler */}
                   <Button
+                    onClick={onBuyNow}
                     variant="outline"
                     className="flex-1 py-6 text-lg font-semibold"
                   >
@@ -515,3 +542,6 @@ export const ProductDetail = ({ product }: Props) => {
     </div>
   );
 };
+
+
+

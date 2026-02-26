@@ -4,7 +4,7 @@ import { Card, CardContent, CardTitle } from "./ui/card";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PlaceholderImage } from "./placeholder-image"; // Import your component
+import { PlaceholderImage } from "./placeholder-image";
 
 interface Product {
   id: string;
@@ -38,9 +38,9 @@ export const Carousel = ({ products = [] }: Props) => {
 
   if (!products || products.length === 0) {
     return (
-      <Card className="flex flex-col relative overflow-hidden rounded-lg shadow-md border-gray-300 min-h-80">
-        <div className="relative h-80 w-full">
-          <PlaceholderImage /> {/* Use placeholder here */}
+      <Card className="relative w-full h-full overflow-hidden rounded-lg shadow-md border-gray-300">
+        <div className="relative w-full h-full">
+          <PlaceholderImage />
         </div>
       </Card>
     );
@@ -50,28 +50,30 @@ export const Carousel = ({ products = [] }: Props) => {
   const productUrl = `/products/${currentProduct.id}`;
 
   return (
-    <Link href={productUrl}>
-      <Card className="flex flex-col relative overflow-hidden rounded-lg shadow-md border-gray-300 hover:shadow-xl transition-shadow duration-300 group">
-        {/* Image Container - full background */}
-        <div className="relative h-80 w-full">
+    <Link href={productUrl} className="block w-full h-full">
+      <Card className="relative w-full h-full overflow-hidden rounded-lg shadow-md border-gray-300 hover:shadow-xl transition-shadow duration-300 group">
+        {/* Image Container - fills the entire card */}
+        <div className="relative w-full h-full">
           {currentProduct?.images?.[0] ? (
             <Image
               src={currentProduct.images[0]}
               alt={currentProduct.name || "Product image"}
               fill
-              style={{ objectFit: "contain" }}
-              className=" object-contain transition-opacity duration-500 ease-in-out group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-contain transition-opacity duration-500 ease-in-out group-hover:scale-105 transition-transform duration-300"
+              sizes="(max-width: 850px) 100vw, (max-width: 1500px) 50vw, 33vw"
               priority
             />
           ) : (
             <PlaceholderImage />
           )}
           
-          {/* Title at the top - no overlay */}
-          <CardTitle className="absolute top-0 left-4 right-4 text-2xl font-2xl text-red-900 drop-shadow-lg z-10">
-            {currentProduct?.name || "Product Name"}
-          </CardTitle>
+          {/* Title overlay at the top */}
+          {/* Title overlay at the bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+            <CardTitle className="text-xl font-italic text-white drop-shadow-lg">
+              {currentProduct?.name || "Product Name"}
+            </CardTitle>
+          </div>
         </div>
       </Card>
     </Link>

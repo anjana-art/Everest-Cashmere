@@ -149,7 +149,7 @@ export async function POST(request: Request) {
         itemsCount: items.length.toString(),
       },
       shipping_address_collection: {
-        allowed_countries: ['US', 'CA', 'GB', 'AU', 'IN', 'FR', 'DE', 'IT', 'ES'], // Add your countries
+        allowed_countries: ['PT','ES', 'NO', 'FI', 'SE', 'DK', 'NL', 'DE', 'BE', 'LU', 'AT', 'CH', 'IT', 'FR', 'IE', ], // Add your countries
       },
       allow_promotion_codes: true,
     });
