@@ -1,11 +1,11 @@
-// app/login/page.tsx - FIXED VERSION WITH HOME BUTTON
+// app/login/page.tsx - FIXED VERSION WITH HOME BUTTON AND PASSWORD VISIBILITY
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/store/cart-store';
-import { Home } from 'lucide-react'; // Make sure to install lucide-react or use any icon
+import { Home, Eye, EyeOff } from 'lucide-react';
 
 // Inner component that uses useSearchParams
 function LoginPageContent() {
@@ -15,6 +15,7 @@ function LoginPageContent() {
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { mergeItems } = useCartStore();
@@ -110,7 +111,8 @@ function LoginPageContent() {
         className="absolute top-4 left-4 sm:top-6 sm:left-6 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group"
         aria-label="Go to home page"
       >
-    <p className='font-bold text-red-900'>Back to Home Page</p> <Home className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
+        <p className='font-bold text-red-900'>Back to Home Page</p> 
+        <Home className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
       </Link>
 
       <div className="max-w-md w-full">
@@ -171,7 +173,7 @@ function LoginPageContent() {
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Password Field with Visibility Toggle */}
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -190,14 +192,26 @@ function LoginPageContent() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition"
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition"
                   placeholder="Enter your password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                  )}
+                </button>
               </div>
             </div>
 

@@ -1,7 +1,8 @@
-// lib/user-service.ts - FIXED VERSION
+// lib/user-service.ts - FIXED VERSION WITH PASSWORD RESET METHODS
 import { Prisma } from '@prisma/client'
 import { AuthUtils } from './auth-utils'
 import { prisma } from './prisma'
+import crypto from 'crypto';
 
 export class UserService {
   // Signup new user
@@ -180,6 +181,120 @@ export class UserService {
     
     return { success: true }
   }
+  
+  // ============ NEW PASSWORD RESET METHODS ============
+  
+  /**
+   * Request a password reset
+   */
+  static async requestPasswordReset(email: string) {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    // Don't reveal if user exists or not (security best practice)
+    if (!user) {
+      return { success: true }; // Still return success to prevent email enumeration
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExp = new Date(Date.now() + 3600000); // 1 hour from now
+
+    // Hash token before storing (security best practice)
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetToken: hashedToken,
+        resetTokenExp,
+      },
+    });
+
+    // Send email with unhashed token
+    // Note: You'll need to create an email service or integrate with one
+    try {
+      const { EmailService } = await import('./email-service');
+      await EmailService.sendPasswordResetEmail(email, resetToken);
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      // In development, you might want to log the token for testing
+      if (process.env.NODE_ENV === 'development') {
+        console.log('RESET TOKEN (dev only):', resetToken);
+      }
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Validate if a reset token is valid and not expired
+   */
+  static async validateResetToken(token: string) {
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: hashedToken,
+        resetTokenExp: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    return user;
+  }
+
+  /**
+   * Reset password using a valid token
+   */
+  static async resetPassword(token: string, newPassword: string) {
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: hashedToken,
+        resetTokenExp: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      throw new Error('Invalid or expired reset token');
+    }
+
+    // Validate new password
+    const passwordValidation = AuthUtils.validatePasswordFormat(newPassword);
+    if (!passwordValidation.valid) {
+      throw new Error(passwordValidation.message);
+    }
+
+    const hashedPassword = await AuthUtils.hashPassword(newPassword);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExp: null,
+      },
+    });
+
+    return { success: true };
+  }
+  
+  // ============ END OF NEW METHODS ============
   
   // ADMIN FUNCTIONS
   

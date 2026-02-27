@@ -6,6 +6,8 @@ import { Carousel } from "@/components/carousel";
 import { prisma } from "@/lib/prisma";
 import FoundersStory from "@/components/foundersStory";
 import SignupForm from "@/components/signup-form";
+import ShareButtons from '@/components/ShareButtons';
+
 
 // Define the Product type matching your Carousel component
 interface Product {
@@ -376,6 +378,30 @@ export default async function Home() {
             </Link>
             
           </div>
+        </div>
+      </section>
+
+       {/* Hero Section with Share Buttons */}
+      <section className="relative bg-gradient-to-r from-red-100 to-amber-100 text-white py-20">
+        <div className="container mx-auto px-4 text-center">
+         
+          
+          {/* Share Buttons in Hero */}
+          <div className="mt-12">
+            <p className="text-m mb-3 opacity-90 text-red-900">Share with friends:</p>
+            <div className="flex justify-center">
+              <ShareButtons 
+                title="Check out this amazing store!"
+                description="Great products and amazing deals"
+                hashtag="#AmazingStore"
+                iconSize={44}
+                round={true}
+                className="justify-center"
+              />
+            </div>
+          </div>
+          
+         
         </div>
       </section>
 
