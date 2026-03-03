@@ -105,28 +105,28 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-amber-50 shadow">
+    <nav className="sticky top-0 z-50 bg-white shadow">
       <div className="container mx-auto flex items-center justify-between px-2 py-2">
         
         {/* Logo Section */}
         <div className="flex items-center space-x-2">
                   <Link href="/" className="inline-block">
-            <div className="h-20 w-20 overflow-hidden rounded-full">
+            <div className="h-20 w-20 overflow-hidden rounded-xl">
               <img 
-                src="/evereste_logo_new.png" 
+                src="/400PngdpiLogoCropped.png" 
                 alt="Everesté Logo" 
                 className="h-full w-full object-contain"
               />
             </div>
           </Link>
-          <p className="hidden lg:inline text-blue-950 text-sm italic max-w-xs">
+          <p className="hidden lg:inline text-red-950 text-sm italic max-w-xs">
             - pure cashmere from the highest peaks to the finest wardrobes.
           </p>
         </div>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-6">
-          <Link href={"/"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">Home</Link>
+          <Link href={"/"} className="hover:text-amber-600 text-red-900 text-lg transition-colors">Home</Link>
           
           {/* Category Dropdown with fancy submenus */}
           <div className="relative category-menu">
@@ -138,7 +138,7 @@ export const Navbar = () => {
                 setShowClothingTypeSubmenu(false);
                 setShowAccessoriesSubmenu(false);
               }}
-              className="flex items-center space-x-1 hover:text-blue-600 text-blue-950 text-lg transition-colors category-button"
+              className="flex items-center space-x-1 hover:text-amber-600 text-red-900 text-lg transition-colors category-button"
             >
               <span>Products</span>
               <ChevronDownIcon className={`h-4 w-4 transition-transform ${showCategoryMenu ? 'rotate-180' : ''}`} />
@@ -150,10 +150,10 @@ export const Navbar = () => {
                 <div className="p-4">
                   {/* Header with close button */}
                   <div className="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 className="font-semibold text-gray-800">Shop by Category</h3>
+                    <h3 className="font-semibold text-red-900">Shop by Category</h3>
                     <button
                       onClick={() => setShowCategoryMenu(false)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-red-900 hover:text-amber-600 transition-colors"
                     >
                       <XCircleIcon className="h-5 w-5" />
                     </button>
@@ -162,11 +162,11 @@ export const Navbar = () => {
                   {/* All Products */}
                   <Link
                     href="/products"
-                    className="flex items-center justify-between px-3 py-2.5 mb-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                    className="flex items-center justify-between px-3 py-2.5 mb-2 rounded-lg hover:bg-a50 hover:text-blue-600 transition-colors group"
                     onClick={closeAllMenus}
                   >
-                    <span className="font-medium text-gray-700 group-hover:text-blue-600">All Products</span>
-                    <ChevronDownIcon className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                    <span className="font-medium text-red-900 group-hover:text-amber-600 hover:bg-amber-50">All Products</span>
+                    <ChevronDownIcon className="h-4 w-4 text-red-900 group-hover:text-amber-600" />
                   </Link>
                   
                   {/* Clothing Category */}
@@ -178,10 +178,11 @@ export const Navbar = () => {
                         setShowAccessoriesSubmenu(false);
                         setShowClothingTypeSubmenu(false);
                       }}
-                      className="flex items-center justify-between w-full px-3 py-2.5 mb-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                      className="flex items-center justify-between w-full px-3 py-2.5 mb-2 rounded-lg hover:bg-amber-50 hover:text-red-700 transition-colors group"
                     >
-                      <span className="font-medium text-gray-700 group-hover:text-blue-600">Clothing</span>
-                      <ChevronDownIcon className={`h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-transform ${showClothingSubmenu ? 'rotate-180' : ''}`} />
+
+                      <span className="font-medium text-red-900 hover:bg-amber-50 group-hover:text-amber-600">Clothing</span>
+                      <ChevronDownIcon className={`h-4 w-4 text-red-900 group-hover:text-amber-500 transition-transform ${showClothingSubmenu ? 'rotate-180' : ''}`} />
                     </button>
                     
                     {/* Clothing Submenu */}
@@ -189,10 +190,10 @@ export const Navbar = () => {
                       <div className="absolute left-full top-0 ml-1 w-64 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
                         <div className="p-3">
                           <div className="flex justify-between items-center mb-2 pb-2 border-b">
-                            <h4 className="font-medium text-gray-700">Clothing</h4>
+                            <h4 className="font-medium text-red-900">Clothing</h4>
                             <button
                               onClick={() => setShowClothingSubmenu(false)}
-                              className="text-gray-400 hover:text-gray-600 transition-colors"
+                              className="text-red-900 hover:text-amber-600 transition-colors"
                             >
                               <XCircleIcon className="h-4 w-4" />
                             </button>
@@ -205,7 +206,7 @@ export const Navbar = () => {
                                 e.stopPropagation();
                                 setShowClothingTypeSubmenu(!showClothingTypeSubmenu);
                               }}
-                              className="flex items-center justify-between w-full px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              className="flex items-center justify-between w-full px-3 py-2 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
                             >
                               <span>By Material Type</span>
                               <ChevronDownIcon className={`h-3 w-3 transition-transform ${showClothingTypeSubmenu ? 'rotate-180' : ''}`} />
@@ -215,21 +216,21 @@ export const Navbar = () => {
                               <div className="ml-3 pl-2 border-l border-gray-200 mt-1">
                                 <Link
                                   href="/products?category=CLOTHING&type=CASHMERE"
-                                  className="block px-2 py-1.5 text-xs text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  className="block px-2 py-1.5 text-xs text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
                                   onClick={closeAllMenus}
                                 >
                                   Cashmere
                                 </Link>
                                 <Link
                                   href="/products?category=CLOTHING&type=CASHMERE_MARINO_WOOL"
-                                  className="block px-2 py-1.5 text-xs text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  className="block px-2 py-1.5 text-xs text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
                                   onClick={closeAllMenus}
                                 >
                                   Cashmere + Marino Wool
                                 </Link>
                                 <Link
                                   href="/products?category=CLOTHING&type=MARINO_WOOL"
-                                  className="block px-2 py-1.5 text-xs text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                  className="block px-2 py-1.5 text-xs text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
                                   onClick={closeAllMenus}
                                 >
                                   Marino Wool
@@ -240,24 +241,24 @@ export const Navbar = () => {
                           
                           {/* Clothing by Gender */}
                           <div>
-                            <p className="text-xs font-medium text-gray-500 mb-1">By Gender</p>
+                            <p className="text-xs font-medium text-red-900 mb-1">By Gender</p>
                             <Link
                               href="/products?category=CLOTHING&gender=MEN"
-                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              className="block px-3 py-2 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
                               onClick={closeAllMenus}
                             >
                               Men's Clothing
                             </Link>
                             <Link
                               href="/products?category=CLOTHING&gender=WOMEN"
-                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              className="block px-3 py-2 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
                               onClick={closeAllMenus}
                             >
                               Women's Clothing
                             </Link>
                             <Link
                               href="/products?category=CLOTHING&gender=UNISEX"
-                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors"
+                              className="block px-3 py-2 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors"
                               onClick={closeAllMenus}
                             >
                               Unisex Clothing
@@ -268,7 +269,7 @@ export const Navbar = () => {
                           <div className="mt-3 pt-3 border-t border-gray-100">
                             <Link
                               href="/products?category=CLOTHING"
-                              className="block px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              className="block px-3 py-2 text-sm font-medium text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
                               onClick={closeAllMenus}
                             >
                               All Clothing
@@ -282,11 +283,10 @@ export const Navbar = () => {
                   {/* Home Decore */}
                   <Link
                     href="/products?category=HOME_DECORE"
-                    className="flex items-center justify-between px-3 py-2.5 mb-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                    className="flex items-center justify-between px-3 py-2.5 mb-2 rounded-lg hover:bg-blue-50 hover:text-amber-600 transition-colors group"
                     onClick={closeAllMenus}
                   >
-                    <span className="font-medium text-gray-700 group-hover:text-blue-600">Home Decore</span>
-                    <ChevronDownIcon className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
+                    <span className="font-medium text-red-900 group-hover:text-amber-600">Home Decore</span>
                   </Link>
                   
                   {/* Accessories Category */}
@@ -298,10 +298,11 @@ export const Navbar = () => {
                         setShowClothingSubmenu(false);
                         setShowClothingTypeSubmenu(false);
                       }}
-                      className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors group"
+                      className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-red-900 hover:bg-amber-50 hover:text-amber-600 transition-colors group"
                     >
-                      <span className="font-medium text-gray-700 group-hover:text-blue-600">Accessories</span>
-                      <ChevronDownIcon className={`h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-transform ${showAccessoriesSubmenu ? 'rotate-180' : ''}`} />
+                      <span className="font-medium text-red-900 group-hover:text-amber-600">Accessories</span>
+                   <ChevronDownIcon className="h-4 w-4 text-red-900 group-hover:text-amber-600" />
+
                     </button>
                     
                     {/* Accessories Submenu */}
@@ -309,10 +310,11 @@ export const Navbar = () => {
                       <div className="absolute left-full top-0 ml-1 w-56 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
                         <div className="p-3">
                           <div className="flex justify-between items-center mb-2 pb-2 border-b">
-                            <h4 className="font-medium text-gray-700">Accessories</h4>
+                            <h4 className="font-medium text-red-900 hover:text-amber-600 hover:bg-amber-50">Accessories</h4>
+
                             <button
                               onClick={() => setShowAccessoriesSubmenu(false)}
-                              className="text-gray-400 hover:text-gray-600 transition-colors"
+                              className="text-red0-900 hover:text-amber-600 transition-colors"
                             >
                               <XCircleIcon className="h-4 w-4" />
                             </button>
@@ -320,24 +322,24 @@ export const Navbar = () => {
                           
                           {/* Accessories by Gender */}
                           <div className="mb-2">
-                            <p className="text-xs font-medium text-gray-500 mb-1">By Gender</p>
+                            <p className="text-xs font-medium text-red-900 mb-1">By Gender</p>
                             <Link
                               href="/products?category=ACCESSORIES&type=MEN"
-                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              className="block px-3 py-2 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
                               onClick={closeAllMenus}
                             >
                               Men
                             </Link>
                             <Link
                               href="/products?category=ACCESSORIES&type=WOMEN"
-                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors mb-1"
+                              className="block px-3 py-2 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
                               onClick={closeAllMenus}
                             >
                               Women
                             </Link>
                             <Link
                               href="/products?category=ACCESSORIES&type=UNISEX"
-                              className="block px-3 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors"
+                              className="block px-3 py-2 text-sm text-red-600 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors"
                               onClick={closeAllMenus}
                             >
                               Unisex
@@ -348,7 +350,7 @@ export const Navbar = () => {
                           <div className="mt-2 pt-2 border-t border-gray-100">
                             <Link
                               href="/products?category=ACCESSORIES"
-                              className="block px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              className="block px-3 py-2 text-sm font-medium text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
                               onClick={closeAllMenus}
                             >
                               All Accessories
@@ -363,9 +365,9 @@ export const Navbar = () => {
             )}
           </div>
           
-          <Link href={"/checkout"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">Checkout</Link>
-          <Link href={"/about"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">About Us</Link>
-          <Link href={"/contact"} className="hover:text-blue-600 text-blue-950 text-lg transition-colors">Contact Us</Link>
+          <Link href={"/checkout"} className="hover:text-amber-600 text-red-900 text-lg transition-colors">Checkout</Link>
+          <Link href={"/about"} className="hover:text-amber-600 text-red-900 text-lg transition-colors">About Us</Link>
+          <Link href={"/contact"} className="hover:text-amber-600 text-red-900 text-lg transition-colors">Contact Us</Link>
         </div>
         
         {/* Right Side Icons - KEEPING YOUR ORIGINAL STYLING */}
@@ -374,7 +376,7 @@ export const Navbar = () => {
           {isAdmin && (
             <Link
               href="/admin"
-              className="relative group hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg"
+              className="relative group hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-400 text-white hover:from-amber-400 hover:to-amber-300 transition-all duration-300 shadow-md hover:shadow-lg"
               title="Admin Dashboard"
             >
               <Cog6ToothIcon className="h-5 w-5" />
@@ -388,14 +390,14 @@ export const Navbar = () => {
 
           {/* Cart Icon */}
           <Link 
-            className="relative hover:text-blue-600 transition-colors group" 
+            className="relative text-red-900 hover:text-amber-600 transition-colors group" 
             href={'/checkout'}
             title="Shopping Cart"
           >
             <div className="relative">
               <ShoppingCartIcon className="h-6 w-6" />
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-800 text-xs text-white">
                   {cartCount}
                 </span>
               )}
@@ -418,7 +420,7 @@ export const Navbar = () => {
                   className="flex items-center space-x-2 hover:text-blue-600 transition-colors user-profile-button group"
                   title="My Account"
                 >
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-md relative">
+                  <div className="h-8 w-8 rounded-full  bg-gradient-to-r from-blue-900 to-purple-800  flex items-center justify-center text-white text-sm font-bold shadow-md relative">
                     {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                     {isAdmin && (
                       <span className="absolute -bottom-1 -right-1 bg-yellow-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
@@ -426,7 +428,7 @@ export const Navbar = () => {
                       </span>
                     )}
                   </div>
-                  <ChevronDownIcon className={`h-4 w-4 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+                  <ChevronDownIcon className={`h-4 w-4  text-red-900 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* User Dropdown Menu */}
@@ -436,7 +438,7 @@ export const Navbar = () => {
                       {/* User Info */}
                       <div className="px-4 py-3 border-b border-gray-100">
                         <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-red-900 to-red-800 flex items-center justify-center text-white font-bold">
                             {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
                           </div>
                           <div className="ml-3">
@@ -455,26 +457,26 @@ export const Navbar = () => {
                       {/* Menu Items */}
                       <Link
                         href="/profile"
-                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="flex items-center px-4 py-3 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
-                        <UserIcon className="h-4 w-4 mr-3 text-gray-400" />
+                        <UserIcon className="h-4 w-4 mr-3 text-red-900" />
                         My Profile
                       </Link>
                       <Link
                         href="/orders"
-                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="flex items-center px-4 py-3 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
-                        <ShoppingBagIcon className="h-4 w-4 mr-3 text-gray-400" />
+                        <ShoppingBagIcon className="h-4 w-4 mr-3 text-red-900" />
                         My Orders
                       </Link>
                       <Link
                         href="/wishlist"
-                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="flex items-center px-4 py-3 text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 transition-colors"
                         onClick={() => setShowUserMenu(false)}
                       >
-                        <HeartIcon className="h-4 w-4 mr-3 text-gray-400" />
+                        <HeartIcon className="h-4 w-4 mr-3 text-red-900" />
                         Wishlist
                       </Link>
                       
@@ -494,7 +496,7 @@ export const Navbar = () => {
                       <div className="border-t border-gray-100 mt-1 pt-1">
                         <button
                           onClick={handleLogout}
-                          className="flex w-full items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                          className="flex w-full items-center px-4 py-3 text-sm text-red-600 hover:text-lg hover:bg-amber-100 hover:text-amber-700 transition-colors"
                         >
                           <ArrowRightOnRectangleIcon className="h-4 w-4 mr-3" />
                           Logout
