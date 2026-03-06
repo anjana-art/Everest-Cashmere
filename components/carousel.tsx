@@ -1,4 +1,4 @@
-// components/carousel.tsx
+// components/carousel.tsx - LUXURY EDITION (No white space)
 'use client';
 import { Card, CardContent, CardTitle } from "./ui/card";
 import { useState, useEffect } from "react";
@@ -31,14 +31,14 @@ export const Carousel = ({ products = [] }: Props) => {
     
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % products.length);
-    }, 3000);
+    }, 4000); // Slightly slower for luxury feel
 
     return () => clearInterval(interval);
   }, [products.length]);
 
   if (!products || products.length === 0) {
     return (
-      <Card className="relative w-full h-full overflow-hidden rounded-lg shadow-md border-gray-300">
+      <Card className="relative w-full h-full overflow-hidden rounded-lg shadow-xl border-0 bg-gradient-to-br from-amber-50 to-red-50">
         <div className="relative w-full h-full">
           <PlaceholderImage />
         </div>
@@ -51,29 +51,73 @@ export const Carousel = ({ products = [] }: Props) => {
 
   return (
     <Link href={productUrl} className="block w-full h-full">
-      <Card className="relative w-full h-full overflow-hidden rounded-lg shadow-md border-gray-300 hover:shadow-xl transition-shadow duration-300 group">
-        {/* Image Container - fills the entire card */}
+      <Card className="relative w-full h-full overflow-hidden rounded-xl shadow-2xl border-0 group cursor-pointer">
+        {/* Image Container - fills the entire card with no padding/margin */}
         <div className="relative w-full h-full">
           {currentProduct?.images?.[0] ? (
-            <Image
-              src={currentProduct.images[0]}
-              alt={currentProduct.name || "Product image"}
-              fill
-              className="object-contain transition-opacity duration-500 ease-in-out group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 850px) 100vw, (max-width: 1500px) 50vw, 33vw"
-              priority
-            />
+            <>
+              <Image
+                src={currentProduct.images[0]}
+                alt={currentProduct.name || "Product image"}
+                fill
+                className="object-contain transition-all duration-700 ease-in-out group-hover:scale-110"
+                sizes="(max-width: 850px) 100vw, (max-width: 1500px) 50vw, 33vw"
+                priority
+              />
+              
+              {/* Luxury Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-red-900/80 via-transparent to-transparent opacity-60 group-hover:opacity-70 transition-opacity duration-500"></div>
+              
+              {/* Progress Indicator Dots */}
+              <div className="absolute top-4 right-4 flex gap-1.5 z-20">
+                {products.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      index === current 
+                        ? 'w-6 bg-amber-400' 
+                        : 'w-2 bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+              
+              {/* Category Badge (if available) */}
+              {currentProduct.metadata?.category && (
+                <div className="absolute top-4 left-4 z-20">
+                  <span className="px-3 py-1.5 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-lg border border-amber-200">
+                    {currentProduct.metadata.category}
+                  </span>
+                </div>
+              )}
+              
+              {/* Title overlay at the bottom - Luxury styled */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-20">
+                <div className="transform transition-transform duration-500 group-hover:translate-y-[-4px]">
+                  <CardTitle className="text-2xl md:text-3xl font-serif font-bold text-white drop-shadow-2xl mb-1">
+                    {currentProduct?.name || "Product Name"}
+                  </CardTitle>
+                  
+                  {/* Price - Optional: uncomment if you want to show price */}
+                  {/* <p className="text-amber-300 font-light text-sm md:text-base">
+                    {currentProduct?.price ? `€${currentProduct.price.toFixed(2)}` : ''}
+                  </p> */}
+                  
+                  {/* Decorative line */}
+                  <div className="h-0.5 w-12 bg-amber-400 mt-2 group-hover:w-20 transition-all duration-500"></div>
+                </div>
+              </div>
+              
+              {/* Slide Number Indicator */}
+              <div className="absolute bottom-4 right-4 text-xs font-light text-white/70 z-20">
+                {current + 1} / {products.length}
+              </div>
+            </>
           ) : (
-            <PlaceholderImage />
+            <div className="relative w-full h-full">
+              <PlaceholderImage />
+            </div>
           )}
-          
-          {/* Title overlay at the top */}
-          {/* Title overlay at the bottom */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
-            <CardTitle className="text-xl font-italic text-white drop-shadow-lg">
-              {currentProduct?.name || "Product Name"}
-            </CardTitle>
-          </div>
         </div>
       </Card>
     </Link>

@@ -125,6 +125,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     clothingType: product.clothingType || null,
     gender: product.gender || null,
     accessoriesType: product.accessoriesType || null,
+    availableColors: product.availableColors || [],
+    availableSizes: product.availableSizes || [],
+    defaultColor: product.defaultColor || null,
+    defaultSize: product.defaultSize || null,
   }));
 
   // Generate page title based on filters
@@ -281,24 +285,24 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     <div className="container mx-auto px-4 py-8">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{getPageTitle()}</h1>
-        <p className="text-gray-600">{getDescription()}</p>
+        <h1 className="text-3xl font-bold mb-2 text-red-900">{getPageTitle()}</h1>
+        <p className="text-red-700">{getDescription()}</p>
       </div>
 
       {/* Active Filters Display */}
       {activeFilters.length > 0 && (
         <div className="mb-6">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Active Filters:</span>
+            <span className="text-sm font-medium text-red-800">Active Filters:</span>
             {activeFilters.map(filter => (
               <div
                 key={`${filter.key}-${filter.value}`}
-                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+                className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm"
               >
                 <span>{filter.label}</span>
                 <Link
                   href={removeFilter(filter.key)}
-                  className="text-blue-500 hover:text-blue-700"
+                  className="text-amber-600 hover:text-amber-800"
                 >
                   <span className="sr-only">Remove {filter.label} filter</span>
                   ×
@@ -308,7 +312,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             {activeFilters.length > 0 && (
               <Link
                 href="/products"
-                className="text-sm text-gray-500 hover:text-gray-700 underline ml-2"
+                className="text-sm text-red-600 hover:text-amber-600 underline ml-2"
               >
                 Clear all filters
               </Link>
@@ -322,7 +326,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         {/* Category Filter Sidebar */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-sm p-6 space-y-6 sticky top-24">
-            <h3 className="font-semibold text-lg mb-4">Categories</h3>
+            <h3 className="font-semibold text-lg mb-4 text-red-900">Categories</h3>
             
             <div className="space-y-2">
               {/* All Products */}
@@ -330,12 +334,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 href="/products"
                 className={`flex justify-between items-center p-2 rounded-lg transition-colors ${
                   (!params.category || params.category === 'all')
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-amber-50 text-amber-600 font-medium'
+                    : 'text-red-900 hover:text-amber-600 hover:bg-amber-50'
                 }`}
               >
                 <span>All Products</span>
-                <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
+                <span className="text-sm bg-amber-100 text-red-800 px-2 py-1 rounded-full">
                   {categoryCounts.all}
                 </span>
               </Link>
@@ -345,12 +349,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 href="/products?category=CLOTHING"
                 className={`flex justify-between items-center p-2 rounded-lg transition-colors ${
                   params.category === 'CLOTHING'
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-amber-50 text-amber-600 font-medium'
+                    : 'text-red-900 hover:text-amber-600 hover:bg-amber-50'
                 }`}
               >
                 <span>Clothing</span>
-                <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
+                <span className="text-sm bg-amber-100 text-red-800 px-2 py-1 rounded-full">
                   {categoryCounts.CLOTHING}
                 </span>
               </Link>
@@ -360,44 +364,44 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 <div className="ml-4 space-y-2">
                   {/* Clothing Type */}
                   <div className="mt-3">
-                    <h4 className="text-sm font-medium text-gray-600 mb-2">Material Type</h4>
+                    <h4 className="text-sm font-medium text-red-800 mb-2">Material Type</h4>
                     <div className="space-y-1">
                       <Link
                         href="/products?category=CLOTHING"
-                        className={`block p-2 rounded text-sm ${
+                        className={`block p-2 rounded text-sm transition-colors ${
                           !params.type
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-600 hover:text-blue-600'
+                            ? 'text-amber-600 font-medium bg-amber-50'
+                            : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                         }`}
                       >
                         All Materials
                       </Link>
                       <Link
                         href="/products?category=CLOTHING&type=CASHMERE"
-                        className={`block p-2 rounded text-sm ${
+                        className={`block p-2 rounded text-sm transition-colors ${
                           params.type === 'CASHMERE'
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-600 hover:text-blue-600'
+                            ? 'text-amber-600 font-medium bg-amber-50'
+                            : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                         }`}
                       >
                         Cashmere
                       </Link>
                       <Link
                         href="/products?category=CLOTHING&type=CASHMERE_MARINO_WOOL"
-                        className={`block p-2 rounded text-sm ${
+                        className={`block p-2 rounded text-sm transition-colors ${
                           params.type === 'CASHMERE_MARINO_WOOL'
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-600 hover:text-blue-600'
+                            ? 'text-amber-600 font-medium bg-amber-50'
+                            : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                         }`}
                       >
                         Cashmere + Marino Wool
                       </Link>
                       <Link
                         href="/products?category=CLOTHING&type=MARINO_WOOL"
-                        className={`block p-2 rounded text-sm ${
+                        className={`block p-2 rounded text-sm transition-colors ${
                           params.type === 'MARINO_WOOL'
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-600 hover:text-blue-600'
+                            ? 'text-amber-600 font-medium bg-amber-50'
+                            : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                         }`}
                       >
                         Marino Wool
@@ -407,17 +411,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
                   {/* Gender */}
                   <div className="mt-3">
-                    <h4 className="text-sm font-medium text-gray-600 mb-2">Gender</h4>
+                    <h4 className="text-sm font-medium text-red-800 mb-2">Gender</h4>
                     <div className="space-y-1">
                       <Link
                         href={params.type ? 
                           `/products?category=CLOTHING&type=${params.type}` : 
                           '/products?category=CLOTHING'
                         }
-                        className={`block p-2 rounded text-sm ${
+                        className={`block p-2 rounded text-sm transition-colors ${
                           !params.gender
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-600 hover:text-blue-600'
+                            ? 'text-amber-600 font-medium bg-amber-50'
+                            : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                         }`}
                       >
                         All Genders
@@ -427,10 +431,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                           `/products?category=CLOTHING&type=${params.type}&gender=MEN` : 
                           '/products?category=CLOTHING&gender=MEN'
                         }
-                        className={`block p-2 rounded text-sm ${
+                        className={`block p-2 rounded text-sm transition-colors ${
                           params.gender === 'MEN'
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-600 hover:text-blue-600'
+                            ? 'text-amber-600 font-medium bg-amber-50'
+                            : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                         }`}
                       >
                         Men
@@ -440,10 +444,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                           `/products?category=CLOTHING&type=${params.type}&gender=WOMEN` : 
                           '/products?category=CLOTHING&gender=WOMEN'
                         }
-                        className={`block p-2 rounded text-sm ${
+                        className={`block p-2 rounded text-sm transition-colors ${
                           params.gender === 'WOMEN'
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-600 hover:text-blue-600'
+                            ? 'text-amber-600 font-medium bg-amber-50'
+                            : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                         }`}
                       >
                         Women
@@ -453,10 +457,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                           `/products?category=CLOTHING&type=${params.type}&gender=UNISEX` : 
                           '/products?category=CLOTHING&gender=UNISEX'
                         }
-                        className={`block p-2 rounded text-sm ${
+                        className={`block p-2 rounded text-sm transition-colors ${
                           params.gender === 'UNISEX'
-                            ? 'text-blue-600 font-medium'
-                            : 'text-gray-600 hover:text-blue-600'
+                            ? 'text-amber-600 font-medium bg-amber-50'
+                            : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                         }`}
                       >
                         Unisex
@@ -471,12 +475,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 href="/products?category=HOME_DECORE"
                 className={`flex justify-between items-center p-2 rounded-lg transition-colors ${
                   params.category === 'HOME_DECORE'
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-amber-50 text-amber-600 font-medium'
+                    : 'text-red-900 hover:text-amber-600 hover:bg-amber-50'
                 }`}
               >
                 <span>Home Decore</span>
-                <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
+                <span className="text-sm bg-amber-100 text-red-800 px-2 py-1 rounded-full">
                   {categoryCounts.HOME_DECORE}
                 </span>
               </Link>
@@ -486,12 +490,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 href="/products?category=ACCESSORIES"
                 className={`flex justify-between items-center p-2 rounded-lg transition-colors ${
                   params.category === 'ACCESSORIES'
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-amber-50 text-amber-600 font-medium'
+                    : 'text-red-900 hover:text-amber-600 hover:bg-amber-50'
                 }`}
               >
                 <span>Accessories</span>
-                <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
+                <span className="text-sm bg-amber-100 text-red-800 px-2 py-1 rounded-full">
                   {categoryCounts.ACCESSORIES}
                 </span>
               </Link>
@@ -499,44 +503,44 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               {/* Accessories Sub-filters */}
               {params.category === 'ACCESSORIES' && (
                 <div className="ml-4 mt-3">
-                  <h4 className="text-sm font-medium text-gray-600 mb-2">Gender</h4>
+                  <h4 className="text-sm font-medium text-red-800 mb-2">Gender</h4>
                   <div className="space-y-1">
                     <Link
                       href="/products?category=ACCESSORIES"
-                      className={`block p-2 rounded text-sm ${
+                      className={`block p-2 rounded text-sm transition-colors ${
                         !params.type
-                          ? 'text-blue-600 font-medium'
-                          : 'text-gray-600 hover:text-blue-600'
+                          ? 'text-amber-600 font-medium bg-amber-50'
+                          : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                       }`}
                     >
                       All Accessories
                     </Link>
                     <Link
                       href="/products?category=ACCESSORIES&type=MEN"
-                      className={`block p-2 rounded text-sm ${
+                      className={`block p-2 rounded text-sm transition-colors ${
                         params.type === 'MEN'
-                          ? 'text-blue-600 font-medium'
-                          : 'text-gray-600 hover:text-blue-600'
+                          ? 'text-amber-600 font-medium bg-amber-50'
+                          : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                       }`}
                     >
                       Men
                     </Link>
                     <Link
                       href="/products?category=ACCESSORIES&type=WOMEN"
-                      className={`block p-2 rounded text-sm ${
+                      className={`block p-2 rounded text-sm transition-colors ${
                         params.type === 'WOMEN'
-                          ? 'text-blue-600 font-medium'
-                          : 'text-gray-600 hover:text-blue-600'
+                          ? 'text-amber-600 font-medium bg-amber-50'
+                          : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                       }`}
                     >
                       Women
                     </Link>
                     <Link
                       href="/products?category=ACCESSORIES&type=UNISEX"
-                      className={`block p-2 rounded text-sm ${
+                      className={`block p-2 rounded text-sm transition-colors ${
                         params.type === 'UNISEX'
-                          ? 'text-blue-600 font-medium'
-                          : 'text-gray-600 hover:text-blue-600'
+                          ? 'text-amber-600 font-medium bg-amber-50'
+                          : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                       }`}
                     >
                       Unisex
@@ -552,53 +556,49 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <div className="lg:col-span-3">
           {/* Results Info */}
           <div className="flex justify-between items-center mb-6">
-           {/*  <p className="text-gray-600">
-              Showing <span className="font-semibold">{products.length}</span> product{products.length !== 1 ? 's' : ''}
-            </p> */}
-            
             {/* Sort options */}
-            <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Sort by:</span>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-2 ml-auto">
+              <span className="text-sm text-red-800">Sort by:</span>
+              <div className="flex items-center space-x-1">
                 <Link
-                href={buildUrlWithSort('newest')}
-                className={`text-sm px-3 py-1 rounded transition-colors ${
+                  href={buildUrlWithSort('newest')}
+                  className={`text-sm px-3 py-1 rounded transition-colors ${
                     (!params.sort || params.sort === 'newest')
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-amber-50 text-red-800 hover:bg-amber-100'
+                  }`}
                 >
-                Newest
+                  Newest
                 </Link>
                 <Link
-                href={buildUrlWithSort('price-low')}
-                className={`text-sm px-3 py-1 rounded transition-colors ${
+                  href={buildUrlWithSort('price-low')}
+                  className={`text-sm px-3 py-1 rounded transition-colors ${
                     params.sort === 'price-low'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-amber-50 text-red-800 hover:bg-amber-100'
+                  }`}
                 >
-                Price: Low to High
+                  Price: Low to High
                 </Link>
                 <Link
-                href={buildUrlWithSort('price-high')}
-                className={`text-sm px-3 py-1 rounded transition-colors ${
+                  href={buildUrlWithSort('price-high')}
+                  className={`text-sm px-3 py-1 rounded transition-colors ${
                     params.sort === 'price-high'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-amber-50 text-red-800 hover:bg-amber-100'
+                  }`}
                 >
-                Price: High to Low
+                  Price: High to Low
                 </Link>
+              </div>
             </div>
-            </div>
-                    </div>
+          </div>
 
           {/* Products */}
           {formattedProducts.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-              <div className="text-gray-500 mb-4 text-lg">No products found</div>
-              <p className="text-gray-600 mb-6">
+              <div className="text-red-800 mb-4 text-lg">No products found</div>
+              <p className="text-red-700 mb-6">
                 {params.category 
                   ? `We couldn't find any products in the "${params.category.replace('_', ' ')}" category.`
                   : 'No products are currently available.'
@@ -606,7 +606,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               </p>
               <Link 
                 href="/products" 
-                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-block bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 transition-colors"
               >
                 Browse All Products
               </Link>
@@ -619,13 +619,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               {products.length >= 20 && (
                 <div className="mt-8 flex justify-center">
                   <nav className="flex items-center space-x-2">
-                    <button className="px-3 py-2 rounded border text-gray-600 hover:bg-gray-50">
+                    <button className="px-3 py-2 rounded border border-amber-200 text-red-800 hover:bg-amber-50 transition-colors">
                       Previous
                     </button>
-                    <button className="px-3 py-2 rounded bg-blue-600 text-white">1</button>
-                    <button className="px-3 py-2 rounded border text-gray-600 hover:bg-gray-50">2</button>
-                    <button className="px-3 py-2 rounded border text-gray-600 hover:bg-gray-50">3</button>
-                    <button className="px-3 py-2 rounded border text-gray-600 hover:bg-gray-50">
+                    <button className="px-3 py-2 rounded bg-amber-600 text-white">1</button>
+                    <button className="px-3 py-2 rounded border border-amber-200 text-red-800 hover:bg-amber-50 transition-colors">2</button>
+                    <button className="px-3 py-2 rounded border border-amber-200 text-red-800 hover:bg-amber-50 transition-colors">3</button>
+                    <button className="px-3 py-2 rounded border border-amber-200 text-red-800 hover:bg-amber-50 transition-colors">
                       Next
                     </button>
                   </nav>

@@ -196,7 +196,7 @@ export default function ProfilePage() {
         <div className="container mx-auto max-w-4xl">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-blue-950 mb-2">My Profile</h1>
+            <h1 className="text-3xl font-bold text-red-950 mb-2">My Profile</h1>
             <p className="text-gray-600">Manage your personal information</p>
           </div>
 
@@ -239,7 +239,7 @@ export default function ProfilePage() {
                     <button
                       onClick={handleSaveProfile} // FIXED: No parameter needed
                       disabled={isSaving}
-                      className="flex items-center space-x-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      className="flex items-center space-x-1 bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-amber-700 disabled:opacity-50"
                     >
                       {isSaving ? (
                         <>
@@ -257,7 +257,7 @@ export default function ProfilePage() {
                 ) : (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="flex items-center space-x-1 px-4 py-2 bg-red-900 text-white rounded-lg hover:bg-amber-700"
                   >
                     <PencilIcon className="h-4 w-4" />
                     <span>Edit Profile</span>

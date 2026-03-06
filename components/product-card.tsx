@@ -1,4 +1,4 @@
-// components/product-card.tsx - FIXED VERSION
+// components/product-card.tsx - LUXURY EDITION
 "use client";
 
 import Image from "next/image";
@@ -6,11 +6,10 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import { useCartStore } from "@/store/cart-store";
 import { useState, useEffect } from "react";
-import { HeartIcon, ShoppingBagIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { HeartIcon, ShoppingBagIcon, PlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { PlaceholderImage } from "./placeholder-image";
-import { ProductRating } from '@/components/ProductRating';
-
+// import { ProductRating } from '@/components/ProductRating'; // Commented as in original
 
 interface Product {
   id: string;           // Database ID
@@ -29,9 +28,6 @@ interface Props {
   product: Product;
 }
 
-
- 
-
 export const ProductCard = ({ product }: Props) => {
   const { items, addItem } = useCartStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -42,14 +38,12 @@ export const ProductCard = ({ product }: Props) => {
   const cartItem = items.find((item) => item.id === product.id);
   const quantity = cartItem ? cartItem.quantity : 0;
 
- console.log('ProductCard received product:', {
-    idFromDB: product.id,          // This should be database ID
-    idFromStripeId: product.stripeId, // This should be Stripe ID
+  console.log('ProductCard received product:', {
+    idFromDB: product.id,
+    idFromStripeId: product.stripeId,
     nameOfProduct: product.name,
-    // Log all properties
     ...product
   });
-  
 
   // Get user ID on component mount
   useEffect(() => {
@@ -107,18 +101,14 @@ export const ProductCard = ({ product }: Props) => {
     e.stopPropagation();
     
     try {
-      // Check if user is logged in
       if (!userId) {
         alert('Please login to add items to wishlist');
-        // Optionally redirect to login page
-        // router.push('/login');
         return;
       }
 
       setLoadingWishlist(true);
 
       if (isWishlisted) {
-        // Remove from wishlist - use database id
         const response = await fetch(`/api/wishlist?productId=${product.id}`, {
           method: 'DELETE',
           headers: {
@@ -134,7 +124,6 @@ export const ProductCard = ({ product }: Props) => {
           throw new Error(errorData.error || 'Failed to remove from wishlist');
         }
       } else {
-        // Add to wishlist - use databaseId
         const response = await fetch('/api/wishlist', {
           method: 'POST',
           headers: {
@@ -142,7 +131,7 @@ export const ProductCard = ({ product }: Props) => {
             'x-user-id': userId,
           },
           body: JSON.stringify({ 
-            productId: product.id, // Send database id
+            productId: product.id,
           }),
         });
 
@@ -167,7 +156,6 @@ export const ProductCard = ({ product }: Props) => {
     try {
       setIsAddingToCart(true);
       
-      // Ensure price is a valid number
       const productPrice = typeof product.price === 'number' && !isNaN(product.price) 
         ? product.price 
         : 0;
@@ -182,9 +170,9 @@ export const ProductCard = ({ product }: Props) => {
       });
       
       addItem({
-        id: product.id, // Use database ID for cart
+        id: product.id,
         name: product.name,
-        price: productPrice, // Already in euros
+        price: productPrice,
         imageUrl: product.images?.[0] || '',
         quantity: 1,
         color: 'black',
@@ -201,17 +189,30 @@ export const ProductCard = ({ product }: Props) => {
     }
   };
 
-  // Handle NaN price display
+  // LUXURY PRICE FORMATTING
   const displayPrice = () => {
     const price = product.price;
     if (typeof price !== 'number' || isNaN(price)) {
       console.warn('Invalid price for product:', product.id, product.name, price);
-      return '€0.00';
+      return '€0,00';
     }
-    return `€${price.toFixed(2)}`;
+    
+    // Format with comma as decimal separator for European luxury feel
+    return `€${price.toFixed(2).replace('.', ',')}`;
   };
 
-  // Login button for when user is not logged in
+  // Format name with elegant handling
+  const formatProductName = (name: string) => {
+    if (!name) return '';
+    
+    // Add a subtle luxury touch for long names
+    if (name.length > 30) {
+      return name.substring(0, 27) + '...';
+    }
+    return name;
+  };
+
+  // Wishlist button render
   const renderWishlistButton = () => {
     if (!userId) {
       return (
@@ -219,13 +220,12 @@ export const ProductCard = ({ product }: Props) => {
           onClick={(e) => {
             e.stopPropagation();
             alert('Please login to use wishlist');
-            // You can add login redirect here
           }}
-          className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110"
+          className="p-2.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 border border-amber-200/50"
           aria-label="Login to add to wishlist"
           title="Login to add to wishlist"
         >
-          <HeartIcon className="h-5 w-5 text-gray-400" />
+          <HeartIcon className="h-4 w-4 text-red-300" />
         </button>
       );
     }
@@ -234,114 +234,117 @@ export const ProductCard = ({ product }: Props) => {
       <button
         onClick={handleAddToWishlist}
         disabled={loadingWishlist}
-        className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-110 disabled:opacity-50"
+        className="p-2.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 border border-amber-200/50 disabled:opacity-50"
         aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
       >
         {loadingWishlist ? (
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-900"></div>
         ) : isWishlisted ? (
-          <HeartIconSolid className="h-5 w-5 text-red-500" />
+          <HeartIconSolid className="h-4 w-4 text-red-500" />
         ) : (
-          <HeartIcon className="h-5 w-5 text-gray-700" />
+          <HeartIcon className="h-4 w-4 text-red-900" />
         )}
       </button>
     );
   };
 
   return (
-    <div className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+    <div className="group bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer relative border border-amber-100/50">
       <Link href={`/products/${product.id}`} className="block">
-        {/* Image Container */}
-        <div className="relative aspect-square overflow-hidden bg-gray-100">
+        {/* Image Container with Luxury Overlay */}
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-amber-50 to-red-50">
           {product.images && product.images[0] ? (
             <Image
               src={product.images[0]}
               alt={product.name}
               fill
-              className="object-contain transition-transform duration-300 group-hover:scale-110"
+              className="object-contain transition-transform duration-700 group-hover:scale-110"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
-           <PlaceholderImage />
+            <PlaceholderImage />
           )}
           
-          {/* Category Badge */}
+          {/* Elegant Gradient Overlay on Hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-red-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          
+          {/* Category Badge - Luxury Style */}
           {product.metadata?.category && (
-            <div className="absolute top-3 left-3">
-              <span className="px-2 py-1 text-xs font-medium bg-white/90 backdrop-blur-sm text-red-900 rounded-full">
+            <div className="absolute top-4 left-4">
+              <span className="px-3 py-1.5 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-sm border border-amber-200">
                 {product.metadata.category}
               </span>
             </div>
           )}
         </div>
 
-        {/* Product Info */}
-        <div className="p-4">
-          <h3 className="font-semibold text-red-900 mb-1 line-clamp-1 group-hover:text-red-800 transition-colors">
-            {product.name}
+        {/* Product Info with Luxury Typography */}
+        <div className="p-5">
+          <h3 className="font-serif text-lg text-red-900 mb-2 line-clamp-1 group-hover:text-amber-700 transition-colors duration-300 tracking-wide">
+            {formatProductName(product.name)}
           </h3>
           
           {product.description && (
-            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+            <p className="text-sm text-red-950 mb-3 line-clamp-2 font-light italic ">
               {product.description}
             </p>
           )}
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <p className="text-lg font-bold text-blue-600">
-                {displayPrice()}
-              </p>
-              {quantity > 0 && (
-                <div className="bg-blue-100 text-blue-600 text-xs font-bold px-2 py-0.5 rounded-full">
-                  {quantity} in cart
-                </div>
-              )}
+          {/* Price and Cart Status - Luxury Presentation */}
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs text-red-950 font-light tracking-wider mb-0.5">PRICE</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xl font-serif font-medium text-amber-700">
+                  {displayPrice()}
+                </p>
+                {quantity > 0 && (
+                  <div className="bg-amber-100 text-amber-800 text-[10px] font-medium px-2 py-0.5 rounded-full border border-amber-200">
+                    {quantity} in cart
+                  </div>
+                )}
+              </div>
             </div>
             
-            <span className="text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors">
-              View details →
-            </span>
+            {/* Elegant View Details Link */}
+            <div className="flex items-center gap-1 text-red-900 group-hover:text-amber-600 transition-colors duration-300">
+              <span className="text-xs font-light tracking-wide">Discover</span>
+              <span className="text-lg leading-none transform group-hover:translate-x-1 transition-transform duration-300">→</span>
+            </div>
           </div>
         </div>
       </Link>
       
-      {/*display ratings */}
-       {/*  <section className="mt-12">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
-            <ProductRating productId={product.id} />
-          </div>
-        </section> */}
-
-      {/* Action Buttons (Outside Link) */}
-      <div className="absolute top-3 right-3">
+      {/* Action Buttons - Repositioned for Luxury */}
+      <div className="absolute top-4 right-4 z-10">
         {renderWishlistButton()}
       </div>
       
-      <div className="absolute top-3 left-3">
+      {/* Add to Cart Button - Luxury Style */}
+      <div className="absolute bottom-20 left-5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
         <Button
           onClick={onAddToCart}
           disabled={isAddingToCart}
           size="sm"
-          className="flex items-center gap-1 bg-white text-gray-900 hover:bg-gray-100 font-medium shadow-md disabled:opacity-50"
+          className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-light tracking-wide px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-amber-500/50 disabled:opacity-50"
         >
           {isAddingToCart ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-              <span className="text-sm">Adding...</span>
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+              <span className="text-xs">Adding...</span>
             </>
           ) : (
             <>
-              <div className="relative">
-                <ShoppingBagIcon className="h-4 w-4" />
-                <PlusIcon className="h-2 w-2 absolute -top-0.5 -right-0.5" />
-              </div>
-              <span className="text-sm">Add</span>
+              <ShoppingBagIcon className="h-3.5 w-3.5" />
+              <span className="text-xs uppercase tracking-wider">Add</span>
+              <PlusIcon className="h-2.5 w-2.5" />
             </>
           )}
         </Button>
       </div>
+
+      {/* Luxury Accent Line */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-300 via-red-400 to-amber-300 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
     </div>
   );
 };

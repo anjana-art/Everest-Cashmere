@@ -385,14 +385,14 @@ export default function OrdersPage() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={handleRetry}
-                  className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                  className="inline-flex items-center gap-2 text-sm text-blue-800 hover:text-blue-600"
                 >
                   <ArrowPathIcon className="h-4 w-4" />
                   Refresh
                 </button>
                 <Link
                   href="/products"
-                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                  className="inline-flex items-center gap-2 bg-red-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-700"
                 >
                   <ShoppingBagIcon className="h-4 w-4" />
                   Shop More
@@ -455,7 +455,7 @@ export default function OrdersPage() {
                     )}
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-amber-900">
                       €{order.total.toFixed(2)}
                     </div>
                     <p className="text-sm text-gray-600">Total Amount</p>

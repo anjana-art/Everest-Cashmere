@@ -43,21 +43,21 @@ export default function CategoryFilter({
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-      <h3 className="font-semibold text-lg mb-4">Categories</h3>
+      <h3 className="font-semibold text-lg mb-4 text-red-900">Categories</h3>
       
       <div className="space-y-2">
         {categories.map((cat) => (
           <Link
             key={cat.value}
             href={cat.value === 'all' ? '/products' : `/products?category=${cat.value}`}
-            className={`flex justify-between items-center p-2 rounded-lg hover:bg-gray-50 ${
+            className={`flex justify-between items-center p-2 rounded-lg transition-colors ${
               (!currentCategory && cat.value === 'all') || currentCategory === cat.value
-                ? 'bg-blue-50 text-blue-600 font-medium'
-                : 'text-gray-700'
+                ? 'bg-amber-50 text-amber-600 font-medium'
+                : 'text-red-900 hover:text-amber-600 hover:bg-amber-50'
             }`}
           >
             <span>{cat.label}</span>
-            <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
+            <span className="text-sm bg-amber-100 text-red-800 px-2 py-1 rounded-full">
               {cat.count}
             </span>
           </Link>
@@ -66,17 +66,17 @@ export default function CategoryFilter({
 
       {/* Clothing Subcategories */}
       {currentCategory === 'CLOTHING' && (
-        <div className="border-t pt-4 mt-4">
-          <h4 className="font-medium text-gray-600 mb-3">Clothing Types</h4>
+        <div className="border-t border-amber-200 pt-4 mt-4">
+          <h4 className="font-medium text-red-800 mb-3">Clothing Types</h4>
           <div className="space-y-2">
             {clothingTypes.map((type) => (
               <Link
                 key={type.value}
                 href={`/products?category=CLOTHING&type=${type.value}`}
-                className={`block p-2 rounded-lg hover:bg-gray-50 ${
+                className={`block p-2 rounded-lg transition-colors ${
                   currentType === type.value
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-600'
+                    ? 'bg-amber-50 text-amber-600 font-medium'
+                    : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                 }`}
               >
                 {type.label}
@@ -88,17 +88,17 @@ export default function CategoryFilter({
 
       {/* Accessories Subcategories */}
       {currentCategory === 'ACCESSORIES' && (
-        <div className="border-t pt-4 mt-4">
-          <h4 className="font-medium text-gray-600 mb-3">Accessories Types</h4>
+        <div className="border-t border-amber-200 pt-4 mt-4">
+          <h4 className="font-medium text-red-800 mb-3">Accessories Types</h4>
           <div className="space-y-2">
             {accessoriesTypes.map((type) => (
               <Link
                 key={type.value}
                 href={`/products?category=ACCESSORIES&type=${type.value}`}
-                className={`block p-2 rounded-lg hover:bg-gray-50 ${
+                className={`block p-2 rounded-lg transition-colors ${
                   currentType === type.value
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-600'
+                    ? 'bg-amber-50 text-amber-600 font-medium'
+                    : 'text-red-800 hover:text-amber-600 hover:bg-amber-50'
                 }`}
               >
                 {type.label}
