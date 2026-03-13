@@ -1,6 +1,8 @@
 'use client';
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { ChevronRightIcon } from "@heroicons/react/24/outline"; //i am using this in mobile menu
+
 import {
   ShoppingCartIcon,
   Bars3Icon,
@@ -27,9 +29,14 @@ export const Navbar = () => {
   const [showAccessoriesSubmenu, setShowAccessoriesSubmenu] = useState<boolean>(false);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-
+  const [openClothing, setOpenClothing] = useState(false);
+  const [openAccessories, setOpenAccessories] = useState(false);
+  const [openGender, setOpenGender] = useState(false);
+  const [openMaterial, setOpenMaterial] = useState(false);
   const [taglineIndex, setTaglineIndex] = useState(0);
   const [fade, setFade] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+
   const taglines = [
     'Finest Quality Cashmere',
     'Nepalese Luxury Handicrafts',
@@ -39,40 +46,54 @@ export const Navbar = () => {
   const { items } = useCartStore();
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
-  //for brand short description
   useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setTaglineIndex((prev) => (prev + 1) % taglines.length);
-        setFade(true);
-      }, 500);
-    }, 3000);
+  setIsClient(true);
+   }, []);
 
-    return () => clearInterval(interval);
-  }, []);
+   // Close mobile menu when route changes
+    useEffect(() => {
+      const handleRouteChange = () => setMobileOpen(false);
+      window.addEventListener('popstate', handleRouteChange);
+      return () => window.removeEventListener('popstate', handleRouteChange);
+    }, []);
 
-  // Check if user is logged in and admin on mount
-  useEffect(() => {
-    const checkUserAndAdmin = () => {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-          
-          const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-            const [name, value] = cookie.trim().split('=');
-            acc[name] = decodeURIComponent(value);
-            return acc;
-          }, {} as Record<string, string>);
-          
-          setIsAdmin(cookies['admin-check'] === 'true');
-        } catch (error) {
-          localStorage.removeItem('user');
-        }
-      }
-    };
+
+   
+
+        //for brand short description
+        useEffect(() => {
+          const interval = setInterval(() => {
+            setFade(false);
+            setTimeout(() => {
+              setTaglineIndex((prev) => (prev + 1) % taglines.length);
+              setFade(true);
+            }, 500);
+          }, 3000);
+
+        return () => clearInterval(interval);
+      }, []);
+
+      // Check if user is logged in and admin on mount
+      useEffect(() => {
+        const checkUserAndAdmin = () => {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              setUser(parsedUser);
+              
+              const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+                const [name, value] = cookie.trim().split('=');
+                acc[name] = decodeURIComponent(value);
+                return acc;
+              }, {} as Record<string, string>);
+              
+              setIsAdmin(cookies['admin-check'] === 'true');
+            } catch (error) {
+              localStorage.removeItem('user');
+            }
+          }
+        };
 
     checkUserAndAdmin();
     window.addEventListener('load', checkUserAndAdmin);
@@ -107,6 +128,11 @@ export const Navbar = () => {
       window.removeEventListener('click', handleClickOutside);
     };
   }, []);
+
+   // Don't render anything on server for the mobile menu
+      if (!isClient) {
+        return null;
+      }
 
   // Handle logout
   const handleLogout = () => {
@@ -143,7 +169,7 @@ export const Navbar = () => {
           </Link>
           
           {/* Tagline - hidden on small screens, visible on md and up */}
-          <p className="hidden md:block text-red-950 text-xs md:text-sm italic w-32 md:w-48 text-center transition-opacity duration-500 ease-in-out min-h-[3rem] flex items-center justify-center">
+          <p className="sm:text-xs md:block text-red-950 text-xs md:text-sm italic w-32 md:w-48 text-center transition-opacity duration-500 ease-in-out min-h-[3rem] flex items-center justify-center">
             <span className={`${fade ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 ease-in-out`}>
               - {taglines[taglineIndex]}
             </span>
@@ -419,9 +445,11 @@ export const Navbar = () => {
             title="Shopping Cart"
           >
             <div className="relative">
-              <ShoppingCartIcon className="h-5 w-5 sm:h-6 sm:w-6" />
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-800 text-xs text-white">
+{/*               <ShoppingCartIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+ */}            
+                     🛒
+                      {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-400 text-xs text-white">
                   {cartCount}
                 </span>
               )}
@@ -552,268 +580,330 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu - Responsive for all mobile sizes */}
-      {mobileOpen && (
-        <div className="lg:hidden bg-white border-t max-h-[calc(100vh-4rem)] overflow-y-auto">
-          <div className="px-3 sm:px-4 py-2 sm:py-3 space-y-1">
-            {/* Main Navigation Links */}
-            <Link 
-              href={'/'} 
-              className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base" 
-              onClick={() => setMobileOpen(false)}
-            >
-              Home
-            </Link>
+     {/* Mobile Menu - Enhanced UX/UI with Sidebar Style */}
+{isClient && mobileOpen && (
+  <div className="lg:hidden fixed inset-0 z-50 pointer-events-none"onClick={() => setMobileOpen(false)}>
+    <div 
+      className="fixed left-0 top-0 h-full w-80 max-w-[90vw] bg-white shadow-xl overflow-y-auto animate-slide-in pointer-events-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header with close button */}
+      <div className="sticky top-0 bg-white border-b border-amber-200 p-4 flex items-center justify-between z-10">
+        <h2 className="text-lg font-semibold text-red-900">Menu</h2>
+        <button 
+          onClick={() => setMobileOpen(false)}
+          className="p-2 hover:bg-amber-50 rounded-full transition-colors"
+          aria-label="Close menu"
+        >
+          <svg className="w-5 h-5 text-red-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="p-4 space-y-2">
+        {/* Main Navigation Links - Bigger Buttons */}
+        <Link 
+          href={'/'} 
+          className="block py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-transparent hover:border-amber-200 transition-all text-base shadow-sm" 
+          onClick={() => setMobileOpen(false)}
+        >
+          🏠 Home
+        </Link>
+        
+        {/* Products with dropdown in mobile */}
+        <div className="space-y-1">
+          <Link 
+            href={'/products'} 
+            className="block py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-transparent hover:border-amber-200 transition-all text-base shadow-sm" 
+            onClick={() => setMobileOpen(false)}
+          >
+            📦 All Products
+          </Link>
+          
+          {/* Mobile Category Links with better hierarchy */}
+          <div className="ml-2 space-y-2 mt-2">
             
-            {/* Products with dropdown in mobile */}
-            <div className="space-y-1">
-              <Link 
-                href={'/products'} 
-                className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors font-medium text-sm sm:text-base" 
-                onClick={() => setMobileOpen(false)}
+            {/* Clothing Section with Dropdown */}
+            <div className="border border-amber-100 rounded-lg overflow-hidden bg-amber-50/30">
+              <button
+                onClick={() => setOpenClothing(!openClothing)}
+                className="w-full flex items-center justify-between p-3.5 text-red-900 font-medium hover:bg-amber-50 transition-colors"
               >
-                All Products
-              </Link>
+                <span>👕 Clothing</span>
+                <ChevronDownIcon className={`h-4 w-4 transition-transform ${openClothing ? 'rotate-180' : ''}`} />
+              </button>
               
-              {/* Mobile Category Links */}
-              <div className="pl-2 sm:pl-4 space-y-1">
-                <div className="text-xs sm:text-sm font-medium text-red-700 py-1 sm:py-2 px-2">Shop by Category</div>
-                
-                {/* Clothing Section */}
-                <div className="space-y-1">
+              {openClothing && (
+                <div className="bg-white border-t border-amber-100 p-2 space-y-2">
                   <Link 
                     href="/products?category=CLOTHING" 
-                    className="block py-1.5 sm:py-2 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-xs sm:text-sm" 
+                    className="block py-2.5 px-3 text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm border-l-2 border-transparent hover:border-amber-400"
                     onClick={() => setMobileOpen(false)}
                   >
-                    Clothing
+                    All Clothing
                   </Link>
-                  <div className="ml-2 sm:ml-4 pl-1 sm:pl-2 border-l-2 border-amber-200 space-y-1">
-                    <Link 
-                      href="/products?category=CLOTHING&gender=MEN" 
-                      className="block py-1 sm:py-1.5 px-2 sm:px-3 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Men's Clothing
-                    </Link>
-                    <Link 
-                      href="/products?category=CLOTHING&gender=WOMEN" 
-                      className="block py-1 sm:py-1.5 px-2 sm:px-3 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Women's Clothing
-                    </Link>
-                    <Link 
-                      href="/products?category=CLOTHING&gender=UNISEX" 
-                      className="block py-1 sm:py-1.5 px-2 sm:px-3 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Unisex Clothing
-                    </Link>
+                  
+                  <div className="ml-2 space-y-2">
+                    <div className="border border-amber-50 rounded-lg">
+                      <button
+                        onClick={() => setOpenGender(!openGender)}
+                        className="w-full flex items-center justify-between p-2.5 text-red-800 text-sm hover:bg-amber-50 rounded-lg"
+                      >
+                        <span>By Gender</span>
+                        <ChevronRightIcon className={`h-3 w-3 transition-transform ${openGender ? 'rotate-90' : ''}`} />
+                      </button>
+                      
+                      {openGender && (
+                        <div className="ml-2 space-y-1 pb-2">
+                          <Link 
+                            href="/products?category=CLOTHING&gender=MEN" 
+                            className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            👔 Men's Clothing
+                          </Link>
+                          <Link 
+                            href="/products?category=CLOTHING&gender=WOMEN" 
+                            className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            👗 Women's Clothing
+                          </Link>
+                          <Link 
+                            href="/products?category=CLOTHING&gender=UNISEX" 
+                            className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            👤 Unisex Clothing
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                     
-                    {/* Material Types */}
-                    <div className="mt-1 sm:mt-2">
-                      <div className="text-xs font-medium text-red-700 px-2 py-1">Material Types</div>
-                      <Link 
-                        href="/products?category=CLOTHING&type=CASHMERE" 
-                        className="block py-1 sm:py-1.5 px-4 sm:px-6 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                        onClick={() => setMobileOpen(false)}
+                    {/* Material Types with dropdown */}
+                    <div className="border border-amber-50 rounded-lg">
+                      <button
+                        onClick={() => setOpenMaterial(!openMaterial)}
+                        className="w-full flex items-center justify-between p-2.5 text-red-800 text-sm hover:bg-amber-50 rounded-lg"
                       >
-                        Cashmere
-                      </Link>
-                      <Link 
-                        href="/products?category=CLOTHING&type=CASHMERE_MARINO_WOOL" 
-                        className="block py-1 sm:py-1.5 px-4 sm:px-6 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                        onClick={() => setMobileOpen(false)}
-                      >
-                        Cashmere + Marino Wool
-                      </Link>
-                      <Link 
-                        href="/products?category=CLOTHING&type=MARINO_WOOL" 
-                        className="block py-1 sm:py-1.5 px-4 sm:px-6 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                        onClick={() => setMobileOpen(false)}
-                      >
-                        Marino Wool
-                      </Link>
+                        <span>🧵 Material Types</span>
+                        <ChevronRightIcon className={`h-3 w-3 transition-transform ${openMaterial ? 'rotate-90' : ''}`} />
+                      </button>
+                      
+                      {openMaterial && (
+                        <div className="ml-2 space-y-1 pb-2">
+                          <Link 
+                            href="/products?category=CLOTHING&type=CASHMERE" 
+                            className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            🐐 Cashmere
+                          </Link>
+                          <Link 
+                            href="/products?category=CLOTHING&type=CASHMERE_MARINO_WOOL" 
+                            className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            🧶 Cashmere + Marino Wool
+                          </Link>
+                          <Link 
+                            href="/products?category=CLOTHING&type=MARINO_WOOL" 
+                            className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            🐑 Marino Wool
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-                
-                {/* Home Decore */}
-                <Link 
-                  href="/products?category=HOME_DECORE" 
-                  className="block py-1.5 sm:py-2 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-xs sm:text-sm" 
-                  onClick={() => setMobileOpen(false)}
-                >
-                  Home Decore
-                </Link>
-                
-                {/* Accessories Section */}
-                <div className="space-y-1">
-                  <Link 
-                    href="/products?category=ACCESSORIES" 
-                    className="block py-1.5 sm:py-2 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-xs sm:text-sm" 
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Accessories
-                  </Link>
-                  <div className="ml-2 sm:ml-4 pl-1 sm:pl-2 border-l-2 border-amber-200 space-y-1">
-                    <Link 
-                      href="/products?category=ACCESSORIES&type=MEN" 
-                      className="block py-1 sm:py-1.5 px-2 sm:px-3 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Men's Accessories
-                    </Link>
-                    <Link 
-                      href="/products?category=ACCESSORIES&type=WOMEN" 
-                      className="block py-1 sm:py-1.5 px-2 sm:px-3 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Women's Accessories
-                    </Link>
-                    <Link 
-                      href="/products?category=ACCESSORIES&type=UNISEX" 
-                      className="block py-1 sm:py-1.5 px-2 sm:px-3 text-xs sm:text-sm text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" 
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Unisex Accessories
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
             
-            {/* Other Navigation Links */}
+            {/* Home Decore - Standalone */}
             <Link 
-              href={'/checkout'} 
-              className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base" 
+              href="/products?category=HOME_DECORE" 
+              className="flex items-center gap-2 py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-amber-100 hover:border-amber-300 transition-all text-sm bg-white"
               onClick={() => setMobileOpen(false)}
             >
-              Checkout
+              <span>🏠</span> Home Decore
             </Link>
             
-            {/* Admin Dashboard in Mobile Menu */}
-            {isAdmin && (
-              <Link 
-                href={'/admin'} 
-                className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors border-l-4 border-amber-500 text-sm sm:text-base"
-                onClick={() => setMobileOpen(false)}
+            {/* Accessories Section with Dropdown */}
+            <div className="border border-amber-100 rounded-lg overflow-hidden bg-amber-50/30">
+              <button
+                onClick={() => setOpenAccessories(!openAccessories)}
+                className="w-full flex items-center justify-between p-3.5 text-red-900 font-medium hover:bg-amber-50 transition-colors"
               >
-                <div className="flex items-center">
-                  <Cog6ToothIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-amber-600" />
-                  <span className="font-medium">Admin Dashboard</span>
+                <span>👜 Accessories</span>
+                <ChevronDownIcon className={`h-4 w-4 transition-transform ${openAccessories ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {openAccessories && (
+                <div className="bg-white border-t border-amber-100 p-2 space-y-1">
+                  <Link 
+                    href="/products?category=ACCESSORIES" 
+                    className="block py-2.5 px-3 text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm border-l-2 border-transparent hover:border-amber-400"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    All Accessories
+                  </Link>
+                  <Link 
+                    href="/products?category=ACCESSORIES&type=MEN" 
+                    className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    👔 Men's Accessories
+                  </Link>
+                  <Link 
+                    href="/products?category=ACCESSORIES&type=WOMEN" 
+                    className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    💎 Women's Accessories
+                  </Link>
+                  <Link 
+                    href="/products?category=ACCESSORIES&type=UNISEX" 
+                    className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    ⌚ Unisex Accessories
+                  </Link>
                 </div>
-              </Link>
-            )}
-            
-            <Link 
-              href={'/about'} 
-              className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base" 
-              onClick={() => setMobileOpen(false)}
-            >
-              About Us
-            </Link>
-            <Link 
-              href={'/contact'} 
-              className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base" 
-              onClick={() => setMobileOpen(false)}
-            >
-              Contact Us
-            </Link>
-            
-            {/* Mobile User Section */}
-            <div className="border-t border-amber-200 mt-2 pt-2 sm:pt-3">
-              {user ? (
-                <>
-                  <div className="px-2 sm:px-3 py-1 sm:py-2">
-                    <div className="flex items-center">
-                      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-r from-blue-900 to-blue-800 flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                        {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="ml-2 sm:ml-3">
-                        <p className="text-xs sm:text-sm font-semibold text-red-900">{user.name}</p>
-                        <p className="text-xs text-gray-600">{user.email}</p>
-                        {isAdmin && (
-                          <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 mt-1 text-xs font-medium bg-amber-100 text-amber-800 rounded">
-                            <ShieldCheckIcon className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
-                            Admin
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <Link 
-                    href="/profile" 
-                    className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-red-900" />
-                      My Profile
-                    </div>
-                  </Link>
-                  <Link 
-                    href="/orders" 
-                    className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <ShoppingBagIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-red-900" />
-                      My Orders
-                    </div>
-                  </Link>
-                  <Link 
-                    href="/wishlist" 
-                    className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <HeartIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-red-900" />
-                      Wishlist
-                    </div>
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileOpen(false);
-                    }}
-                    className="w-full text-left py-2 sm:py-3 px-2 sm:px-3 text-red-600 hover:text-amber-700 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base"
-                  >
-                    <div className="flex items-center">
-                      <ArrowRightOnRectangleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3" />
-                      Logout
-                    </div>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link 
-                    href="/login" 
-                    className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <UserCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-red-900" />
-                      Login
-                    </div>
-                  </Link>
-                  <Link 
-                    href="/signup" 
-                    className="block py-2 sm:py-3 px-2 sm:px-3 text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm sm:text-base"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <div className="flex items-center">
-                      <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 text-red-900" />
-                      Sign Up
-                    </div>
-                  </Link>
-                </>
               )}
             </div>
           </div>
         </div>
-      )}
+        
+        {/* Other Navigation Links - Bigger Buttons */}
+        <Link 
+          href={'/checkout'} 
+          className="block py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-transparent hover:border-amber-200 transition-all text-base shadow-sm mt-2" 
+          onClick={() => setMobileOpen(false)}
+        >
+          🛒 Checkout
+        </Link>
+        
+        {/* Admin Dashboard in Mobile Menu */}
+        {isAdmin && (
+          <Link 
+            href={'/admin'} 
+            className="block py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border-l-4 border-amber-500 bg-amber-50/50 hover:bg-amber-100 transition-all text-base shadow-sm"
+            onClick={() => setMobileOpen(false)}
+          >
+            <div className="flex items-center gap-2">
+              <Cog6ToothIcon className="h-5 w-5 text-amber-600" />
+              <span>⚙️ Admin Dashboard</span>
+            </div>
+          </Link>
+        )}
+        
+        <Link 
+          href={'/about'} 
+          className="block py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-transparent hover:border-amber-200 transition-all text-base shadow-sm" 
+          onClick={() => setMobileOpen(false)}
+        >
+          📖 About Us
+        </Link>
+        <Link 
+          href={'/contact'} 
+          className="block py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-transparent hover:border-amber-200 transition-all text-base shadow-sm" 
+          onClick={() => setMobileOpen(false)}
+        >
+          📞 Contact Us
+        </Link>
+        
+        {/* Mobile User Section with Card Style */}
+        <div className="border-2 border-amber-200 rounded-lg mt-4 bg-amber-50/30 overflow-hidden">
+          {user ? (
+            <>
+              <div className="p-4 bg-gradient-to-r from-red-50 to-amber-50">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-r from-red-900 to-red-800 flex items-center justify-center text-white font-bold text-base shadow-md">
+                    {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-red-900">{user.name}</p>
+                    <p className="text-xs text-gray-600">{user.email}</p>
+                    {isAdmin && (
+                      <span className="inline-flex items-center px-2 py-0.5 mt-1 text-xs font-medium bg-amber-200 text-amber-800 rounded-full">
+                        <ShieldCheckIcon className="h-3 w-3 mr-1" />
+                        Admin
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="divide-y divide-amber-100">
+                <Link 
+                  href="/profile" 
+                  className="flex items-center gap-3 py-3 px-4 text-red-900 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <UserIcon className="h-5 w-5 text-red-900" />
+                  <span>My Profile</span>
+                </Link>
+                <Link 
+                  href="/orders" 
+                  className="flex items-center gap-3 py-3 px-4 text-red-900 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <ShoppingBagIcon className="h-5 w-5 text-red-900" />
+                  <span>My Orders</span>
+                </Link>
+                <Link 
+                  href="/wishlist" 
+                  className="flex items-center gap-3 py-3 px-4 text-red-900 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <HeartIcon className="h-5 w-5 text-red-900" />
+                  <span>Wishlist</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 py-3 px-4 text-red-600 hover:text-amber-700 hover:bg-amber-50 transition-colors"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="p-4 bg-gradient-to-r from-red-50 to-amber-50">
+                <p className="text-sm font-medium text-red-900">Welcome! 👋</p>
+                <p className="text-xs text-gray-600">Sign in to access your account</p>
+              </div>
+              <div className="divide-y divide-amber-100">
+                <Link 
+                  href="/login" 
+                  className="flex items-center gap-3 py-3 px-4 text-red-900 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <UserCircleIcon className="h-5 w-5 text-red-900" />
+                  <span>Login</span>
+                </Link>
+                <Link 
+                  href="/signup" 
+                  className="flex items-center gap-3 py-3 px-4 text-red-900 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <UserIcon className="h-5 w-5 text-red-900" />
+                  <span>Sign Up</span>
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </nav>
   );
 };
