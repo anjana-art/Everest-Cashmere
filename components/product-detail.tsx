@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { HeartIcon, ShoppingBagIcon, PlusIcon, TruckIcon, ShieldCheckIcon, ArrowPathIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
+import { SimilarProducts } from "./similar-products";
 
 interface Product {
   id: string;           // Database ID
@@ -552,6 +553,11 @@ export const ProductDetail = ({ product }: Props) => {
           </div>
         </div>
       </div>
+
+      <SimilarProducts 
+          currentProductId={product.id}
+          category={product.category || product.metadata?.category}
+        />
     </div>
   );
 };
