@@ -16,9 +16,14 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Everesté | Luxury Cashmere & Fine Wool",
+  
   description: "Discover timeless elegance crafted from pure cashmere and fine wool. Handmade and hand-spun, rooted in Nepalese craftsmanship.",
+   icons: {
+    icon: '/favicon.jpg',
+       },
   openGraph: {
     title: "Everesté | Luxury Cashmere & Fine Wool",
+   
     description: "Sustainable luxury from the mountains to your wardrobe.",
     url: "https://www.evereste.eu",
     siteName: "Everesté",

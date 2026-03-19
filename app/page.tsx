@@ -148,6 +148,53 @@ export default async function Home() {
   </div>
 </section>
 
+      {/* BRAND VALUES STRIP */}
+      <section className="py-16 px-6 bg-white border-b border-neutral-100">
+        <div className="max-w-5xl mx-auto text-center">
+          <p className="text-xs tracking-[4px] uppercase text-amber-700 mb-4">Our Philosophy</p>
+          <h2 className="text-3xl md:text-4xl font-light text-neutral-800 mb-6">
+            Born in the Himalayas,<br className="hidden md:block" /> refined for modern living
+          </h2>
+          <p className="text-neutral-500 text-lg leading-relaxed max-w-2xl mx-auto mb-12">
+            Every Everesté piece begins high in the mountains, where master artisans 
+            hand-spin the finest cashmere using techniques passed down through generations. 
+            We believe luxury should be conscious — kind to the people who create it, 
+            and enduring enough to last a lifetime.
+          </p>
+
+          {/* Three pillars */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center">
+                <span className="text-2xl">🏔️</span>
+              </div>
+              <h3 className="font-medium text-neutral-800">Nepalese Craftsmanship</h3>
+              <p className="text-neutral-500 text-sm leading-relaxed">
+                Each piece is handmade by skilled artisans in Nepal, preserving century-old traditions.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center">
+                <span className="text-2xl">🌿</span>
+              </div>
+              <h3 className="font-medium text-neutral-800">Sustainably Made</h3>
+              <p className="text-neutral-500 text-sm leading-relaxed">
+                Pure cashmere and fine wool, sourced responsibly with respect for nature and community.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center">
+                <span className="text-2xl">✨</span>
+              </div>
+              <h3 className="font-medium text-neutral-800">Timeless Quality</h3>
+              <p className="text-neutral-500 text-sm leading-relaxed">
+                Designed to outlast trends — pieces you'll wear and love for years to come.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* SECTION 2: Launch Information - April 9, 2026 */}
       <section className="py-20 px-6 bg-neutral-50">
         <div className="max-w-5xl mx-auto">
