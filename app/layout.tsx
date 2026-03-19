@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Everesté | Luxury Cashmere & Fine Wool",
   
   description: "Discover timeless elegance crafted from pure cashmere and fine wool. Handmade and hand-spun, rooted in Nepalese craftsmanship.",

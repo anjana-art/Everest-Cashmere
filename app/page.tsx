@@ -7,7 +7,12 @@ import { prisma } from "@/lib/prisma";
 import FoundersStory from "@/components/foundersStory";
 import SignupForm from "@/components/signup-form";
 import ShareButtons from '@/components/ShareButtons';
+import type { Metadata } from "next";
 
+export const metadata: Metadata = {
+  title: "Pure Cashmere & Wool | Everesté",
+  description: "Browse our collection of  handmade cashmere sweaters and fine wool pieces.",
+};
 
 // Define the Product type matching your Carousel component
 interface Product {
