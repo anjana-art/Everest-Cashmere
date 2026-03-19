@@ -20,7 +20,13 @@ export const metadata = {
   description: "Discover timeless elegance crafted from pure cashmere and fine wool. Handmade and hand-spun, rooted in Nepalese craftsmanship.",
    icons: {
     icon: '/favicon.jpg',
-       },
+    shortcut: '/favicon.jpg',
+    apple: '/favicon.jpg',
+    other: {
+      rel: 'apple-touch-icon-precomposed',
+      url: '/favicon.jpg',
+    },
+  },
   openGraph: {
     title: "Everesté | Luxury Cashmere & Fine Wool",
    
