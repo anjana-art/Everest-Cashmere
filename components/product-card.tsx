@@ -266,16 +266,9 @@ export const ProductCard = ({ product }: Props) => {
           )}
           
           {/* Elegant Gradient Overlay on Hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-red-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          
-          {/* Category Badge - Luxury Style */}
-          {product.metadata?.category && (
-            <div className="absolute top-4 left-4">
-              <span className="px-3 py-1.5 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-sm border border-amber-200">
-                {product.metadata.category}
-              </span>
-            </div>
-          )}
+{/*           <div className="absolute inset-0 bg-gradient-to-t from-red-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+ */}          
+         
         </div>
 
         {/* Product Info with Luxury Typography */}

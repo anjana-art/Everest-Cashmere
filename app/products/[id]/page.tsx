@@ -16,6 +16,8 @@ interface Product {
     [key: string]: any;
   };
   category?: string | null;
+  clothingType?: string | null;    
+  accessoriesType?: string | null; 
   stock?: number;
   availableColors?: string[];
   availableSizes?: string[];
@@ -52,6 +54,8 @@ export default async function ProductPage({
         price: true,
         images: true,
         category: true,
+        clothingType:true,       
+        accessoriesType:true, 
         availableColors: true,
         availableSizes: true,
         defaultColor: true,
@@ -121,6 +125,8 @@ export default async function ProductPage({
       images: product.images || [],
       metadata: metadata,
       category: product.category,
+      clothingType: product.clothingType,       // ← add
+      accessoriesType: product.accessoriesType, // ← add
       stock: product.stock,
       // ✅ Always pass colors
       availableColors: product.availableColors || [],

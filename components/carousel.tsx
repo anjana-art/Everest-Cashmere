@@ -49,6 +49,8 @@ export const Carousel = ({ products = [] }: Props) => {
   const currentProduct = products[current];
   const productUrl = `/products/${currentProduct.id}`;
 
+ 
+
   return (
     <Link href={productUrl} className="block w-full h-full">
       <Card className="relative w-full h-full overflow-hidden rounded-xl shadow-2xl border-0 group cursor-pointer">
@@ -82,14 +84,7 @@ export const Carousel = ({ products = [] }: Props) => {
                 ))}
               </div>
               
-              {/* Category Badge (if available) */}
-              {currentProduct.metadata?.category && (
-                <div className="absolute top-4 left-4 z-20">
-                  <span className="px-3 py-1.5 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-lg border border-amber-200">
-                    {currentProduct.metadata.category}
-                  </span>
-                </div>
-              )}
+            
               
               {/* Title overlay at the bottom - Luxury styled */}
               <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-20">

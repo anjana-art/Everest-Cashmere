@@ -41,6 +41,8 @@ export async function GET(request: Request) {
         price: true,
         images: true,
         category: true,
+        clothingType: true,      
+        accessoriesType: true,   
         metadata: true,
         availableColors: true,
         availableSizes: true,

@@ -20,6 +20,8 @@ interface SimilarProduct {
   price: number;
   images: string[];
   category?: string | null;
+  clothingType?: string | null;     // add this
+  accessoriesType?: string | null;  // add this too
   availableColors?: string[];
   availableSizes?: string[];
 }
@@ -162,6 +164,28 @@ export const SimilarProducts = ({ currentProductId, category }: Props) => {
     console.log('No similar products found for category:', category);
     return null;
   }
+    
+  
+  
+  const formatSubCategory = (product: SimilarProduct) => {
+  if (product.category === 'CLOTHING' && product.clothingType) {
+    const map: Record<string, string> = {
+      'CASHMERE':             'Pure Cashmere',
+      'MARINO_WOOL':          'Merino Wool',
+      'CASHMERE_MARINO_WOOL': 'Cashmere & Merino',
+    };
+    return map[product.clothingType] || product.clothingType;
+  }
+  if (product.category === 'ACCESSORIES' && product.accessoriesType) {
+    const map: Record<string, string> = {
+      'MEN':    'Men',
+      'WOMEN':  'Women',
+      'UNISEX': 'Unisex',
+    };
+    return map[product.accessoriesType] || product.accessoriesType;
+  }
+  return null;
+};
 
   return (
     <div className="mt-16 md:mt-24">
@@ -232,14 +256,13 @@ export const SimilarProducts = ({ currentProductId, category }: Props) => {
                     </div>
                   )}
 
-                  {/* Category Tag */}
-                  {product.category && (
-                    <div className="absolute top-3 left-3">
-                      <span className="px-3 py-1 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-sm border border-amber-200">
-                        {product.category.replace('_', ' ')}
-                      </span>
+                {formatSubCategory(product) && (
+                    <div className="absolute top-3 left-3 z-10">
+                        <span className="px-3 py-1.5 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-sm border border-amber-200">
+                        {formatSubCategory(product)}
+                        </span>
                     </div>
-                  )}
+                    )}
 
                   {/* Quick Add Overlay */}
                   <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">

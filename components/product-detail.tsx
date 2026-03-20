@@ -26,6 +26,8 @@ interface Product {
   defaultColor?: string | null;
   defaultSize?: string | null;
   category?: string | null;
+  clothingType?: string | null;     // add this
+  accessoriesType?: string | null;  // add this too
 }
 
 interface Props {
@@ -245,6 +247,26 @@ export const ProductDetail = ({ product }: Props) => {
     );
   }
 
+    const formatSubCategory = (product: Product) => {
+      if (product.category === 'CLOTHING' && product.clothingType) {
+        const map: Record<string, string> = {
+          'CASHMERE':             'Pure Cashmere',
+          'MARINO_WOOL':          'Merino Wool',
+          'CASHMERE_MARINO_WOOL': 'Cashmere & Merino',
+        };
+        return map[product.clothingType] || product.clothingType;
+      }
+      if (product.category === 'ACCESSORIES' && product.accessoriesType) {
+        const map: Record<string, string> = {
+          'MEN':    'Men',
+          'WOMEN':  'Women',
+          'UNISEX': 'Unisex',
+        };
+        return map[product.accessoriesType] || product.accessoriesType;
+      }
+      return null;
+    };  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 py-12">
       <div className="container mx-auto px-4">
@@ -286,14 +308,14 @@ export const ProductDetail = ({ product }: Props) => {
                   </button>
 
                   {/* Category Badge - Luxury */}
-                  {product.category && (
-                    <div className="absolute top-4 left-4">
-                      <span className="px-4 py-2 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-sm border border-amber-200">
-                        {product.category}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                 {formatSubCategory(product) && (
+        <div className="absolute top-3 left-3 z-10">
+          <span className="px-3 py-1.5 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-sm border border-amber-200">
+            {formatSubCategory(product)}
+          </span>
+        </div>
+      )}
+            </div>
 
                 {/* Thumbnail Images with Luxury Style */}
                 <div className="grid grid-cols-4 gap-3">
@@ -328,7 +350,7 @@ export const ProductDetail = ({ product }: Props) => {
                   <p className="text-3xl font-serif font-medium text-amber-700">
                     {displayPrice()}
                   </p>
-                  <span className="text-xs text-red-950 font-light tracking-wider">EXCL. TAX</span>
+                  <span className="text-xs text-red-950 font-light tracking-wider">INCLU. TAX</span>
                 </div>
               </div>
 

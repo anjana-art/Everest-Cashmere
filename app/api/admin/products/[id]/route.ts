@@ -297,12 +297,11 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete single product
+// DELETE - Soft delete single product (deactivates instead of removing)
 export async function DELETE(
   request: NextRequest
 ) {
   try {
-    // Extract productId from URL
     const productId = extractProductIdFromUrl(request.url);
     
     if (!productId) {
@@ -326,9 +325,6 @@ export async function DELETE(
     // Check if product exists
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      include: {
-        orderItems: true
-      }
     });
 
     if (!product) {
@@ -338,29 +334,36 @@ export async function DELETE(
       );
     }
 
-    // Check if product has orders
-    if (product.orderItems.length > 0) {
+    // Check if already deactivated
+    if (!product.isActive) {
       return NextResponse.json(
-        { error: 'Cannot delete product with existing orders' },
+        { error: 'Product is already deactivated' },
         { status: 400 }
       );
     }
 
-    // Delete the product
-    await prisma.product.delete({
-      where: { id: productId }
+    // Soft delete — deactivate instead of removing
+    const deactivatedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: { isActive: false },
     });
 
-    console.log('✅ Product deleted:', productId);
-    
+    console.log('✅ Product deactivated:', productId);
+
     return NextResponse.json({
       success: true,
-      message: 'Product deleted successfully'
+      message: 'Product deactivated successfully',
+      product: {
+        id: deactivatedProduct.id,
+        name: deactivatedProduct.name,
+        isActive: deactivatedProduct.isActive,
+      }
     });
+
   } catch (error) {
-    console.error('Error deleting product:', error);
+    console.error('Error deactivating product:', error);
     return NextResponse.json(
-      { error: 'Failed to delete product' },
+      { error: 'Failed to deactivate product' },
       { status: 500 }
     );
   }
