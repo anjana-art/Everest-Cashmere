@@ -20,9 +20,11 @@ const COLORS = [
   { value: 'green', name: 'Green', hex: '#10B981' },
   { value: 'yellow-200', name: 'Yellow 200', hex: '#FEF08A' },
   { value: 'red-900', name: 'Red 900', hex: '#7F1D1D' },
+  { value: 'beige', name: 'Beige', hex: '#D4B896' },
+  { value: 'charcoal', name: 'Charcoal', hex: '#4A4A4A' },
 ];
 
-const SIZES = ['S', 'M', 'L'];
+const SIZES = ['XS','S', 'M', 'L','XL'];
 
 export default function AddProductPage() {
   const router = useRouter();

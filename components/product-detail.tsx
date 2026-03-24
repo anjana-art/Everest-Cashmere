@@ -341,9 +341,9 @@ export const ProductDetail = ({ product }: Props) => {
             <div className="p-8 lg:p-10 space-y-6 bg-white">
               {/* Title Section */}
               <div className="border-b border-amber-100 pb-4">
-                <h1 className="text-3xl lg:text-4xl font-serif font-bold text-red-900 mb-3 tracking-tight">
-                  {product.name}
-                </h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-red-900 mb-3 tracking-tight">
+                    {product.name}
+                  </h1>
                 
                 {/* Price - Luxury Format */}
                 <div className="flex items-baseline gap-2">

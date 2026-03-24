@@ -84,19 +84,19 @@ export default async function Home() {
     <div> 
      
       {/* SECTION 1: Hero with background image roses.jpeg */}
-<section className="relative min-h-[600px] md:min-h-[600px] flex items-center justify-center overflow-hidden py-8">
+<section className="relative min-h-[600px] md:min-h-[600px]  flex items-center justify-center overflow-hidden py-8">
   {/* Background Image - darker overlay for better readability */}
   <div className="absolute inset-0 z-0">
-    <Image
+   {/*  <Image
       src="/rose_edit.jpeg"
       alt="Everesté background"
       fill
       className="object-cover"
       priority
       sizes="100vw"
-    />
+    /> */}
     {/* Darker overlay for better text readability */}
-    <div className="absolute inset-0 bg-black/50"></div>
+    <div className="absolute inset-0 bg-amber-100"></div>
   </div>
   
   {/* Content - Two column layout with carousel on right */}
@@ -104,17 +104,17 @@ export default async function Home() {
     {/* Grid changes to single column on mobile */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
       {/* Left side - Text with larger font */}
-      <div className="flex flex-col justify-center max-w-md space-y-6 text-white mx-auto md:mx-0">
-       <h1 className="text-5xl md:text-6xl font-serif font-bold tracking-tight text-center md:text-left 
-                    bg-gradient-to-r from-amber-100 to-white bg-clip-text text-transparent">
+      <div className="flex flex-col justify-center max-w-md space-y-6 text-red-900 mx-auto md:mx-0">
+       <h1 className="text-5xl md:text-6xl font-serif font-bold tracking-tight text-red-900 text-center md:text-left 
+                     clip-text ">
             Welcome to Everesté!
           </h1>
-        <p className="text-xl text-white/90 leading-relaxed text-center md:text-left">
+        <p className="text-xl text-red-800 leading-relaxed text-center md:text-left">
           Discover timeless elegance crafted from pure cashmere and fine wool. 
           Each piece is thoughtfully handmade and hand-spun, rooted in Nepalese 
           craftsmanship and refined for a conscious European lifestyle.
         </p>
-        <p className="text-xl text-white/90 leading-relaxed text-center md:text-left">
+        <p className="text-xl text-red-800 leading-relaxed text-center md:text-left">
           From the quiet strength of the mountains to your wardrobe, 
           Everesté represents sustainable luxury — honoring local artisans, 
           respecting the environment, and offering enduring comfort with style.
@@ -275,7 +275,7 @@ export default async function Home() {
       {/* Women's Collection */}
       <Link href="/products?category=CLOTHING&gender=WOMEN" className="border bg-fuchsia-50 hover:bg-fuchsia-100 group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300">
         <Image
-          src="/stand up collar ladies sweater.webp"
+          src="/women_s_xs_roundneck_cashmere_sweaters.jpg"
           alt="Women's Collection Banner"
           fill
           className="object-contain transition-transform duration-300 group-hover:scale-105"
@@ -302,7 +302,7 @@ export default async function Home() {
       {/* Men's Collection */}
       <Link href="/products?category=CLOTHING&gender=MEN" className="border bg-fuchsia-50 hover:bg-fuchsia-100 group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300">
         <Image
-          src="/cashmere toyer.webp"
+          src="/men's_m_l_xl_roundneck_cashmere_sweaters.jpg"
           alt="Men's Collection Banner"
           fill
           className="object-contain transition-transform duration-300 group-hover:scale-105"
@@ -329,7 +329,7 @@ export default async function Home() {
       {/* Home Decor */}
       <Link href="/products?category=HOME_DECORE" className="border bg-fuchsia-50 hover:bg-fuchsia-100 group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300">
         <Image
-          src="/evereste_logo_new.png"
+          src="/400jpgdpiLogoCroppedBW.jpg"
           alt="Home Decor Banner"
           fill
           className="object-contain transition-transform duration-300 group-hover:scale-105"
@@ -356,7 +356,7 @@ export default async function Home() {
       {/* Accessories */}
       <Link href="/products?category=ACCESSORIES" className="border bg-fuchsia-50 hover:bg-fuchsia-100 group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300">
         <Image
-          src="/scarf unisex.webp"
+          src="/400JpgdpiLogoCroppedBW.jpg"
           alt="Accessories Banner"
           fill
           className="object-contain transition-transform duration-300 group-hover:scale-105"

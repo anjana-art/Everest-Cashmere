@@ -111,7 +111,6 @@ function LoginPageContent() {
         className="absolute top-4 left-4 sm:top-6 sm:left-6 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group"
         aria-label="Go to home page"
       >
-        <p className='font-bold text-red-900'>Back to Home Page</p> 
         <Home className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
       </Link>
 
