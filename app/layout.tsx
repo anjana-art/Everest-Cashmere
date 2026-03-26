@@ -15,10 +15,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.himkash.com'), 
+
   title: "HIM-KASH | Luxury  Cashmere & Fine Wool",
   
   description: "Discover timeless elegance crafted from pure cashmere and fine wool. Handmade and hand-spun, rooted in Nepalese craftsmanship.",
-   icons: {
+  robots: {                // ← add this
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+        }
+      },
+  icons: {
     icon: '/himkash_red900.png',
     shortcut: '/himkash_red900.png',
     apple: '/himkash_red900.png',

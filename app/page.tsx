@@ -216,7 +216,7 @@ export default async function Home() {
 
             <p className="text-neutral-700 text-lg leading-relaxed max-w-xl mx-auto md:mx-0">
               Be among the first to experience 
-              <span className="text-red-900 font-medium"> Everesté</span> —
+              <span className="text-red-900 font-medium"> HIM-KASH</span> —
               timeless Nepalese craftsmanship reimagined for Europe.
             </p>
 
