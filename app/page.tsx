@@ -105,10 +105,11 @@ export default async function Home() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
       {/* Left side - Text with larger font */}
       <div className="flex flex-col justify-center max-w-md space-y-6 text-red-900 mx-auto md:mx-0">
-       <h1 className="text-5xl md:text-6xl font-serif font-bold tracking-tight text-red-900 text-center md:text-left 
-                     clip-text ">
-            Welcome to Everesté!
+       <h1 className="text-5xl md:text-6xl font-serif font-italian tracking-tight text-amber-700 text-center md:text-left 
+                     clip-text  ">
+            Welcome to <span className="text-red-900">HIM-KASH</span> ! 
           </h1>
+          <p>-Himalayan Kashmere</p>
         <p className="text-xl text-red-800 leading-relaxed text-center md:text-left">
           Discover timeless elegance crafted from pure cashmere and fine wool. 
           Each piece is thoughtfully handmade and hand-spun, rooted in Nepalese 
@@ -116,7 +117,7 @@ export default async function Home() {
         </p>
         <p className="text-xl text-red-800 leading-relaxed text-center md:text-left">
           From the quiet strength of the mountains to your wardrobe, 
-          Everesté represents sustainable luxury — honoring local artisans, 
+          HIM-KASH represents sustainable luxury — honoring local artisans, 
           respecting the environment, and offering enduring comfort with style.
         </p>
         
@@ -161,7 +162,7 @@ export default async function Home() {
             Born in the Himalayas,<br className="hidden md:block" /> refined for modern living
           </h2>
           <p className="text-neutral-500 text-lg leading-relaxed max-w-2xl mx-auto mb-12">
-            Every Everesté piece begins high in the mountains, where master artisans 
+            Every HIMKASH piece begins high in the mountains, where master artisans 
             hand-spin the finest cashmere using techniques passed down through generations. 
             We believe luxury should be conscious — kind to the people who create it, 
             and enduring enough to last a lifetime.
@@ -329,7 +330,7 @@ export default async function Home() {
       {/* Home Decor */}
       <Link href="/products?category=HOME_DECORE" className="border bg-fuchsia-50 hover:bg-fuchsia-100 group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300">
         <Image
-          src="/400jpgdpiLogoCroppedBW.jpg"
+          src="/himkash_clean.png"
           alt="Home Decor Banner"
           fill
           className="object-contain transition-transform duration-300 group-hover:scale-105"
@@ -338,10 +339,9 @@ export default async function Home() {
         {/* Lighter gradient overlay at bottom */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
         
-        {/* Collection Name at BOTTOM */}
         <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
           <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-['Playfair_Display'] italic">
-            Home Decor
+            Uni-Sex Collection
           </h3>
         </div>
         
@@ -353,32 +353,7 @@ export default async function Home() {
         </div>
       </Link>
 
-      {/* Accessories */}
-      <Link href="/products?category=ACCESSORIES" className="border bg-fuchsia-50 hover:bg-fuchsia-100 group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300">
-        <Image
-          src="/400JpgdpiLogoCroppedBW.jpg"
-          alt="Accessories Banner"
-          fill
-          className="object-contain transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
-        {/* Lighter gradient overlay at bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-        
-        {/* Collection Name at BOTTOM */}
-        <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
-          <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-['Playfair_Display'] italic">
-            Accessories
-          </h3>
-        </div>
-        
-        {/* Coming Soon at TOP */}
-        <div className="absolute top-3 right-3 md:top-5 md:right-5 z-10">
-          <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-medium shadow-lg border border-white/20">
-            Coming Soon
-          </span>
-        </div>
-      </Link>
+      
     </div>
   </div>
 </section>

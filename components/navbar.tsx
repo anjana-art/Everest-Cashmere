@@ -38,6 +38,7 @@ export const Navbar = () => {
   const [isClient, setIsClient] = useState(false);
 
   const taglines = [
+    'Himalayan Kashmere',
     'Finest Quality Cashmere',
     'Nepalese Luxury Handicrafts',
     'Timeless Elegance & Softness'
@@ -161,19 +162,19 @@ export const Navbar = () => {
           <Link href="/" className="inline-block flex-shrink-0">
             <div className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 overflow-hidden rounded-xl">
               <img 
-                src="/400PngdpiLogoCropped.png" 
+                src="/himkash_red900.png" 
                 alt="Everesté Logo" 
-                className="h-full w-full object-contain"
-              />
+                className="h-full w-full object-cover"
+              /> 
             </div>
           </Link>
           
-          {/* Tagline - hidden on small screens, visible on md and up */}
-          <p className="sm:text-xs md:block text-red-950 text-xs md:text-sm italic w-32 md:w-48 text-center transition-opacity duration-500 ease-in-out min-h-[3rem] flex items-center justify-center">
-            <span className={`${fade ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500 ease-in-out`}>
+          {/* Tagline */}
+          <div className="w-28 sm:w-36 md:w-48 min-h-[2.5rem] flex items-center justify-center overflow-hidden">
+            <p className={`text-red-950 text-xs md:text-sm italic text-center leading-tight px-1 transition-opacity duration-500 ease-in-out ${fade ? 'opacity-100' : 'opacity-0'}`}>
               - {taglines[taglineIndex]}
-            </span>
-          </p>
+            </p>
+          </div>
         </div>
         
         {/* Desktop Navigation - hidden on mobile, visible on lg */}

@@ -15,24 +15,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Everesté | Luxury Cashmere & Fine Wool",
+  title: "HIM-KASH | Luxury  Cashmere & Fine Wool",
   
   description: "Discover timeless elegance crafted from pure cashmere and fine wool. Handmade and hand-spun, rooted in Nepalese craftsmanship.",
    icons: {
-    icon: '/favicon.jpg',
-    shortcut: '/favicon.jpg',
-    apple: '/favicon.jpg',
+    icon: '/himkash_red900.png',
+    shortcut: '/himkash_red900.png',
+    apple: '/himkash_red900.png',
     other: {
       rel: 'apple-touch-icon-precomposed',
-      url: '/favicon.jpg',
+      url: '/himkash_red900.png',
     },
   },
   openGraph: {
-    title: "Everesté | Luxury Cashmere & Fine Wool",
+    title: "HIM-KASH | Luxury Cashmere & Fine Wool",
    
-    description: "Sustainable luxury from the mountains to your wardrobe.",
-    url: "https://www.evereste.eu",
-    siteName: "Everesté",
+    description: "Himalayan Kashmere - Sustainable luxury from the mountains to your wardrobe.",
+    url: "https://www.himkash.com",
+    siteName: "HIM-KASH",
   },
 };
 
