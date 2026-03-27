@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     // Build the where clause
     const whereClause: any = {
       category: category,
+      isActive: true, // ✅ Only fetch active products
     };
 
     // Exclude current product if specified

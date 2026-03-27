@@ -15,35 +15,58 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.himkash.com'), 
+  metadataBase: new URL("https://www.himkash.com"),
 
-  title: "HIM-KASH | Luxury  Cashmere & Fine Wool",
-  
-  description: "Discover timeless elegance crafted from pure cashmere and fine wool. Handmade and hand-spun, rooted in Nepalese craftsmanship.",
-  robots: {                // ← add this
+  title: {
+    default: "HIM-KASH | Handmade Himalayan Cashmere & Fine Wool",
+    template: "%s | HIM-KASH",
+  },
+
+  description:
+    "Discover pure cashmere and fine wool pieces, handmade in Nepal. HIM-KASH brings sustainable Himalayan luxury to a conscious European lifestyle.",
+
+  alternates: {
+    canonical: "/",
+  },
+
+  openGraph: {
+    type: "website",
+    siteName: "HIM-KASH",
+    url: "/",
+    locale: "en_GB",
+    title: "HIM-KASH | Handmade Himalayan Cashmere & Fine Wool",
+    description:
+      "Pure cashmere and fine wool. Handmade in Nepal, designed for a conscious European lifestyle.",
+    images: [
+      {
+        url: "/og-himkash.jpg",
+        width: 1200,
+        height: 630,
+        alt: "HIM-KASH Luxury Cashmere",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "HIM-KASH | Himalayan Cashmere & Fine Wool",
+    description:
+      "Handmade cashmere from the Himalayas. Sustainable, timeless, conscious luxury.",
+    images: ["/og-himkash.jpg"],
+  },
+
+  robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-        }
-      },
-  icons: {
-    icon: '/himkash_red900.png',
-    shortcut: '/himkash_red900.png',
-    apple: '/himkash_red900.png',
-    other: {
-      rel: 'apple-touch-icon-precomposed',
-      url: '/himkash_red900.png',
-    },
   },
-  openGraph: {
-    title: "HIM-KASH | Luxury Cashmere & Fine Wool",
-   
-    description: "Himalayan Kashmere - Sustainable luxury from the mountains to your wardrobe.",
-    url: "https://www.himkash.com",
-    siteName: "HIM-KASH",
-  },
+
+  keywords: [
+    "HIM-KASH",
+    "Himalayan cashmere",
+    "handmade cashmere",
+    "sustainable wool clothing",
+    "Nepalese luxury fashion",
+  ],
 };
 
 export default function RootLayout({
