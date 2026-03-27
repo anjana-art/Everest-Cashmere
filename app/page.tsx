@@ -10,8 +10,8 @@ import ShareButtons from '@/components/ShareButtons';
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pure Cashmere & Wool | Everesté",
-  description: "Browse our collection of  handmade cashmere sweaters and fine wool pieces.",
+  title: "Pure Cashmere | Kashmere & Wool | Nepalese Luxury | Finest Quality | Elegance + Softness | Timeless | Finest Fiber",
+  description: "From Mountains -For LIFETIME || Browse our Collection of  Handmade Cashmere sweaters and Fine Marino wool pieces. Every HIM-KASH piece is hand-spum by nepalese artisans using generational old techniques",
 };
 
 // Define the Product type matching your Carousel component
