@@ -34,10 +34,15 @@ export default async function ProductPage({
 
   if (!product || !product.isActive) return notFound();
 
-  // ✅ Fix: Handle metadata type
-  const metadata = product.metadata && typeof product.metadata === 'object' && !Array.isArray(product.metadata)
+ const metadata = product.metadata && 
+  typeof product.metadata === 'object' && 
+  !Array.isArray(product.metadata) && 
+  Object.keys(product.metadata).length > 0
     ? product.metadata as Record<string, any>
     : { category: product.category };
+
+    console.log('Raw metadata from DB:', JSON.stringify(product.metadata, null, 2));
+    console.log('Processed metadata:', JSON.stringify(metadata, null, 2));
 
   return (
     <ProductDetail

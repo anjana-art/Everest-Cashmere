@@ -27,6 +27,8 @@ export const Navbar = () => {
   const [showClothingSubmenu, setShowClothingSubmenu] = useState<boolean>(false);
   const [showClothingTypeSubmenu, setShowClothingTypeSubmenu] = useState<boolean>(false);
   const [showAccessoriesSubmenu, setShowAccessoriesSubmenu] = useState<boolean>(false);
+    const [showClothingMenu, setShowClothingMenu] = useState(false);
+
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [openClothing, setOpenClothing] = useState(false);
@@ -157,265 +159,81 @@ export const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-white shadow">
       <div className="container mx-auto flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3">
         
-        {/* Logo Section */}
-        <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
-          <Link href="/" className="inline-block flex-shrink-0">
-            <div className="h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20 overflow-hidden rounded-xl">
-              <img 
-                src="/himkash_red900.png" 
-                alt="Everesté Logo" 
-                className="h-full w-full object-cover"
-              /> 
-            </div>
-          </Link>
-          
-          {/* Tagline */}
-          <div className="w-28 sm:w-36 md:w-48 min-h-[2.5rem] flex items-center justify-center overflow-hidden">
-            <p className={`text-red-950 text-xs md:text-sm italic text-center leading-tight px-1 transition-opacity duration-500 ease-in-out ${fade ? 'opacity-100' : 'opacity-0'}`}>
-              - {taglines[taglineIndex]}
-            </p>
-          </div>
-        </div>
-        
-        {/* Desktop Navigation - hidden on mobile, visible on lg */}
-        <div className="hidden lg:flex space-x-4 xl:space-x-6">
-          <Link href={"/"} className="hover:text-amber-600 text-red-900 text-base xl:text-lg transition-colors whitespace-nowrap">Home</Link>
-          
-          {/* Category Dropdown with fancy submenus */}
-          <div className="relative category-menu">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowCategoryMenu(!showCategoryMenu);
-                setShowClothingSubmenu(false);
-                setShowClothingTypeSubmenu(false);
-                setShowAccessoriesSubmenu(false);
-              }}
-              className="flex items-center space-x-1 hover:text-amber-600 text-red-900 text-base xl:text-lg transition-colors category-button whitespace-nowrap"
-            >
-              <span>Products</span>
-              <ChevronDownIcon className={`h-3 w-3 xl:h-4 xl:w-4 transition-transform ${showCategoryMenu ? 'rotate-180' : ''}`} />
-            </button>
+                  {/* Logo Section - ALL SCREENS, TAGLINE ALWAYS VISIBLE */}
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 min-w-0">
             
-            {/* Main Category Menu */}
-            {showCategoryMenu && (
-              <div className="absolute left-0 mt-2 w-56 lg:w-64 rounded-lg shadow-xl bg-white border border-gray-200 z-50">
-                <div className="p-3 lg:p-4">
-                  {/* Header with close button */}
-                  <div className="flex justify-between items-center mb-3 lg:mb-4 pb-2 lg:pb-3 border-b">
-                    <h3 className="font-semibold text-red-900 text-sm lg:text-base">Shop by Category</h3>
-                    <button
-                      onClick={() => setShowCategoryMenu(false)}
-                      className="text-red-900 hover:text-amber-600 transition-colors"
-                    >
-                      <XCircleIcon className="h-4 w-4 lg:h-5 lg:w-5" />
-                    </button>
-                  </div>
-                  
-                  {/* All Products */}
-                  <Link
-                    href="/products"
-                    className="flex items-center justify-between px-2 lg:px-3 py-2 lg:py-2.5 mb-1 lg:mb-2 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors group"
-                    onClick={closeAllMenus}
-                  >
-                    <span className="font-medium text-red-900 group-hover:text-amber-600 text-sm lg:text-base">All Products</span>
-                    <ChevronDownIcon className="h-3 w-3 lg:h-4 lg:w-4 text-red-900 group-hover:text-amber-600" />
-                  </Link>
-                  
-                  {/* Clothing Category */}
-                  <div className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowClothingSubmenu(!showClothingSubmenu);
-                        setShowAccessoriesSubmenu(false);
-                        setShowClothingTypeSubmenu(false);
-                      }}
-                      className="flex items-center justify-between w-full px-2 lg:px-3 py-2 lg:py-2.5 mb-1 lg:mb-2 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors group"
-                    >
-                      <span className="font-medium text-red-900 group-hover:text-amber-600 text-sm lg:text-base">Clothing</span>
-                      <ChevronDownIcon className={`h-3 w-3 lg:h-4 lg:w-4 text-red-900 group-hover:text-amber-600 transition-transform ${showClothingSubmenu ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {/* Clothing Submenu */}
-                    {showClothingSubmenu && (
-                      <div className="absolute left-full top-0 ml-1 w-56 lg:w-64 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
-                        <div className="p-2 lg:p-3">
-                          <div className="flex justify-between items-center mb-2 pb-2 border-b">
-                            <h4 className="font-medium text-red-900 text-sm lg:text-base">Clothing</h4>
-                            <button
-                              onClick={() => setShowClothingSubmenu(false)}
-                              className="text-red-900 hover:text-amber-600 transition-colors"
-                            >
-                              <XCircleIcon className="h-3 w-3 lg:h-4 lg:w-4" />
-                            </button>
-                          </div>
-                          
-                          {/* Clothing Types */}
-                          <div className="mb-2 lg:mb-3">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowClothingTypeSubmenu(!showClothingTypeSubmenu);
-                              }}
-                              className="flex items-center justify-between w-full px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
-                            >
-                              <span>By Material Type</span>
-                              <ChevronDownIcon className={`h-2 w-2 lg:h-3 lg:w-3 transition-transform ${showClothingTypeSubmenu ? 'rotate-180' : ''}`} />
-                            </button>
-                            
-                            {showClothingTypeSubmenu && (
-                              <div className="ml-2 lg:ml-3 pl-1 lg:pl-2 border-l border-gray-200 mt-1">
-                                <Link
-                                  href="/products?category=CLOTHING&type=CASHMERE"
-                                  className="block px-2 py-1 lg:py-1.5 text-xs text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                                  onClick={closeAllMenus}
-                                >
-                                  Cashmere
-                                </Link>
-                                <Link
-                                  href="/products?category=CLOTHING&type=CASHMERE_MARINO_WOOL"
-                                  className="block px-2 py-1 lg:py-1.5 text-xs text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                                  onClick={closeAllMenus}
-                                >
-                                  Cashmere + Marino Wool
-                                </Link>
-                                <Link
-                                  href="/products?category=CLOTHING&type=MARINO_WOOL"
-                                  className="block px-2 py-1 lg:py-1.5 text-xs text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                                  onClick={closeAllMenus}
-                                >
-                                  Marino Wool
-                                </Link>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Clothing by Gender */}
-                          <div>
-                            <p className="text-xs font-medium text-red-900 mb-1">By Gender</p>
-                            <Link
-                              href="/products?category=CLOTHING&gender=MEN"
-                              className="block px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
-                              onClick={closeAllMenus}
-                            >
-                              Men's Clothing
-                            </Link>
-                            <Link
-                              href="/products?category=CLOTHING&gender=WOMEN"
-                              className="block px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
-                              onClick={closeAllMenus}
-                            >
-                              Women's Clothing
-                            </Link>
-                            <Link
-                              href="/products?category=CLOTHING&gender=UNISEX"
-                              className="block px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors"
-                              onClick={closeAllMenus}
-                            >
-                              Unisex Clothing
-                            </Link>
-                          </div>
-                          
-                          {/* All Clothing */}
-                          <div className="mt-2 lg:mt-3 pt-2 lg:pt-3 border-t border-gray-100">
-                            <Link
-                              href="/products?category=CLOTHING"
-                              className="block px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm font-medium text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                              onClick={closeAllMenus}
-                            >
-                              All Clothing
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Home Decore */}
-                  <Link
-                    href="/products?category=HOME_DECORE"
-                    className="flex items-center justify-between px-2 lg:px-3 py-2 lg:py-2.5 mb-1 lg:mb-2 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors group"
-                    onClick={closeAllMenus}
-                  >
-                    <span className="font-medium text-red-900 group-hover:text-amber-600 text-sm lg:text-base">Home Decore</span>
-                  </Link>
-                  
-                  {/* Accessories Category */}
-                  <div className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowAccessoriesSubmenu(!showAccessoriesSubmenu);
-                        setShowClothingSubmenu(false);
-                        setShowClothingTypeSubmenu(false);
-                      }}
-                      className="flex items-center justify-between w-full px-2 lg:px-3 py-2 lg:py-2.5 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors group"
-                    >
-                      <span className="font-medium text-red-900 group-hover:text-amber-600 text-sm lg:text-base">Accessories</span>
-                      <ChevronDownIcon className="h-3 w-3 lg:h-4 lg:w-4 text-red-900 group-hover:text-amber-600" />
-                    </button>
-                    
-                    {/* Accessories Submenu */}
-                    {showAccessoriesSubmenu && (
-                      <div className="absolute left-full top-0 ml-1 w-48 lg:w-56 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
-                        <div className="p-2 lg:p-3">
-                          <div className="flex justify-between items-center mb-2 pb-2 border-b">
-                            <h4 className="font-medium text-red-900 text-sm lg:text-base">Accessories</h4>
-                            <button
-                              onClick={() => setShowAccessoriesSubmenu(false)}
-                              className="text-red-900 hover:text-amber-600 transition-colors"
-                            >
-                              <XCircleIcon className="h-3 w-3 lg:h-4 lg:w-4" />
-                            </button>
-                          </div>
-                          
-                          {/* Accessories by Gender */}
-                          <div className="mb-2">
-                            <p className="text-xs font-medium text-red-900 mb-1">By Gender</p>
-                            <Link
-                              href="/products?category=ACCESSORIES&type=MEN"
-                              className="block px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
-                              onClick={closeAllMenus}
-                            >
-                              Men
-                            </Link>
-                            <Link
-                              href="/products?category=ACCESSORIES&type=WOMEN"
-                              className="block px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors mb-1"
-                              onClick={closeAllMenus}
-                            >
-                              Women
-                            </Link>
-                            <Link
-                              href="/products?category=ACCESSORIES&type=UNISEX"
-                              className="block px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors"
-                              onClick={closeAllMenus}
-                            >
-                              Unisex
-                            </Link>
-                          </div>
-                          
-                          {/* All Accessories */}
-                          <div className="mt-2 pt-2 border-t border-gray-100">
-                            <Link
-                              href="/products?category=ACCESSORIES"
-                              className="block px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm font-medium text-red-900 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                              onClick={closeAllMenus}
-                            >
-                              All Accessories
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            <Link href="/" className="inline-block flex-shrink-0">
+              <img
+                src="/himkash_favicon.svg"
+                alt="HIM-KASH"
+                className="h-8 sm:h-10 md:h-12 w-auto"
+              />
+            </Link>
+
+            {/* Tagline - always visible, adapts per screen */}
+            <div className="min-w-0 w-20 sm:w-28 md:w-40 flex items-center overflow-hidden">
+              <p className={`text-red-950 text-[9px] sm:text-xs md:text-sm 
+                            italic text-center leading-tight px-1 w-full
+                            transition-opacity duration-500 ease-in-out 
+                            ${fade ? 'opacity-100' : 'opacity-0'}`}>
+                - {taglines[taglineIndex]}
+              </p>
+            </div>
+
           </div>
+           {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/" className="hover:text-amber-600 text-red-900 text-base xl:text-lg transition-colors whitespace-nowrap">
+              Home
+            </Link>
+            
+            {/* Clothing Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setShowClothingMenu(true)}
+              onMouseLeave={() => setShowClothingMenu(false)}
+            >
+             <button className="flex items-center gap-1 hover:text-amber-600 text-red-900 text-base xl:text-lg transition-colors whitespace-nowrap">
+              Clothing
+              <ChevronDownIcon className="w-4 h-4" />
+            </button>
+              
+              {showClothingMenu && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white shadow-lg rounded-lg border py-2">
+                  <Link 
+                    href="/clothing" 
+                    className="block px-4 py-2 hover:bg-amber-50 text-gray-700"
+                  >
+                    All Clothing
+                  </Link>
+                  <div className="border-t my-1"></div>
+                  <div className="px-4 py-1 text-xs text-gray-500 font-medium">Shop by Material</div>
+                  <Link href="/clothing/cashmere" className="block px-4 py-2 pl-6 hover:bg-amber-50">
+                    Cashmere
+                  </Link>
+                  <Link href="/clothing/cashmere-marino-wool" className="block px-4 py-2 pl-6 hover:bg-amber-50">
+                    Cashmere + Marino Wool
+                  </Link>
+                  <Link href="/clothing/marino-wool" className="block px-4 py-2 pl-6 hover:bg-amber-50">
+                    Marino Wool
+                  </Link>
+                  <div className="border-t my-1"></div>
+                  <div className="px-4 py-1 text-xs text-gray-500 font-medium">Shop by Gender</div>
+                  <Link href="/clothing/women" className="block px-4 py-2 pl-6 hover:bg-amber-50">
+                    Women's
+                  </Link>
+                  <Link href="/clothing/men" className="block px-4 py-2 pl-6 hover:bg-amber-50">
+                    Men's
+                  </Link>
+                  <Link href="/clothing/unisex" className="block px-4 py-2 pl-6 hover:bg-amber-50">
+                    Unisex
+                  </Link>
+                </div>
+              )}
+            </div>
           
           {/* Desktop Navigation Links */}
+
           <Link href={"/checkout"} className="hover:text-amber-600 text-red-900 text-base xl:text-lg transition-colors whitespace-nowrap">Checkout</Link>
           <Link href={"/about"} className="hover:text-amber-600 text-red-900 text-base xl:text-lg transition-colors whitespace-nowrap">About Us</Link>
           <Link href={"/contact"} className="hover:text-amber-600 text-red-900 text-base xl:text-lg transition-colors whitespace-nowrap">Contact Us</Link>
