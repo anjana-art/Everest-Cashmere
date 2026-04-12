@@ -275,29 +275,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* SECTION 5: Round Buttons */}
-      <section className="py-20 px-6 bg-[#FDFBF7]">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-            {[
-              { href: "/contact", icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", label: "Contact Us" },
-              { href: "/about", icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z", label: "About Us" },
-              { href: "/frequentlyAskedQuestions", icon: "M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z", label: "FAQ" }
-            ].map((item, i) => (
-              <Link key={i} href={item.href} className="group flex flex-col items-center">
-                <div className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-red-800 flex items-center justify-center group-hover:bg-amber-600 transition-all duration-300 shadow-lg group-hover:shadow-xl">
-                  <svg className="w-12 h-12 md:w-14 md:h-14 text-amber-100 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} />
-                  </svg>
-                </div>
-                <span className="mt-4 text-lg font-medium text-red-800 group-hover:text-amber-600 transition-colors">
-                  {item.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+    
 
       {/* Share Section */}
       <section className="relative bg-gradient-to-r from-red-800/5 to-amber-800/5 py-16">

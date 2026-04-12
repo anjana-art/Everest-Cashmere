@@ -47,7 +47,7 @@ export default async function ClothingPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {products.map((product) => (
           <div key={product.id} className="group">
-            <Link href={`/product/${product.id}`}>
+            <Link href={`/products/${product.id}`}>
               <div className="aspect-square overflow-hidden rounded-lg bg-gray-100 mb-3">
                 {product.images?.[0] && (
                   <img

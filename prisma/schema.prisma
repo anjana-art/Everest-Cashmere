@@ -2,8 +2,6 @@
 generator client {
   provider = "prisma-client-js"
   binaryTargets = ["native", "linux-musl", "debian-openssl-3.0.x"]
-
-
 }
 
 datasource db {
@@ -17,17 +15,31 @@ model User {
   email     String    @unique
   name      String?
   password  String
-  isAdmin   Boolean   @default(false)  //session handeling for admin 
+  isAdmin   Boolean   @default(false)  //session handling for admin 
 
+  // Portuguese tax number for invoicing
+  nif           String?   @unique  // Número de Identificação Fiscal
+  nifValidated  Boolean   @default(false) // Track if NIF is validated
+  
+  // For businesses (B2B)
+  companyName   String?   // Nome da Empresa
+  companyNif    String?   // NIF da Empresa (different from personal NIF)
+  
+  // For EU VAT (if selling to other EU countries)
+  vatNumber     String?   // EU VAT number for cross-border sales
+  
+  // Invoice preferences
+  invoiceEmail  String?   // Separate email for invoices
+  invoiceFormat InvoiceFormat @default(PDF)
+  
   // fields for password reset
   resetToken     String?   @unique
   resetTokenExp  DateTime?
-
   
   // relationships
   addresses   Address[]
   userProfile UserProfile?
-  ratings  Rating[]
+  ratings     Rating[]
   
   // Orders
   orders    Order[]
@@ -35,14 +47,25 @@ model User {
   // Cart
   cart      Cart?
   
-  // Wishlist - ADD THIS
+  // Wishlist
   wishlist  Wishlist?
+  
+  // Billing address reference
+  billingAddressId String?  @unique 
+  billingAddress   Address? @relation("BillingAddress", fields: [billingAddressId], references: [id])
   
   // Timestamps
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   
   @@map("users")
+}
+
+// Invoice format enum
+enum InvoiceFormat {
+  PDF
+  EMAIL
+  BOTH
 }
 
 // ==================== ADDRESS ====================
@@ -58,6 +81,7 @@ model Address {
   // Recipient info
   fullName      String
   company       String?
+  nif           String?     // NIF at address level (for business addresses)
   
   // International address fields
   addressLine1  String
@@ -75,9 +99,15 @@ model Address {
   // Additional notes
   instructions  String?
   
+  // For VAT/invoice purposes
+  isInvoiceAddress Boolean  @default(false) // Mark if this is the official invoice address
+  
   // Timestamps
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  userBilling   User?       @relation("BillingAddress")
   
   @@map("addresses")
   @@unique([userId, type, isDefault])
@@ -160,19 +190,20 @@ model CartItem {
   cartId    String
   cart      Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
-  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade) // ADD THIS
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   name      String
   price     Decimal   @db.Decimal(10, 2)
   quantity  Int       @default(1)
   image     String?
 
-   // Variant info
+  // Variant info
   color     String?   // Selected color
   size      String?   // Selected size
   
   @@map("cart_items")
 }
 
+// ==================== PRODUCT ENUMS ====================
 enum ProductCategory {
   CLOTHING
   HOME_DECORE
@@ -197,6 +228,7 @@ enum Gender {
   UNISEX
 }
 
+// ==================== PRODUCT ====================
 model Product {
   id          String      @id @default(cuid())
   stripeId    String?     @unique
@@ -204,12 +236,11 @@ model Product {
   description String?
   price       Decimal     @db.Decimal(10, 2)
   images      String[]
-  category    ProductCategory?  // Changed from String?
+  category    ProductCategory?
   
-  // ADD THESE TWO LINES:
+  // Product variants
   clothingType    ClothingType?
-  gender          Gender?            // ADD THIS LINE
-
+  gender          Gender?
   accessoriesType AccessoriesType?
   
   // Product variants
@@ -232,7 +263,6 @@ model Product {
   orderItems    OrderItem[]
   cartItems     CartItem[]
   ratings       Rating[]
-
   
   // Timestamps
   createdAt     DateTime  @default(now())
@@ -240,7 +270,6 @@ model Product {
   
   @@map("products")
 }
-
 
 // ==================== WISHLIST ====================
 model Wishlist {
@@ -280,9 +309,20 @@ model Order {
   shipping              Decimal     @db.Decimal(10, 2) @default(0)
   discount              Decimal     @db.Decimal(10, 2) @default(0)
   
+  // Invoice information
+  invoiceId      String?   // InvoiceXpress invoice ID
+  invoiceNumber  String?   // Invoice number (e.g., FAT 1/2026)
+  invoiceUrl     String?   // URL to view invoice
+  invoicePdf     String?   // URL to download PDF invoice
+  
+  // Portuguese invoice specific fields
+  invoiceType    InvoiceType?  // Fatura, Fatura Simplificada, etc.
+  atcud          String?       // ATCUD - Document unique code for Portuguese invoices
+  qrCode         String?       // QR code for Portuguese invoice validation
+  
   // Order tracking status
   status                OrderStatus @default(PENDING)
-  trackingStatus        TrackingStatus?  // New field for tracking
+  trackingStatus        TrackingStatus?
   
   // Payment info
   paymentMethod         String?     @default("card")
@@ -293,12 +333,17 @@ model Order {
   // Shipping & Delivery
   shippingMethod        String?     @default("standard")
   trackingNumber        String?
-  carrier               String?     // e.g., "UPS", "FedEx", "USPS"
-  estimatedDelivery     DateTime?   // New field
+  carrier               String?     // e.g., "UPS", "FedEx", "USPS", "CTT"
+  estimatedDelivery     DateTime?
   
   // Addresses (stored as JSON)
   shippingAddress       Json?       @db.JsonB
   billingAddress        Json?       @db.JsonB
+  
+  // Tax information at order level
+  vatRate               Float?      @default(23) // Portuguese standard VAT rate
+  vatNumber             String?     // Customer's VAT number for B2B
+  nif                   String?     // Customer's NIF for invoice
   
   // Items
   items                 OrderItem[]
@@ -307,14 +352,20 @@ model Order {
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
   paidAt                DateTime?
-  preparingAt           DateTime?   // New field
-  shippedAt             DateTime?   // New field (fixed typo)
-  deliveredAt           DateTime?   // New field
+  preparingAt           DateTime?
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
   cancelledAt           DateTime?
   
-
-
   @@map("orders")
+}
+
+// Portuguese invoice types
+enum InvoiceType {
+  FATURA           // Standard invoice
+  FATURA_SIMPLIFICADA  // Simplified invoice (under €1000)
+  FATURA_RECIBO    // Receipt invoice
+  NOTA_CREDITO     // Credit note
 }
 
 model OrderItem {
@@ -322,15 +373,17 @@ model OrderItem {
   orderId     String
   order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId   String
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade) // ADD THIS
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   name        String
   price       Decimal   @db.Decimal(10, 2)
   quantity    Int       @default(1)
   image       String?
-  color       String?   // New: for variant tracking
-  size        String?   // New: for variant tracking
-
-   
+  color       String?   // for variant tracking
+  size        String?   // for variant tracking
+  
+  // Tax information per item
+  vatRate     Float?    @default(23) // VAT rate for this item
+  vatAmount   Decimal?  @db.Decimal(10, 2) // Calculated VAT amount
   
   @@map("order_items")
 }
@@ -346,7 +399,6 @@ enum OrderStatus {
   REFUNDED
 }
 
-// New enum for tracking
 enum TrackingStatus {
   ORDER_RECEIVED
   ORDER_PREPARING
@@ -363,17 +415,17 @@ model Rating {
   userId      String
   
   // Rating details (1-5 stars)
-  rating      Int      @default(5) // 1-5 stars
+  rating      Int      @default(5)
   
   // Optional review text
   review      String?
   
   // Review metadata
-  helpfulVotes Int     @default(0) // Number of people who found this helpful
-  verifiedPurchase Boolean @default(false) // Whether user purchased this item
+  helpfulVotes Int     @default(0)
+  verifiedPurchase Boolean @default(false)
   
   // Review status
-  status      ReviewStatus @default(PENDING) // For moderation
+  status      ReviewStatus @default(PENDING)
   
   // Relationships
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -383,9 +435,7 @@ model Rating {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  
-
-  @@unique([productId, userId]) // One rating per user per product
+  @@unique([productId, userId])
   @@map("ratings")
 }
 
@@ -395,5 +445,4 @@ enum ReviewStatus {
   APPROVED   // Visible to public
   REJECTED   // Not visible (spam/inappropriate)
   REPORTED   // Reported by users
-} 
-
+}

@@ -5,9 +5,9 @@ import Link from 'next/link';
 
 // Import different components for different materials
 import CashmerePage from '@/components/cashmerePage';
- import MarinoWoolPage from '@/components/marinoWoolPage';
+import MarinoWoolPage from '@/components/marinoWoolPage';
 import CashmereMarinoPage from '@/components/cashmereMarinoPage';
-import DefaultMaterialPage from '@/components/defaultMaterialPage'; 
+import DefaultMaterialPage from '@/components/defaultMaterialPage';
 
 interface Props {
   params: Promise<{ slug: string[] }> | { slug: string[] };
@@ -55,10 +55,16 @@ export default async function ClothingCatchAllPage({ params, searchParams }: Pro
     where.gender = currentGender.toUpperCase();
   }
   
-  const products = await prisma.product.findMany({
+  const productsFromDb = await prisma.product.findMany({
     where,
     orderBy: { createdAt: 'desc' }
   });
+  
+  // ✅ CRITICAL FIX: Convert Decimal prices to numbers
+  const products = productsFromDb.map(product => ({
+    ...product,
+    price: Number(product.price), // Convert Decimal to number
+  }));
   
   // 🎯 RENDER DIFFERENT PAGE COMPONENTS BASED ON MATERIAL
   switch (currentMaterial) {
@@ -137,6 +143,7 @@ function MaterialCard({ href, title, description, image }: any) {
   return (
     <Link href={href} className="group block">
       <div className="aspect-[4/3] overflow-hidden rounded-lg bg-gray-100 mb-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition" />
       </div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>

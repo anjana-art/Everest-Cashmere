@@ -1,4 +1,4 @@
-// app/api/webhooks/stripe/route.ts (FIXED VERSION)
+// app/api/webhooks/stripe/route.ts (WITH SIMPLIFIED INVOICE TEST)
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
@@ -34,9 +34,6 @@ export async function POST(request: Request) {
       customerEmail: session.customer_email,
       metadata: session.metadata,
       paymentStatus: session.payment_status,
-      // Debug: check what properties exist
-      hasShipping: !!(session as any).shipping_details || !!(session as any).shipping,
-      hasCustomerDetails: !!(session as any).customer_details
     });
     
     try {
@@ -57,6 +54,12 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+      
+      // Get user details for invoice
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true, nif: true }
+      });
       
       // Calculate totals
       const subtotal = session.amount_subtotal ? session.amount_subtotal / 100 : 0;
@@ -94,7 +97,7 @@ export async function POST(request: Request) {
       // Type assertion to access properties that might exist
       const sessionAny = session as any;
       
-      // Prepare shipping address - check multiple possible property names
+      // Prepare shipping address
       let shippingData = null;
       if (sessionAny.shipping_details) {
         shippingData = sessionAny.shipping_details;
@@ -114,7 +117,7 @@ export async function POST(request: Request) {
         }
       } : Prisma.DbNull;
       
-      // Prepare billing address - check multiple possible property names
+      // Prepare billing address
       let billingData = null;
       if (sessionAny.customer_details) {
         billingData = sessionAny.customer_details;
@@ -138,13 +141,15 @@ export async function POST(request: Request) {
         } : undefined
       } : Prisma.DbNull;
       
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
       // Create order in database
       const order = await prisma.order.create({
         data: {
           userId: userId,
           stripeSessionId: session.id,
           stripeCustomerId: typeof session.customer === 'string' ? session.customer : null,
-          orderNumber: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+          orderNumber: orderNumber,
           subtotal: subtotal,
           total: total,
           tax: tax,
@@ -161,11 +166,71 @@ export async function POST(request: Request) {
           preparingAt: new Date()
         },
         include: {
-          items: true
+          items: true,
+          user: true
         }
       });
       
-      console.log(`Order created successfully: ${order.id}`);
+      console.log(`✅ Order created successfully: ${order.id} (${orderNumber})`);
+      
+      // 🆕🆕🆕 SIMPLIFIED INVOICE TEST 🆕🆕🆕
+      console.log('🔵🔵🔵 STARTING INVOICE CREATION TEST 🔵🔵🔵');
+      console.log('Order number:', orderNumber);
+      console.log('User email:', user?.email);
+      console.log('Items count:', orderItems.length);
+      
+      try {
+        // Test the invoice API directly
+        const testPayload = {
+          client: {
+            name: user?.name || 'Test Customer',
+            email: user?.email || 'test@example.com',
+            vat_number: user?.nif || undefined,
+          },
+          items: orderItems.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            unit_price: item.price,
+            vat_rate: 23,
+          })),
+          orderId: orderNumber,
+        };
+        
+        console.log('🔵 Sending payload:', JSON.stringify(testPayload, null, 2));
+        
+        // Use absolute URL for server-side fetch
+        const apiUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+        const invoiceResponse = await fetch(`${apiUrl}/api/create-invoice`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(testPayload),
+        });
+        
+        const invoiceData = await invoiceResponse.json();
+        console.log('🔵 Invoice API response status:', invoiceResponse.status);
+        console.log('🔵 Invoice API response data:', JSON.stringify(invoiceData, null, 2));
+        
+        if (invoiceData.success) {
+          console.log(`✅✅✅ INVOICE CREATED! ID: ${invoiceData.invoice.id}`);
+          console.log(`✅✅✅ Invoice Number: ${invoiceData.invoice.number}`);
+          console.log(`✅✅✅ PDF URL: ${invoiceData.invoice.pdf_url}`);
+          
+          // Save invoice details to order
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              invoiceId: invoiceData.invoice.id,
+              invoiceNumber: invoiceData.invoice.number,
+              invoiceUrl: invoiceData.invoice.pdf_url,
+            }
+          });
+        } else {
+          console.error(`❌❌❌ INVOICE FAILED: ${invoiceData.error}`);
+        }
+      } catch (err) {
+        console.error('❌❌❌ INVOICE ERROR:', err);
+      }
+      console.log('🔵🔵🔵 INVOICE TEST COMPLETE 🔵🔵🔵');
       
       // Clear user's cart
       const userCart = await prisma.cart.findUnique({
@@ -183,6 +248,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ 
         success: true, 
         orderId: order.id,
+        orderNumber: orderNumber,
         message: 'Order created successfully'
       });
       

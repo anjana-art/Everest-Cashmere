@@ -1,10 +1,11 @@
-// app/api/verify-order/route.ts (FIXED VERSION)
+// app/api/verify-order/route.ts (WITH INVOICE INTEGRATION)
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
+import { createInvoiceAfterOrder } from '@/lib/invoice'; // ✅ Import invoice function
 
 export async function POST(request: Request) {
   console.log('=== VERIFY ORDER API CALLED ===');
@@ -44,6 +45,13 @@ export async function POST(request: Request) {
     
     if (existingOrder) {
       console.log('Order already exists:', existingOrder.id);
+      
+      // ✅ Even if order exists, check if invoice is missing and create it
+      if (!existingOrder.invoiceId) {
+        console.log('🔵 Order exists but no invoice found. Creating invoice...');
+        await createInvoiceForOrder(existingOrder, user);
+      }
+      
       return NextResponse.json({
         success: true,
         message: 'Order found',
@@ -51,12 +59,11 @@ export async function POST(request: Request) {
       });
     }
     
-    // Retrieve session from Stripe WITH ONLY LINE ITEMS EXPANDED
+    // Retrieve session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['line_items.data.price.product'] // Only expand line items
+      expand: ['line_items.data.price.product']
     });
     
-    // Type assertion to access shipping and customer_details
     const sessionWithDetails = session as Stripe.Checkout.Session & {
       shipping?: {
         address?: Stripe.Address;
@@ -68,10 +75,6 @@ export async function POST(request: Request) {
     console.log('Session retrieved:', {
       id: session.id,
       payment_status: session.payment_status,
-      shipping: sessionWithDetails.shipping,
-      customer_details: sessionWithDetails.customer_details,
-      hasShipping: !!sessionWithDetails.shipping,
-      hasCustomerDetails: !!sessionWithDetails.customer_details
     });
     
     if (session.payment_status !== 'paid') {
@@ -94,23 +97,14 @@ export async function POST(request: Request) {
       }
     });
     
-    console.log('Available products in database:', allProducts.map(p => ({
-      id: p.id,
-      stripeId: p.stripeId,
-      name: p.name
-    })));
-    
     // Create order items with VALID product IDs
     const orderItems = lineItems.map((item: any, index: number) => {
       const description = item.description || '';
-      console.log(`Processing item ${index + 1}:`, description);
       
-      // Try to parse color and size from description
       let name = description;
       let color = null;
       let size = null;
       
-      // Format: "Product Name (Color, Size)"
       const match = description.match(/^(.*?)\s*\((.*?),\s*(.*?)\)$/);
       if (match) {
         name = match[1].trim();
@@ -118,32 +112,18 @@ export async function POST(request: Request) {
         size = match[3].trim();
       }
       
-      // Get Stripe product ID
       const stripeProductId = item.price?.product?.id;
-      console.log('Stripe product ID:', stripeProductId);
-      
-      // Find matching product in database by stripeId
       let productId = 'unknown';
       
       if (stripeProductId) {
         const matchingProduct = allProducts.find(p => p.stripeId === stripeProductId);
         if (matchingProduct) {
           productId = matchingProduct.id;
-          console.log(`Found matching product: ${matchingProduct.name} (${matchingProduct.id})`);
-        } else {
-          console.warn(`No matching product found for stripeId: ${stripeProductId}`);
-          // Use the first product as fallback
-          if (allProducts.length > 0) {
-            productId = allProducts[0].id;
-            console.log(`Using fallback product: ${allProducts[0].name} (${productId})`);
-          }
-        }
-      } else {
-        console.warn('No stripeProductId found in item');
-        // Use the first product as fallback
-        if (allProducts.length > 0) {
+        } else if (allProducts.length > 0) {
           productId = allProducts[0].id;
         }
+      } else if (allProducts.length > 0) {
+        productId = allProducts[0].id;
       }
       
       return {
@@ -180,10 +160,8 @@ export async function POST(request: Request) {
     // Generate order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     
-    // Prepare shipping address (available directly on session object)
+    // Prepare shipping address
     const shippingDetails = sessionWithDetails.shipping;
-    console.log('Shipping details:', shippingDetails);
-    
     const shippingAddress = shippingDetails 
       ? JSON.stringify({
           name: shippingDetails.name || '',
@@ -198,10 +176,8 @@ export async function POST(request: Request) {
         })
       : Prisma.DbNull;
     
-    // Prepare billing address (available directly on session object)
+    // Prepare billing address
     const customerDetails = sessionWithDetails.customer_details;
-    console.log('Customer details:', customerDetails);
-    
     const billingAddress = customerDetails
       ? JSON.stringify({
           name: customerDetails.name || '',
@@ -244,7 +220,12 @@ export async function POST(request: Request) {
       }
     });
     
-    console.log('Order created successfully:', newOrder.id);
+    console.log('✅ Order created successfully:', newOrder.id);
+    
+    // 🆕🆕🆕 CREATE INVOICE FOR THE ORDER 🆕🆕🆕
+    console.log('🔵🔵🔵 STARTING INVOICE CREATION 🔵🔵🔵');
+    await createInvoiceForOrder(newOrder, user);
+    console.log('🔵🔵🔵 INVOICE CREATION COMPLETE 🔵🔵🔵');
     
     // Clear user's cart
     try {
@@ -271,7 +252,6 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Error in verify-order:', error);
     
-    // More specific error handling
     if (error.code === 'P2003') {
       return NextResponse.json(
         { 
@@ -291,5 +271,65 @@ export async function POST(request: Request) {
       },
       { status: 500 }
     );
+  }
+}
+
+// ============================================
+// HELPER FUNCTION TO CREATE INVOICE
+// ============================================
+
+async function createInvoiceForOrder(order: any, user: any) {
+  console.log('🔵 createInvoiceForOrder called for order:', order.orderNumber);
+  console.log('🔵 User email:', user?.email);
+  console.log('🔵 Items count:', order.items?.length);
+  
+  try {
+    // Parse shipping address if it exists
+    let shippingAddress = null;
+    if (order.shippingAddress && typeof order.shippingAddress === 'string') {
+      try {
+        shippingAddress = JSON.parse(order.shippingAddress);
+      } catch (e) {
+        console.log('Could not parse shipping address');
+      }
+    }
+    
+    const invoiceResult = await createInvoiceAfterOrder({
+      client: {
+        name: user?.name || shippingAddress?.name || 'Customer',
+        email: user?.email || '',
+        nif: user?.nif || undefined,
+        address: shippingAddress?.address?.line1,
+        city: shippingAddress?.address?.city,
+        postal_code: shippingAddress?.address?.postalCode,
+      },
+      items: order.items.map((item: any) => ({
+        name: item.name,
+        description: item.name,
+        quantity: item.quantity,
+        price: Number(item.price),
+      })),
+      orderId: order.orderNumber,
+    });
+    
+    console.log('🔵 Invoice result:', invoiceResult);
+    
+    if (invoiceResult.success) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          invoiceId: invoiceResult.invoiceId,
+          invoiceNumber: invoiceResult.invoiceNumber,
+          invoiceUrl: invoiceResult.pdfUrl,
+        }
+      });
+      console.log(`✅✅✅ INVOICE CREATED! ID: ${invoiceResult.invoiceId}`);
+      console.log(`✅✅✅ Invoice Number: ${invoiceResult.invoiceNumber}`);
+      console.log(`✅✅✅ PDF URL: ${invoiceResult.pdfUrl}`);
+    } else {
+      console.error(`❌❌❌ INVOICE FAILED: ${invoiceResult.error}`);
+    }
+  } catch (error) {
+    console.error('❌❌❌ INVOICE ERROR:', error);
   }
 }

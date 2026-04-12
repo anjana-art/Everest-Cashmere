@@ -432,13 +432,7 @@ export const Navbar = () => {
         
         {/* Products with dropdown in mobile */}
         <div className="space-y-1">
-          <Link 
-            href={'/products'} 
-            className="block py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-transparent hover:border-amber-200 transition-all text-base shadow-sm" 
-            onClick={() => setMobileOpen(false)}
-          >
-            📦 All Products
-          </Link>
+         
           
           {/* Mobile Category Links with better hierarchy */}
           <div className="ml-2 space-y-2 mt-2">
@@ -456,8 +450,8 @@ export const Navbar = () => {
               {openClothing && (
                 <div className="bg-white border-t border-amber-100 p-2 space-y-2">
                   <Link 
-                    href="/products?category=CLOTHING" 
-                    className="block py-2.5 px-3 text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm border-l-2 border-transparent hover:border-amber-400"
+                    href="/clothing" 
+                    className="block py-2.5 px-3 text-red-800 hover:text-amber-600 hover:bg-amber-100 rounded-md transition-colors text-sm border-l-2 border-transparent hover:border-amber-400"
                     onClick={() => setMobileOpen(false)}
                   >
                     All Clothing
@@ -541,58 +535,8 @@ export const Navbar = () => {
               )}
             </div>
             
-            {/* Home Decore - Standalone */}
-            <Link 
-              href="/products?category=HOME_DECORE" 
-              className="flex items-center gap-2 py-3.5 px-4 text-red-900 font-medium hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-amber-100 hover:border-amber-300 transition-all text-sm bg-white"
-              onClick={() => setMobileOpen(false)}
-            >
-              <span>🏠</span> Home Decore
-            </Link>
-            
-            {/* Accessories Section with Dropdown */}
-            <div className="border border-amber-100 rounded-lg overflow-hidden bg-amber-50/30">
-              <button
-                onClick={() => setOpenAccessories(!openAccessories)}
-                className="w-full flex items-center justify-between p-3.5 text-red-900 font-medium hover:bg-amber-50 transition-colors"
-              >
-                <span>👜 Accessories</span>
-                <ChevronDownIcon className={`h-4 w-4 transition-transform ${openAccessories ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {openAccessories && (
-                <div className="bg-white border-t border-amber-100 p-2 space-y-1">
-                  <Link 
-                    href="/products?category=ACCESSORIES" 
-                    className="block py-2.5 px-3 text-red-800 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors text-sm border-l-2 border-transparent hover:border-amber-400"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    All Accessories
-                  </Link>
-                  <Link 
-                    href="/products?category=ACCESSORIES&type=MEN" 
-                    className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    👔 Men's Accessories
-                  </Link>
-                  <Link 
-                    href="/products?category=ACCESSORIES&type=WOMEN" 
-                    className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    💎 Women's Accessories
-                  </Link>
-                  <Link 
-                    href="/products?category=ACCESSORIES&type=UNISEX" 
-                    className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    ⌚ Unisex Accessories
-                  </Link>
-                </div>
-              )}
-            </div>
+          
+           
           </div>
         </div>
         
