@@ -76,9 +76,9 @@ export default async function Home() {
             {/* Left side - Text */}
             <div className="flex flex-col justify-center max-w-md space-y-6 text-red-900 mx-auto md:mx-0">
               <h1 className="text-5xl md:text-6xl font-serif tracking-tight text-amber-700 text-center md:text-left">
-                Welcome to <span className="text-red-900">HIM-KASH</span>!
+                Welcome to <span className="text-red-900">Himkash </span>!
               </h1>
-              <p className="text-lg text-amber-600 italic text-center md:text-left">- Himalayan Kashmere</p>
+              <p className="text-lg text-amber-600 italic text-center md:text-left">- Himalayan Cashmere</p>
               <p className="text-xl text-red-800 leading-relaxed text-center md:text-left">
                 Discover timeless elegance crafted from pure cashmere and fine wool. 
                 Each piece is thoughtfully handmade and hand-spun, rooted in Nepalese 
@@ -121,7 +121,7 @@ export default async function Home() {
             Born in the Himalayas,<br className="hidden md:block" /> refined for modern living
           </h2>
           <p className="text-neutral-500 text-lg leading-relaxed max-w-2xl mx-auto mb-12">
-            Every HIMKASH piece begins high in the mountains, where master artisans 
+            Every Himkash piece begins high in the mountains, where master artisans 
             hand-spin the finest cashmere using techniques passed down through generations. 
             We believe luxury should be conscious — kind to the people who create it, 
             and enduring enough to last a lifetime.
@@ -152,13 +152,13 @@ export default async function Home() {
             <h2 className="text-3xl md:text-4xl font-light tracking-wide text-red-900">
               Launching 
               <span className="block text-amber-600 font-medium">
-                April 9, 2026
+              May 20, 2026
               </span>
             </h2>
             <div className="w-16 h-[2px] bg-amber-600 mx-auto md:mx-0"></div>
             <p className="text-neutral-700 text-lg leading-relaxed max-w-xl mx-auto md:mx-0">
               Be among the first to experience 
-              <span className="text-red-900 font-medium"> HIM-KASH</span> —
+              <span className="text-red-900 font-medium"> HIMKASH</span> —
               timeless Nepalese craftsmanship reimagined for Europe.
             </p>
             <div className="pt-6 flex justify-center md:justify-start">
@@ -253,7 +253,7 @@ export default async function Home() {
 
             <Link href="/clothing/unisex" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
               <Image
-                src="/himkash_clean.png"
+                src="/himkash_logo_ragister.png"
                 alt="Unisex Collection"
                 fill
                 className="object-contain transition-transform duration-300 group-hover:scale-105"

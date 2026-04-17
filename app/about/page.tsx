@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About Everesté | Our Mission & Story",
+  title: "About Himkash | Our Mission & Story",
   description:
-    "Everesté bridges Nepalese artisan craftsmanship with conscious European living. Pure cashmere, marine wool, and timeless design — made with transparency, care, and tradition.",
+    "Himkash bridges Nepalese artisan craftsmanship with conscious European living. Pure cashmere, marine wool, and timeless design — made with transparency, care, and tradition.",
 };
 
 const values = [
@@ -59,12 +59,7 @@ const materials = [
     description:
       "Rare. Refined. Resilient. Sourced exclusively from coastal breeds, marine wool carries a natural lanolin richness that makes it uniquely breathable, moisture-wicking, and enduringly soft.",
   },
-  {
-    season: "Summer",
-    name: "Pure Cotton",
-    description:
-      "Because warmth is not always the goal. Our summer collection uses only the finest organic cotton — breathable, gentle on skin, and grown without compromise.",
-  },
+  
 ];
 
 export default function AboutPage() {
@@ -105,7 +100,7 @@ export default function AboutPage() {
             className="text-lg md:text-xl text-stone-600 max-w-2xl leading-relaxed font-light"
             style={{ fontFamily: "Georgia, serif" }}
           >
-            Everesté was born from a conviction: that the finest things in life
+            Himkash was born from a conviction: that the finest things in life
             should be made with care, worn with intention, and understood
             completely. We bridge Nepalese artisan mastery with a conscious
             European way of living.
@@ -194,7 +189,7 @@ export default function AboutPage() {
             className="text-4xl font-light text-stone-800"
             style={{ fontFamily: "Georgia, serif" }}
           >
-            Six pillars of Everesté
+            Six pillars of Himkash
           </h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-stone-200">
@@ -293,58 +288,19 @@ export default function AboutPage() {
               className="text-stone-500 leading-relaxed font-light mb-6"
               style={{ fontFamily: "Georgia, serif" }}
             >
-              Everesté is more than a clothing brand. We carry the spirit of
-              Nepalese craftsmanship into every corner of life — from
-              hand-painted Mandala art and intricate jewellery to home décor
-              that brings warmth and intention to your space.
+              Himkash is more than a clothing brand. We carry the spirit of
+              Nepalese craftsmanship that brings warmth and intention to your space.
             </p>
-            <p
-              className="text-stone-500 leading-relaxed font-light"
-              style={{ fontFamily: "Georgia, serif" }}
-            >
-              Every object is made by the same artisan communities we work with
-              for our textiles — supporting their livelihoods, preserving their
-              traditions, and sharing their extraordinary skill with the world.
-            </p>
+           
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {["Mandala Art", "Nepalese Jewellery", "Home Décor", "Handicrafts"].map(
-              (item) => (
-                <div
-                  key={item}
-                  className="border border-stone-200 bg-white p-6 text-center"
-                >
-                  <div className="w-8 h-8 border border-amber-700 rounded-full mx-auto mb-3 flex items-center justify-center">
-                    <span className="text-amber-700 text-xs">✦</span>
-                  </div>
-                  <p
-                    className="text-stone-600 text-sm font-light"
-                    style={{ fontFamily: "Georgia, serif" }}
-                  >
-                    {item}
-                  </p>
-                </div>
-              )
-            )}
-          </div>
+          
         </div>
       </section>
 
       {/* Care Promise */}
       <section className="bg-amber-800 text-amber-50">
         <div className="max-w-4xl mx-auto px-6 py-20 text-center">
-          <p
-            className="text-xs uppercase tracking-[0.4em] text-amber-300 mb-6"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            Our Promise to You
-          </p>
-          <h2
-            className="text-4xl md:text-5xl font-light leading-tight mb-8"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            We guide you — not just sell to you.
-          </h2>
+          
           <p
             className="text-amber-100 text-lg font-light leading-relaxed max-w-2xl mx-auto mb-10"
             style={{ fontFamily: "Georgia, serif" }}
@@ -371,7 +327,7 @@ export default function AboutPage() {
           className="text-4xl font-light text-stone-800 mb-6"
           style={{ fontFamily: "Georgia, serif" }}
         >
-          Ready to experience Everesté?
+          Ready to experience Himkash?
         </h2>
         <p
           className="text-stone-500 font-light mb-10 max-w-xl mx-auto"

@@ -12,7 +12,7 @@ export default function Footer() {
           <div>
             <h3 className="text-amber-200 font-semibold mb-3 text-lg">About Us</h3>
             <p className="text-amber-200/80 text-sm leading-relaxed">
-              Him-Kash online cashmere &  marino wool clothing store<br />
+              Him-Kash online cashmere & marino wool clothing store<br />
               Quality & Luxury fashion delivered to your door
             </p>
           </div>
@@ -75,6 +75,12 @@ export default function Footer() {
           <p>Anjana Bhatta</p>
           <p>NIF: 290131146</p>
           <p>Email: himkash.info@gmail.com</p>
+          
+          {/* ✅ TRADEMARK NOTICE - ADD THIS LINE */}
+          <p className="text-amber-200/50 text-xs">
+            HIMKASH™ - Trademark application pending with INPI
+          </p>
+          
           <p>
             In case of a dispute, the consumer may resort to an Alternative Dispute Resolution entity.
             More information at{' '}
