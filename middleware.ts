@@ -3,8 +3,15 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  
   // Check if it's an admin route
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin')) {
+    // IMPORTANT: Allow API routes to pass through with their own auth
+    if (pathname.startsWith('/api/admin')) {  // Changed from '/admin/api' to '/api/admin'
+      return NextResponse.next();
+    }
+    
     const cookieHeader = request.headers.get('cookie');
     let isAdmin = false;
     
@@ -37,10 +44,18 @@ export function middleware(request: NextRequest) {
       }
     }
     
-    if (!isAdmin) {
-      // Redirect to login with return URL
+    if (!isAdmin && !pathname.startsWith('/admin/login')) {
+      // Don't redirect API routes
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+      
+      // Redirect to login for page routes
       const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
+      loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
