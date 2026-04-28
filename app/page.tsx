@@ -27,6 +27,9 @@ interface Product {
   };
 }
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Disable caching
+
 export default async function Home() {
   const dbProducts = await prisma.product.findMany({
     where: { isActive: true },
