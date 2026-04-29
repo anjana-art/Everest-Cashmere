@@ -494,7 +494,7 @@ export async function PATCH(request: NextRequest) {
 
     // Validate colors if provided
     if (updateData.availableColors !== undefined) {
-      const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900'];
+      const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal'];
       const availableColors = Array.isArray(updateData.availableColors) 
         ? updateData.availableColors 
         : (updateData.availableColors ? [updateData.availableColors] : []);
@@ -511,7 +511,7 @@ export async function PATCH(request: NextRequest) {
 
     // Validate sizes if provided
     if (updateData.availableSizes !== undefined) {
-      const validSizes = ['S', 'M', 'L'];
+      const validSizes = ['S', 'M', 'L', 'XS', 'XL'];
       const availableSizes = Array.isArray(updateData.availableSizes)
         ? updateData.availableSizes
         : (updateData.availableSizes ? [updateData.availableSizes] : []);

@@ -179,7 +179,7 @@ export default async function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="relative w-80 h-80 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-amber-100">
               <Image
-                src="/anjana_formal_dress.jpeg"
+                src="/anjana_formal_dress.webp"
                 alt="Anjana Bhatta - Founder of HIM-KASH"
                 fill
                 className="object-cover"
@@ -214,7 +214,7 @@ export default async function Home() {
             
             <Link href="/clothing/women" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
               <Image
-                src="/women_s_xs_roundneck_cashmere_sweaters.jpg"
+                src="/women_s_xs_roundneck_cashmere_sweaters.webp"
                 alt="Women's Collection"
                 fill
                 className="object-contain transition-transform duration-300 group-hover:scale-105"
@@ -235,7 +235,7 @@ export default async function Home() {
 
             <Link href="/clothing/men" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
               <Image
-                src="/men's_m_l_xl_roundneck_cashmere_sweaters.jpg"
+                src="/men's_m_l_xl_roundneck_cashmere_sweaters.webp"
                 alt="Men's Collection"
                 fill
                 className="object-contain transition-transform duration-300 group-hover:scale-105"
@@ -256,7 +256,7 @@ export default async function Home() {
 
             <Link href="/clothing/unisex" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
               <Image
-                src="/himkash_logo_ragister.png"
+                src="/himkash_logo_ragister.webp"
                 alt="Unisex Collection"
                 fill
                 className="object-contain transition-transform duration-300 group-hover:scale-105"
