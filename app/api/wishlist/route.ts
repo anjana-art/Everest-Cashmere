@@ -1,13 +1,16 @@
+// app/api/wishlist/route.ts - Best practice with variant support
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// GET - Get user's wishlist OR check if product is in wishlist
+// GET - Get user's wishlist OR check if product variant is in wishlist
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id');
     const { searchParams } = new URL(request.url);
     const check = searchParams.get('check');
-    const productId = searchParams.get('productId'); // This is DATABASE ID
+    const productId = searchParams.get('productId');
+    const variantId = searchParams.get('variantId'); // Optional: check specific variant
     
     if (!userId) {
       return NextResponse.json(
@@ -16,31 +19,33 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // If checking specific product - FIXED: Use database ID
+    // If checking specific product/variant
     if (check === 'true' && productId) {
       const wishlist = await prisma.wishlist.findUnique({
         where: { userId },
         include: {
           items: {
-            where: {
-              productId: productId // Use database ID directly
-            }
+            where: variantId 
+              ? { productId, variantId }  // Check specific variant
+              : { productId }              // Check any variant of product
           }
         }
       });
 
       return NextResponse.json({
-        isInWishlist: wishlist ? wishlist.items.length > 0 : false
+        isInWishlist: wishlist ? wishlist.items.length > 0 : false,
+        item: wishlist?.items[0] || null
       });
     }
 
-    // Return full wishlist
+    // Return full wishlist with variant details
     const wishlist = await prisma.wishlist.findUnique({
       where: { userId },
       include: {
         items: {
           include: {
-            product: true
+            product: true,
+            variant: true  // Include variant details
           },
           orderBy: {
             addedAt: 'desc'
@@ -59,11 +64,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Add product to wishlist - FIXED: Accept database ID directly
+// POST - Add product variant to wishlist
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id');
-    const { productId } = await request.json(); // This is DATABASE ID
+    const { productId, variantId, color, size } = await request.json();
     
     if (!userId || !productId) {
       return NextResponse.json(
@@ -72,7 +77,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Adding to wishlist:', { userId, productId });
+    console.log('Adding to wishlist:', { userId, productId, variantId, color, size });
 
     // First, ensure wishlist exists for user
     let wishlist = await prisma.wishlist.findUnique({
@@ -85,25 +90,42 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check if product exists in your database - FIXED: Use database ID
+    // Check if product exists
     const product = await prisma.product.findUnique({
-      where: { id: productId } // Changed from stripeId to id
+      where: { id: productId }
     });
 
     if (!product) {
-      console.log('Product not found with ID:', productId);
       return NextResponse.json(
-        { error: 'Product not found in database' },
+        { error: 'Product not found' },
         { status: 404 }
       );
     }
 
-    // Check if already in wishlist
+    // If variantId provided, verify it exists and belongs to product
+    if (variantId) {
+      const variant = await prisma.productVariant.findFirst({
+        where: { 
+          id: variantId,
+          productId: productId
+        }
+      });
+
+      if (!variant) {
+        return NextResponse.json(
+          { error: 'Variant not found' },
+          { status: 404 }
+        );
+      }
+    }
+
+    // Check if already in wishlist (with same variant)
     const existingItem = await prisma.wishlistItem.findUnique({
       where: {
-        wishlistId_productId: {
+        wishlistId_productId_variantId: {
           wishlistId: wishlist.id,
-          productId: product.id
+          productId: product.id,
+          variantId: variantId || null  // null for product-level wishlist
         }
       }
     });
@@ -111,21 +133,30 @@ export async function POST(request: NextRequest) {
     if (existingItem) {
       return NextResponse.json({
         success: true,
-        message: 'Product already in wishlist'
+        message: 'Product already in wishlist',
+        alreadyExists: true
       });
     }
 
     // Add to wishlist
-    await prisma.wishlistItem.create({
+    const wishlistItem = await prisma.wishlistItem.create({
       data: {
         wishlistId: wishlist.id,
-        productId: product.id
+        productId: product.id,
+        variantId: variantId || null,
+        color: color || null,
+        size: size || null,
+      },
+      include: {
+        product: true,
+        variant: true
       }
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Added to wishlist'
+      message: 'Added to wishlist',
+      item: wishlistItem
     });
   } catch (error) {
     console.error('Error adding to wishlist:', error);
@@ -136,12 +167,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Remove product from wishlist - FIXED: Accept database ID directly
+// DELETE - Remove from wishlist
 export async function DELETE(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id');
     const { searchParams } = new URL(request.url);
-    const productId = searchParams.get('productId'); // This should be DATABASE ID
+    const productId = searchParams.get('productId');
+    const variantId = searchParams.get('variantId'); // Optional: remove specific variant
     
     if (!userId || !productId) {
       return NextResponse.json(
@@ -150,7 +182,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.log('Removing from wishlist:', { userId, productId });
+    console.log('Removing from wishlist:', { userId, productId, variantId });
 
     const wishlist = await prisma.wishlist.findUnique({
       where: { userId }
@@ -163,26 +195,26 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Find product in database - FIXED: Use database ID
-    const product = await prisma.product.findUnique({
-      where: { id: productId } // Changed from stripeId to id
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
-
-    await prisma.wishlistItem.delete({
-      where: {
-        wishlistId_productId: {
-          wishlistId: wishlist.id,
-          productId: product.id
+    // Remove specific variant or any variant of product
+    if (variantId) {
+      await prisma.wishlistItem.delete({
+        where: {
+          wishlistId_productId_variantId: {
+            wishlistId: wishlist.id,
+            productId: productId,
+            variantId: variantId
+          }
         }
-      }
-    });
+      });
+    } else {
+      // Remove all variants of this product from wishlist
+      await prisma.wishlistItem.deleteMany({
+        where: {
+          wishlistId: wishlist.id,
+          productId: productId
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,

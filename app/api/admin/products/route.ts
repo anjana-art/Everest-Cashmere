@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
       : (body.availableSizes ? [body.availableSizes] : []);
 
     // Validate colors and sizes
-    const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal'];
+    const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal', 'toupe'];
     const validSizes = ['S', 'M', 'L', 'XS', 'XL'];
 
     const invalidColors = availableColors.filter((color: string) => !validColors.includes(color));
@@ -494,7 +494,7 @@ export async function PATCH(request: NextRequest) {
 
     // Validate colors if provided
     if (updateData.availableColors !== undefined) {
-      const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal'];
+      const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal','toupe'];
       const availableColors = Array.isArray(updateData.availableColors) 
         ? updateData.availableColors 
         : (updateData.availableColors ? [updateData.availableColors] : []);

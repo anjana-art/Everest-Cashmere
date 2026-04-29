@@ -8,6 +8,7 @@ import FoundersStory from "@/components/foundersStory";
 import SignupForm from "@/components/signup-form";
 import ShareButtons from '@/components/ShareButtons';
 import type { Metadata } from "next";
+import { SimpleImageGrid } from "@/components/simple-image-grid";
 
 export const metadata: Metadata = {
   title: "Pure Cashmere | Kashmere & Wool | Nepalese Luxury | Finest Quality | Elegance + Softness | Timeless | Finest Fiber",
@@ -66,58 +67,63 @@ export default async function Home() {
     };
   });
 
-  const carouselProducts = formattedProducts.slice(0, 4);
-  const heroCarouselProducts = formattedProducts.length > 0 ? formattedProducts : [];
-
   return (
-    <div className="bg-[#FDFBF7]"> {/* Warm cream base - LUXURY */}
+    <div className="bg-[#FDFBF7]">
       
-      {/* SECTION 1: Hero Section - Subtle gradient overlay */}
-      <section className="relative min-h-[600px] md:min-h-[600px] flex items-center justify-center overflow-hidden py-8 bg-gradient-to-br from-[#FDF8F0] to-[#FBF5E8]">
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-16 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-            {/* Left side - Text */}
-            <div className="flex flex-col justify-center max-w-md space-y-6 text-red-900 mx-auto md:mx-0">
-              <h1 className="text-5xl md:text-6xl font-serif tracking-tight text-amber-700 text-center md:text-left">
-                Welcome to <span className="text-red-900">Himkash </span>!
-              </h1>
-              <p className="text-lg text-amber-600 italic text-center md:text-left">- Himalayan Cashmere</p>
-              <p className="text-xl text-red-800 leading-relaxed text-center md:text-left">
-                Discover timeless elegance crafted from pure cashmere and fine wool. 
-                Each piece is thoughtfully handmade and hand-spun, rooted in Nepalese 
-                craftsmanship and refined for a conscious European lifestyle.
-              </p>
-              <p className="text-xl text-red-800 leading-relaxed text-center md:text-left">
-                From the quiet strength of the mountains to your wardrobe, 
-                HIM-KASH represents sustainable luxury — honoring local artisans, 
-                respecting the environment, and offering enduring comfort with style.
-              </p>
+      {/* SECTION 1: Hero Section - FULL WIDTH with Image Grid */}
+      <section className="relative w-full min-h-screen flex items-center justify-center  overflow-hidden">
+        {/* Full width image grid - takes priority */}
+        <div className="absolute inset-0 z-0">
+          <SimpleImageGrid />
+        </div>
+        
+        {/* Overlay content - subtle gradient for text readability */}
+        <div className="relative z-10 w-full bg-gradient-to-r from-black/60 via-black/30 to-transparent">
+          <div className="max-w-7xl mx-auto px-4 sm:px-16 py-20 md:py-32">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
               
-              <div className="flex justify-center md:justify-start">
-                <Button asChild className="text-xl inline-flex items-center justify-center rounded-full px-8 py-4 text-white bg-red-800 hover:bg-amber-700 border-none transform transition-all duration-300 hover:-translate-y-0.5 shadow-md hover:shadow-lg">
-                  <Link href="/clothing">Browse all Products</Link>
-                </Button>
+              {/* Left side - Text Content with transparent background */}
+              <div className="flex flex-col justify-center space-y-6 text-white backdrop-blur-sm bg-black/20 rounded-2xl p-6 md:p-8">
+                <h1 className="text-5xl md:text-7xl font-mono tracking-tight text-amber-300">
+                  Welcome to <span className="text-white">Himkash</span>
+                </h1>
+                <p className="text-xl text-amber-200 italic">- Himalayan Cashmere</p>
+                
+                <div className="w-20 h-[2px] bg-amber-400"></div>
+                
+                <p className="text-lg text-gray-100 leading-relaxed">
+                  Discover timeless elegance crafted from pure cashmere and fine wool. 
+                  Each piece is thoughtfully handmade and hand-spun, rooted in Nepalese 
+                  craftsmanship and refined for a conscious European lifestyle.
+                </p>
+                
+                <p className="text-lg text-gray-100 leading-relaxed">
+                  From the quiet strength of the mountains to your wardrobe, 
+                  HIM-KASH represents sustainable luxury — honoring local artisans, 
+                  respecting the environment, and offering enduring comfort with style.
+                </p>
+                
+                <div className="flex flex-wrap gap-4 pt-4">
+                  <Button asChild className="text-lg inline-flex items-center justify-center rounded-full px-8 py-6 text-white bg-amber-600 hover:bg-amber-700 border-none transform transition-all duration-300 hover:-translate-y-0.5 shadow-xl">
+                    <Link href="/clothing">Browse all Products</Link>
+                  </Button>
+                  
+                  <Button asChild variant="outline" className="text-lg rounded-full px-8 py-6 border-white text-black hover:bg-white/10">
+                    <Link href="/about">Learn More</Link>
+                  </Button>
+                </div>
               </div>
-            </div>
-
-            {/* Right side - Carousel */}
-            <div className="w-full mt-8 md:mt-0">
-              {heroCarouselProducts.length > 0 ? (
-                <div className="w-full h-[400px] sm:h-[450px] md:h-[500px]">
-                  <Carousel products={heroCarouselProducts} />
-                </div>
-              ) : (
-                <div className="relative w-full h-[400px] bg-gray-100 rounded flex items-center justify-center">
-                  <p className="text-gray-500">No products available</p>
-                </div>
-              )}
+              
+              {/* Right side - Empty to let image show through */}
+              <div className="hidden md:block"></div>
+              
             </div>
           </div>
         </div>
       </section>
 
       {/* BRAND VALUES STRIP - Clean white with subtle border */}
-      <section className="py-16 px-6 bg-white border-b border-amber-100/50">
+      <section className="py-16 px-6 bg-white border-b border-amber-100/50 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
           <p className="text-xs tracking-[4px] uppercase text-amber-600 mb-4">Our Philosophy</p>
           <h2 className="text-3xl md:text-4xl font-light text-neutral-800 mb-6">
@@ -149,13 +155,13 @@ export default async function Home() {
       </section>
 
       {/* SECTION 2: Launch Information - Warm amber gradient */}
-      <section className="py-20 px-6 bg-gradient-to-r from-amber-50/50 to-red-50/50">
+      <section className="py-20 px-6 bg-gradient-to-r from-amber-50/50 to-red-50/50 relative z-10">
         <div className="max-w-5xl mx-auto">
           <div className="space-y-6 text-center md:text-left">
             <h2 className="text-3xl md:text-4xl font-light tracking-wide text-red-900">
               Launching 
               <span className="block text-amber-600 font-medium">
-              May 20, 2026
+                May 20, 2026
               </span>
             </h2>
             <div className="w-16 h-[2px] bg-amber-600 mx-auto md:mx-0"></div>
@@ -174,7 +180,7 @@ export default async function Home() {
       </section>
 
       {/* SECTION 3: Founder's Story - Cream background */}
-      <section className="py-20 px-6 bg-[#FDFBF7]">
+      <section className="py-20 px-6 bg-[#FDFBF7] relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="relative w-80 h-80 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-amber-100">
@@ -208,7 +214,7 @@ export default async function Home() {
       </section>
 
       {/* SECTION 4: Category Collection Grid */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white relative z-10">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-10 lg:gap-16">
             
@@ -278,10 +284,8 @@ export default async function Home() {
         </div>
       </section>
 
-    
-
       {/* Share Section */}
-      <section className="relative bg-gradient-to-r from-red-800/5 to-amber-800/5 py-16">
+      <section className="relative bg-gradient-to-r from-red-800/5 to-amber-800/5 py-16 z-10">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm mb-3 text-neutral-500">Share with friends:</p>
           <div className="flex justify-center">

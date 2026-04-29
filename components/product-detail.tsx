@@ -1,4 +1,5 @@
-// components/product-detail.tsx - LUXURY EDITION
+// components/product-detail.tsx - Full page with variant wishlist tracking
+
 "use client";
 
 import Image from "next/image";
@@ -10,12 +11,19 @@ import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import { SimilarProducts } from "./similar-products";
 
+interface ProductVariant {
+  id: string;
+  color: string;
+  size: string;
+  stock: number;
+}
+
 interface Product {
-  id: string;           // Database ID
-  stripeId: string;     // Stripe ID
+  id: string;
+  stripeId: string;
   name: string;
   description: string | null;
-  price: number;        // Already in euros
+  price: number;
   images: string[];
   metadata?: {
     category?: string;
@@ -26,15 +34,14 @@ interface Product {
   defaultColor?: string | null;
   defaultSize?: string | null;
   category?: string | null;
-  clothingType?: string | null;     // add this
-  accessoriesType?: string | null;  // add this too
+  clothingType?: string | null;
+  accessoriesType?: string | null;
 }
 
 interface Props {
   product: Product;
 }
 
-// Enhanced color mapping for luxury palette
 const COLOR_MAP: Record<string, { name: string, class: string, hex?: string }> = {
   'baby-pink': { name: 'Blush Pink', class: 'bg-rose-200 border border-rose-300', hex: '#fbc4c4' },
   'amber-200': { name: 'Champagne', class: 'bg-amber-200 border border-amber-300', hex: '#f7e5c2' },
@@ -48,11 +55,19 @@ const COLOR_MAP: Record<string, { name: string, class: string, hex?: string }> =
   'red-900': { name: 'Burgundy', class: 'bg-red-900 border border-red-950', hex: '#7f1d1d' },
   'burgundy': { name: 'Burgundy', class: 'bg-red-900 border border-red-950', hex: '#7f1d1d' },
   'white': { name: 'Pearl', class: 'bg-white border border-amber-200', hex: '#ffffff' },
+  'beige': { name: 'Beige', class: 'bg-[#F5F5DC] border border-amber-300', hex: '#F5F5DC' },
+  'charcoal': { name: 'Charcoal', class: 'bg-[#36454F] border border-gray-600', hex: '#36454F' },
+  'taupe': { name: 'Taupe', class: 'bg-[#483C32] border border-amber-700', hex: '#483C32' },
 };
 
 export const ProductDetail = ({ product }: Props) => {
   const router = useRouter();
   const { items, addItem, removeItem } = useCartStore();
+  
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [sizeStockMap, setSizeStockMap] = useState<Record<string, number>>({});
+  
+  const [mainImage, setMainImage] = useState<string>(product.images?.[0] || '');
   
   const dbColors = product.availableColors || [];
   const dbSizes = product.availableSizes || [];
@@ -66,6 +81,8 @@ export const ProductDetail = ({ product }: Props) => {
   const [loadingWishlist, setLoadingWishlist] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [showCareDetails, setShowCareDetails] = useState(false);
+
   
   const cartItem = items.find((item) => 
     item.id === product?.id && 
@@ -74,6 +91,51 @@ export const ProductDetail = ({ product }: Props) => {
   );
   
   const cartQuantity = cartItem ? cartItem.quantity : 0;
+  
+  // Get current selected size stock
+  const currentStock = sizeStockMap[selectedSize] || 0;
+  
+  // Get current selected variant
+  const selectedVariant = variants.find(v => v.color === selectedColor && v.size === selectedSize);
+
+  // Fetch variants
+  useEffect(() => {
+    if (product?.id) {
+      fetchVariants();
+    }
+  }, [product?.id]);
+
+  // Update size stock map when variants are loaded or color changes
+  useEffect(() => {
+    if (variants.length > 0 && selectedColor) {
+      const stockMap: Record<string, number> = {};
+      variants
+        .filter(v => v.color === selectedColor)
+        .forEach(v => {
+          stockMap[v.size] = v.stock;
+        });
+      setSizeStockMap(stockMap);
+      
+      // Reset quantity when color/size changes
+      setQuantity(1);
+      
+      // Auto-select first available size if current size is out of stock
+      const firstAvailableSize = Object.entries(stockMap).find(([_, stock]) => stock > 0)?.[0];
+      if (selectedSize && stockMap[selectedSize] === 0 && firstAvailableSize) {
+        setSelectedSize(firstAvailableSize);
+      }
+    }
+  }, [variants, selectedColor, selectedSize]);
+
+  const fetchVariants = async () => {
+    try {
+      const response = await fetch(`/api/admin/products/${product.id}/variants`);
+      const data = await response.json();
+      setVariants(data.variants);
+    } catch (error) {
+      console.error('Error fetching variants:', error);
+    }
+  };
 
   // Get user ID on mount
   useEffect(() => {
@@ -84,7 +146,6 @@ export const ProductDetail = ({ product }: Props) => {
           const user = JSON.parse(userStr);
           if (user && user.id) {
             setUserId(user.id);
-            console.log('User ID found:', user.id);
           }
         }
       } catch (error) {
@@ -95,18 +156,13 @@ export const ProductDetail = ({ product }: Props) => {
     getUser();
   }, []);
 
-  // Check wishlist status
-  useEffect(() => {
-    if (userId && product?.id) {
-      checkWishlistStatus();
-    }
-  }, [product?.id, userId]);
-
+  // Check wishlist status for selected variant
   const checkWishlistStatus = async () => {
-    if (!userId || !product?.id) return;
+    if (!userId || !product?.id || !selectedVariant) return;
     
     try {
-      const response = await fetch(`/api/wishlist?check=true&productId=${product.id}`, {
+      const url = `/api/wishlist?check=true&productId=${product.id}&variantId=${selectedVariant.id}`;
+      const response = await fetch(url, {
         headers: {
           'x-user-id': userId,
         },
@@ -115,13 +171,18 @@ export const ProductDetail = ({ product }: Props) => {
       if (response.ok) {
         const data = await response.json();
         setIsWishlisted(data.isInWishlist);
-      } else if (response.status === 401) {
-        console.log('User not authenticated for wishlist check');
       }
     } catch (error) {
       console.error('Error checking wishlist status:', error);
     }
   };
+
+  // Re-check wishlist when selected variant changes
+  useEffect(() => {
+    if (userId && product?.id && selectedVariant) {
+      checkWishlistStatus();
+    }
+  }, [userId, product?.id, selectedVariant]);
 
   const handleAddToWishlist = async () => {
     if (!userId) {
@@ -134,11 +195,17 @@ export const ProductDetail = ({ product }: Props) => {
       return;
     }
 
+    if (!selectedVariant) {
+      alert('Please select a color and size first');
+      return;
+    }
+
     try {
       setLoadingWishlist(true);
 
       if (isWishlisted) {
-        const response = await fetch(`/api/wishlist?productId=${product.id}`, {
+        // Remove specific variant from wishlist
+        const response = await fetch(`/api/wishlist?productId=${product.id}&variantId=${selectedVariant.id}`, {
           method: 'DELETE',
           headers: {
             'x-user-id': userId,
@@ -153,13 +220,19 @@ export const ProductDetail = ({ product }: Props) => {
           throw new Error(errorData.error || 'Failed to remove from wishlist');
         }
       } else {
+        // Add specific variant to wishlist
         const response = await fetch('/api/wishlist', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-user-id': userId,
           },
-          body: JSON.stringify({ productId: product.id }),
+          body: JSON.stringify({ 
+            productId: product.id,
+            variantId: selectedVariant.id,
+            color: selectedColor,
+            size: selectedSize
+          }),
         });
 
         if (response.ok) {
@@ -178,11 +251,25 @@ export const ProductDetail = ({ product }: Props) => {
     }
   };
 
-  const careDescription = "Machine wash cold with similar colors. Tumble dry low. Do not bleach. Iron on low heat if needed.";
-
   const onAddItem = () => {
     if (!product) {
       alert('Product data is missing');
+      return;
+    }
+
+    if (!selectedSize) {
+      alert('Please select a size');
+      return;
+    }
+
+    // Check if selected size is in stock
+    if (currentStock <= 0) {
+      alert(`Sorry, ${selectedSize.toUpperCase()} is out of stock`);
+      return;
+    }
+
+    if (quantity > currentStock) {
+      alert(`Only ${currentStock} items available in ${selectedSize.toUpperCase()}`);
       return;
     }
 
@@ -191,7 +278,7 @@ export const ProductDetail = ({ product }: Props) => {
       name: product.name,
       price: product.price,
       imageUrl: product.images?.[0] || '',
-      quantity: 1,
+      quantity: quantity,
       color: selectedColor,
       size: selectedSize,
     });
@@ -200,6 +287,21 @@ export const ProductDetail = ({ product }: Props) => {
   const onBuyNow = () => {
     if (!product) {
       alert('Product data is missing');
+      return;
+    }
+
+    if (!selectedSize) {
+      alert('Please select a size');
+      return;
+    }
+
+    if (currentStock <= 0) {
+      alert(`Sorry, ${selectedSize.toUpperCase()} is out of stock`);
+      return;
+    }
+
+    if (quantity > currentStock) {
+      alert(`Only ${currentStock} items available in ${selectedSize.toUpperCase()}`);
       return;
     }
 
@@ -222,8 +324,17 @@ export const ProductDetail = ({ product }: Props) => {
     removeItem(product.id, selectedColor, selectedSize);
   };
 
-  const increaseQuantity = () => setQuantity(prev => prev + 1);
-  const decreaseQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1);
+  const increaseQuantity = () => {
+    if (quantity < currentStock) {
+      setQuantity(prev => prev + 1);
+    }
+  };
+  
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  };
 
   const displayPrice = () => {
     const price = product.price;
@@ -247,39 +358,39 @@ export const ProductDetail = ({ product }: Props) => {
     );
   }
 
-    const formatSubCategory = (product: Product) => {
-      if (product.category === 'CLOTHING' && product.clothingType) {
-        const map: Record<string, string> = {
-          'CASHMERE':             'Pure Cashmere',
-          'MARINO_WOOL':          'Merino Wool',
-          'CASHMERE_MARINO_WOOL': 'Cashmere & Merino',
-        };
-        return map[product.clothingType] || product.clothingType;
-      }
-      if (product.category === 'ACCESSORIES' && product.accessoriesType) {
-        const map: Record<string, string> = {
-          'MEN':    'Men',
-          'WOMEN':  'Women',
-          'UNISEX': 'Unisex',
-        };
-        return map[product.accessoriesType] || product.accessoriesType;
-      }
-      return null;
-    };  
+  const formatSubCategory = (product: Product) => {
+    if (product.category === 'CLOTHING' && product.clothingType) {
+      const map: Record<string, string> = {
+        'CASHMERE':             'Pure Cashmere',
+        'MARINO_WOOL':          'Merino Wool',
+        'CASHMERE_MARINO_WOOL': 'Cashmere & Merino',
+      };
+      return map[product.clothingType] || product.clothingType;
+    }
+    if (product.category === 'ACCESSORIES' && product.accessoriesType) {
+      const map: Record<string, string> = {
+        'MEN':    'Men',
+        'WOMEN':  'Women',
+        'UNISEX': 'Unisex',
+      };
+      return map[product.accessoriesType] || product.accessoriesType;
+    }
+    return null;
+  };  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 py-12">
       <div className="container mx-auto px-4">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-amber-100/50">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            {/* Left Column - Product Images */}
+            {/* Left Column - Product Images with Gallery */}
             <div className="bg-gradient-to-br from-amber-50/50 to-rose-50/50 p-8 lg:p-10">
               <div className="space-y-4">
-                {/* Main Image with Luxury Frame */}
+                {/* Main Image */}
                 <div className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-inner border border-amber-100">
-                  {product.images && product.images[0] ? (
+                  {mainImage ? (
                     <Image
-                      src={product.images[0]}
+                      src={mainImage}
                       alt={product.name}
                       fill
                       className="object-contain transition-transform duration-700 hover:scale-110"
@@ -291,11 +402,10 @@ export const ProductDetail = ({ product }: Props) => {
                     </div>
                   )}
                   
-                  {/* Wishlist Button - Luxury Styled */}
                   <button
                     onClick={handleAddToWishlist}
-                    disabled={loadingWishlist}
-                    className="absolute top-4 right-4 p-3.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-10 disabled:opacity-50 border border-amber-200/50 group"
+                    disabled={loadingWishlist || !selectedVariant}
+                    className="absolute top-4 right-4 p-3.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-10 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-200/50 group"
                     aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                   >
                     {loadingWishlist ? (
@@ -307,22 +417,26 @@ export const ProductDetail = ({ product }: Props) => {
                     )}
                   </button>
 
-                  {/* Category Badge - Luxury */}
-                 {formatSubCategory(product) && (
-        <div className="absolute top-3 left-3 z-10">
-          <span className="px-3 py-1.5 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-sm border border-amber-200">
-            {formatSubCategory(product)}
-          </span>
-        </div>
-      )}
-            </div>
+                  {formatSubCategory(product) && (
+                    <div className="absolute top-3 left-3 z-10">
+                      <span className="px-3 py-1.5 text-xs font-light tracking-wider uppercase bg-white/90 backdrop-blur-sm text-red-900 rounded-full shadow-sm border border-amber-200">
+                        {formatSubCategory(product)}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-                {/* Thumbnail Images with Luxury Style */}
+                {/* Thumbnail Images */}
                 <div className="grid grid-cols-4 gap-3">
-                  {product.images?.slice(0, 4).map((image, index) => (
+                  {product.images?.map((image, index) => (
                     <div 
                       key={index} 
-                      className="aspect-square rounded-xl overflow-hidden bg-white cursor-pointer hover:opacity-90 transition-all duration-300 border border-amber-100 hover:shadow-md hover:scale-105"
+                      onClick={() => setMainImage(image)}
+                      className={`aspect-square rounded-xl overflow-hidden bg-white cursor-pointer transition-all duration-300 border ${
+                        mainImage === image 
+                          ? 'border-amber-500 ring-2 ring-amber-200 scale-105 shadow-lg' 
+                          : 'border-amber-100 hover:border-amber-300 hover:shadow-md hover:scale-105'
+                      }`}
                     >
                       <Image
                         src={image}
@@ -337,15 +451,13 @@ export const ProductDetail = ({ product }: Props) => {
               </div>
             </div>
 
-            {/* Right Column - Product Details with Luxury Typography */}
+            {/* Right Column - Product Details */}
             <div className="p-8 lg:p-10 space-y-6 bg-white">
-              {/* Title Section */}
               <div className="border-b border-amber-100 pb-4">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-red-900 mb-3 tracking-tight">
-                    {product.name}
-                  </h1>
+                  {product.name}
+                </h1>
                 
-                {/* Price - Luxury Format */}
                 <div className="flex items-baseline gap-2">
                   <p className="text-3xl font-serif font-medium text-amber-700">
                     {displayPrice()}
@@ -354,7 +466,6 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               </div>
 
-              {/* Description */}
               {product.description && (
                 <div className="prose max-w-none">
                   <p className="text-red-800 leading-relaxed font-light italic">
@@ -363,7 +474,7 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* Color Selection - Luxury Style */}
+              {/* Color Selection */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-serif text-lg text-red-900 tracking-wide">
@@ -406,7 +517,7 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               </div>
 
-              {/* Size Selection - Luxury Style */}
+              {/* Size Selection */}
               {product.category !== 'HOME_DECORE' && dbSizes.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -417,69 +528,154 @@ export const ProductDetail = ({ product }: Props) => {
                       {selectedSize || "Select"}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-3 max-w-xs">
+                  <div className="flex flex-wrap gap-3">
                     {dbSizes.map((sizeValue) => {
                       const size = sizeValue.toUpperCase();
                       const sizeLower = sizeValue.toLowerCase();
+                      const stock = sizeStockMap[sizeLower] ?? 0;
+                      const isOutOfStock = stock === 0;
+                      const isSelected = selectedSize === sizeLower;
+                      
                       return (
                         <button
                           key={sizeValue}
-                          onClick={() => setSelectedSize(sizeLower)}
-                          className={`py-3 px-5 text-center rounded-lg border font-medium transition-all duration-300 min-w-[70px] ${
-                            selectedSize === sizeLower
+                          onClick={() => !isOutOfStock && setSelectedSize(sizeLower)}
+                          disabled={isOutOfStock}
+                          className={`py-3 px-5 text-center rounded-lg border font-medium transition-all duration-300 min-w-[70px] relative ${
+                            isSelected && !isOutOfStock
                               ? 'bg-amber-600 text-white border-amber-600 scale-105 shadow-md'
+                              : isOutOfStock
+                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 line-through'
                               : 'bg-white text-red-800 border-amber-200 hover:bg-amber-50 hover:border-amber-300 hover:shadow-sm'
                           }`}
                         >
                           {size}
+                          {isOutOfStock && (
+                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                              Out
+                            </span>
+                          )}
+                          {!isOutOfStock && stock < 5 && (
+                            <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                              {stock} left
+                            </span>
+                          )}
                         </button>
                       );
                     })}
                   </div>
+                  {selectedSize && currentStock > 0 && (
+                    <p className="text-xs text-green-600">
+                      ✓ {currentStock} items in stock
+                    </p>
+                  )}
+                  {selectedSize && currentStock === 0 && (
+                    <p className="text-xs text-red-600">
+                      ✗ Out of stock - Please select another size
+                    </p>
+                  )}
                 </div>
               )}
 
               {/* Quantity Selection */}
-              <div className="space-y-4">
-                <h3 className="font-serif text-lg text-red-900 tracking-wide">
-                  Quantity
-                </h3>
-                <div className="flex items-center space-x-4">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={decreaseQuantity}
-                    className="h-12 w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300"
-                  >
-                    <span className="text-xl">–</span>
-                  </Button>
-                  <span className="text-2xl font-serif font-medium w-12 text-center text-red-900">
-                    {quantity}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={increaseQuantity}
-                    className="h-12 w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300"
-                  >
-                    <span className="text-xl">+</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Care Instructions - Luxury Card */}
-              <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                <div className="flex items-start gap-3">
-                  <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-serif font-semibold text-red-900 mb-1 tracking-wide">
-                      Care Instructions
-                    </h4>
-                    <p className="text-sm text-red-800 font-light leading-relaxed">
-                      {careDescription}
-                    </p>
+              {selectedSize && currentStock > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-serif text-lg text-red-900 tracking-wide">
+                    Quantity
+                  </h3>
+                  <div className="flex items-center space-x-4">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={decreaseQuantity}
+                      disabled={quantity <= 1}
+                      className="h-12 w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="text-xl">–</span>
+                    </Button>
+                    <span className="text-2xl font-serif font-medium w-12 text-center text-red-900">
+                      {quantity}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={increaseQuantity}
+                      disabled={quantity >= currentStock}
+                      className="h-12 w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="text-xl">+</span>
+                    </Button>
+                    <span className="text-sm text-gray-500">
+                      Max: {currentStock}
+                    </span>
                   </div>
                 </div>
+              )}
+
+              {/* Care Instructions */}
+              <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+                <button 
+                  onClick={() => setShowCareDetails(!showCareDetails)}
+                  className="flex items-start gap-3 w-full text-left"
+                >
+                  <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                        Care Instructions for Nepalese Cashmere
+                      </h4>
+                      <span className="text-amber-600 text-xl">
+                        {showCareDetails ? '−' : '+'}
+                      </span>
+                    </div>
+                    
+                    {!showCareDetails && (
+                      <p className="text-sm text-red-700 font-light mt-1">
+                        Hand wash cold, lay flat to dry, store folded. Click for full details →
+                      </p>
+                    )}
+                  </div>
+                </button>
+                
+                {showCareDetails && (
+                  <div className="mt-4 space-y-3 text-sm pl-8">
+                    <div>
+                      <p className="font-medium text-red-800">🧼 Washing Instructions</p>
+                      <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium text-red-800">🌀 Drying Method</p>
+                      <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
+                      <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
+                      <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
+                      <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
+                    </div>
+                    
+                    <div>
+                      <p className="font-medium text-red-800">❌ What to Avoid</p>
+                      <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
+                    </div>
+                    
+                    <div className="pt-2">
+                      <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
+                        🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -487,19 +683,31 @@ export const ProductDetail = ({ product }: Props) => {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     onClick={onAddItem}
-                    className="flex-1 flex items-center justify-center gap-3 bg-amber-600 hover:bg-amber-700 text-white font-medium py-6 text-lg rounded-xl transition-all duration-300 shadow-md hover:shadow-xl group"
+                    disabled={!selectedSize || currentStock === 0}
+                    className={`flex-1 flex items-center justify-center gap-3 font-medium py-6 text-lg rounded-xl transition-all duration-300 shadow-md hover:shadow-xl group ${
+                      !selectedSize || currentStock === 0
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-amber-600 hover:bg-amber-700 text-white'
+                    }`}
                   >
                     <div className="relative">
                       <ShoppingBagIcon className="h-6 w-6" />
                       <PlusIcon className="h-3 w-3 absolute -top-1 -right-1" />
                     </div>
-                    <span className="tracking-wide">Add to Cart</span>
+                    <span className="tracking-wide">
+                      {!selectedSize ? 'Select Size' : currentStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </span>
                   </Button>
 
                   <Button
                     onClick={onBuyNow}
+                    disabled={!selectedSize || currentStock === 0}
                     variant="outline"
-                    className="flex-1 py-6 text-lg font-medium border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-xl transition-all duration-300 hover:border-amber-300"
+                    className={`flex-1 py-6 text-lg font-medium rounded-xl transition-all duration-300 ${
+                      !selectedSize || currentStock === 0
+                        ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300'
+                    }`}
                   >
                     Buy Now
                   </Button>
@@ -526,20 +734,20 @@ export const ProductDetail = ({ product }: Props) => {
                 )}
               </div>
 
-              {/* Shipping & Returns - Luxury Grid */}
+              {/* Shipping & Returns */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
                 <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
                   <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
                   <div>
                     <p className="font-serif text-sm text-red-900">Free Shipping</p>
-                    <p className="text-xs text-red-700 font-light">Orders over €50</p>
+                    <p className="text-xs text-red-700 font-light">Orders over €100</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
                   <ArrowPathIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
                   <div>
                     <p className="font-serif text-sm text-red-900">Easy Returns</p>
-                    <p className="text-xs text-red-700 font-light">30-day policy</p>
+                    <p className="text-xs text-red-700 font-light">14-day policy</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
@@ -577,9 +785,9 @@ export const ProductDetail = ({ product }: Props) => {
       </div>
 
       <SimilarProducts 
-          currentProductId={product.id}
-          category={product.category || product.metadata?.category}
-        />
+        currentProductId={product.id}
+        category={product.category || product.metadata?.category}
+      />
     </div>
   );
 };
