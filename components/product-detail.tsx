@@ -58,6 +58,8 @@ const COLOR_MAP: Record<string, { name: string, class: string, hex?: string }> =
   'beige': { name: 'Beige', class: 'bg-[#F5F5DC] border border-amber-300', hex: '#F5F5DC' },
   'charcoal': { name: 'Charcoal', class: 'bg-[#36454F] border border-gray-600', hex: '#36454F' },
   'taupe': { name: 'Taupe', class: 'bg-[#483C32] border border-amber-700', hex: '#483C32' },
+  'indigo': { name: 'Indigo', class: 'bg-[#4B0082] border border-purple-800', hex: '#4B0082' },  
+
 };
 
 export const ProductDetail = ({ product }: Props) => {

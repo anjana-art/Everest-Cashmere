@@ -1,3 +1,5 @@
+// app/api/admin/products/[id]/route.ts - COMPLETE REPLACEMENT WITH FIXED PATCH
+
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -52,12 +54,82 @@ function extractProductIdFromUrl(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// GET - Get single product
+// Helper function to sync variants when product is updated
+async function syncVariantsOnUpdate(
+  productId: string, 
+  colors: string[], 
+  sizes: string[],
+  stockPerVariant?: number
+) {
+  console.log(`🔄 Syncing variants for product ${productId}`);
+  console.log(`   Colors: ${colors.join(', ')}`);
+  console.log(`   Sizes: ${sizes.join(', ')}`);
+  
+  const existingVariants = await prisma.productVariant.findMany({
+    where: { productId: productId }
+  });
+  
+  const existingKeys = new Set(
+    existingVariants.map(v => `${v.color}|${v.size}`)
+  );
+  
+  let createdCount = 0;
+  let deactivatedCount = 0;
+  
+  // Create missing variants (ALL combinations)
+  for (const color of colors) {
+    for (const size of sizes) {
+      const sizeLower = size.toLowerCase();
+      const key = `${color}|${sizeLower}`;
+      
+      if (!existingKeys.has(key)) {
+        const sku = `${productId.substring(0, 8)}-${color}-${sizeLower}`.toUpperCase().replace(/\s/g, '-');
+        
+        await prisma.productVariant.create({
+          data: {
+            productId: productId,
+            color: color,
+            size: sizeLower,
+            sku: sku,
+            stock: stockPerVariant || 10,
+            isActive: true,
+          }
+        });
+        createdCount++;
+        console.log(`   ✅ Created new variant: ${color}/${sizeLower}`);
+      }
+    }
+  }
+  
+  // Deactivate variants for removed combinations
+  const validKeys = new Set();
+  for (const color of colors) {
+    for (const size of sizes) {
+      validKeys.add(`${color}|${size.toLowerCase()}`);
+    }
+  }
+  
+  const variantsToDeactivate = existingVariants.filter(v => !validKeys.has(`${v.color}|${v.size}`));
+  if (variantsToDeactivate.length > 0) {
+    await prisma.productVariant.updateMany({
+      where: {
+        productId: productId,
+        id: { in: variantsToDeactivate.map(v => v.id) }
+      },
+      data: { isActive: false }
+    });
+    deactivatedCount = variantsToDeactivate.length;
+    console.log(`   ⚠️ Deactivated ${deactivatedCount} variants for removed combinations`);
+  }
+  
+  console.log(`✅ Sync complete: ${createdCount} created, ${deactivatedCount} deactivated`);
+}
+
+// GET - Get single product (includes variants)
 export async function GET(
   request: NextRequest
 ) {
   try {
-    // Extract productId from URL
     const productId = extractProductIdFromUrl(request.url);
     
     if (!productId) {
@@ -80,26 +152,18 @@ export async function GET(
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        price: true,
-        images: true,
-        category: true,
-        clothingType: true,
-        gender: true,
-        accessoriesType: true,
-        availableColors: true,
-        availableSizes: true,
-        defaultColor: true,
-        defaultSize: true,
-        stock: true,
-        isActive: true,
-        stripeId: true,
-        metadata: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        variants: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            color: true,
+            size: true,
+            stock: true,
+            sku: true,
+            isActive: true,
+          }
+        }
       }
     });
 
@@ -111,6 +175,7 @@ export async function GET(
     }
 
     console.log('✅ Product found:', product.name);
+    console.log('✅ Variants count:', product.variants?.length || 0);
     
     return NextResponse.json(product);
   } catch (error) {
@@ -122,12 +187,11 @@ export async function GET(
   }
 }
 
-// PATCH - Update single product
+// PATCH - Update single product with variant stock updates (FIXED)
 export async function PATCH(
   request: NextRequest
 ) {
   try {
-    // Extract productId from URL
     const productId = extractProductIdFromUrl(request.url);
     
     if (!productId) {
@@ -149,11 +213,11 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { id, ...updateData } = body;
+    console.log('📥 Received update body:', JSON.stringify(body, null, 2));
 
-    // Check if product exists
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
+      include: { variants: true }
     });
 
     if (!existingProduct) {
@@ -163,141 +227,149 @@ export async function PATCH(
       );
     }
 
-    // Validate category if provided
-    if (updateData.category !== undefined) {
-      const validCategories = ['CLOTHING', 'HOME_DECORE', 'ACCESSORIES'];
-      if (updateData.category && !validCategories.includes(updateData.category)) {
-        return NextResponse.json(
-          { error: `Invalid category. Must be one of: ${validCategories.join(', ')}` },
-          { status: 400 }
-        );
-      }
+    // Update product basic info
+    const updateFields: any = {};
+    
+    if (body.name !== undefined) updateFields.name = body.name;
+    if (body.description !== undefined) updateFields.description = body.description;
+    if (body.price !== undefined) updateFields.price = parseFloat(body.price);
+    if (body.images !== undefined) updateFields.images = body.images;
+    if (body.category !== undefined) updateFields.category = body.category;
+    if (body.clothingType !== undefined) updateFields.clothingType = body.clothingType;
+    if (body.gender !== undefined) updateFields.gender = body.gender;
+    if (body.accessoriesType !== undefined) updateFields.accessoriesType = body.accessoriesType;
+    if (body.availableColors !== undefined) updateFields.availableColors = body.availableColors;
+    if (body.availableSizes !== undefined) updateFields.availableSizes = body.availableSizes;
+    if (body.defaultColor !== undefined) updateFields.defaultColor = body.defaultColor;
+    if (body.defaultSize !== undefined) updateFields.defaultSize = body.defaultSize;
+    if (body.isActive !== undefined) updateFields.isActive = body.isActive;
 
-      // Validate clothing type if category is CLOTHING
-      if (updateData.category === 'CLOTHING' && updateData.clothingType) {
-        const validClothingTypes = ['CASHMERE', 'CASHMERE_MARINO_WOOL', 'MARINO_WOOL'];
-        if (!validClothingTypes.includes(updateData.clothingType)) {
-          return NextResponse.json(
-            { error: `Invalid clothing type. Must be one of: ${validClothingTypes.join(', ')}` },
-            { status: 400 }
-          );
-        }
-      }
-
-      // Validate gender if category is CLOTHING
-      if (updateData.category === 'CLOTHING' && updateData.gender) {
-        const validGenders = ['MEN', 'WOMEN', 'UNISEX'];
-        if (!validGenders.includes(updateData.gender)) {
-          return NextResponse.json(
-            { error: `Invalid gender. Must be one of: ${validGenders.join(', ')}` },
-            { status: 400 }
-          );
-        }
-      }
-
-      // Validate accessories type if category is ACCESSORIES
-      if (updateData.category === 'ACCESSORIES' && updateData.accessoriesType) {
-        const validAccessoriesTypes = ['MEN', 'WOMEN', 'UNISEX'];
-        if (!validAccessoriesTypes.includes(updateData.accessoriesType)) {
-          return NextResponse.json(
-            { error: `Invalid accessories type. Must be one of: ${validAccessoriesTypes.join(', ')}` },
-            { status: 400 }
-          );
-        }
-      }
-
-      // Clear type fields if category doesn't match
-      if (updateData.category !== 'CLOTHING') {
-        updateData.clothingType = null;
-        updateData.gender = null;
-      }
-      if (updateData.category !== 'ACCESSORIES') {
-        updateData.accessoriesType = null;
-      }
-    }
-
-    // Validate colors if provided
-    if (updateData.availableColors !== undefined) {
-      const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900','beige', 'charcoal'];
-      const availableColors = Array.isArray(updateData.availableColors) 
-        ? updateData.availableColors 
-        : (updateData.availableColors ? [updateData.availableColors] : []);
-      
-      const invalidColors = availableColors.filter((color: string) => !validColors.includes(color));
-      if (invalidColors.length > 0) {
-        return NextResponse.json(
-          { error: `Invalid colors: ${invalidColors.join(', ')}` },
-          { status: 400 }
-        );
-      }
-      updateData.availableColors = availableColors;
-    }
-
-    // Validate sizes if provided
-    if (updateData.availableSizes !== undefined) {
-      const validSizes = ['XS','S', 'M', 'L','XL'];
-      const availableSizes = Array.isArray(updateData.availableSizes)
-        ? updateData.availableSizes
-        : (updateData.availableSizes ? [updateData.availableSizes] : []);
-      
-      const invalidSizes = availableSizes.filter((size: string) => !validSizes.includes(size));
-      if (invalidSizes.length > 0) {
-        return NextResponse.json(
-          { error: `Invalid sizes: ${invalidSizes.join(', ')}` },
-          { status: 400 }
-        );
-      }
-      updateData.availableSizes = availableSizes;
-    }
-
-    // Prepare update data
-    const dataToUpdate: any = {
-      ...updateData,
-      // Handle numeric conversions
-      ...(updateData.price && { price: parseFloat(updateData.price) }),
-      ...(updateData.stock !== undefined && { stock: parseInt(updateData.stock) }),
-    };
-
-    // Update product
+    // Update the product
     const product = await prisma.product.update({
       where: { id: productId },
-      data: dataToUpdate,
+      data: updateFields,
     });
 
-    console.log('✅ Product updated:', {
-      id: product.id,
-      name: product.name,
-      category: product.category,
-      clothingType: product.clothingType,
-      gender: product.gender,
-      accessoriesType: product.accessoriesType
+    console.log('✅ Product basic info updated:', product.name);
+
+    // IMPORTANT: Update variant stocks from variantStocks object
+    if (body.variantStocks && typeof body.variantStocks === 'object') {
+      console.log('📦 Updating variant stocks...');
+      
+      for (const [variantKey, stockValue] of Object.entries(body.variantStocks)) {
+        const [color, size] = variantKey.split('|');
+        if (color && size && typeof stockValue === 'number') {
+          const sizeLower = size.toLowerCase();
+          
+          try {
+            // Use upsert to either update or create the variant
+            await prisma.productVariant.upsert({
+              where: {
+                productId_color_size: {
+                  productId: productId,
+                  color: color,
+                  size: sizeLower,
+                }
+              },
+              update: { 
+                stock: stockValue,
+                isActive: stockValue > 0
+              },
+              create: {
+                productId: productId,
+                color: color,
+                size: sizeLower,
+                sku: `${productId.substring(0, 8)}-${color}-${sizeLower}`.toUpperCase().replace(/\s/g, '-'),
+                stock: stockValue,
+                isActive: stockValue > 0,
+              }
+            });
+            console.log(`   ✅ Updated ${color}/${sizeLower} stock to ${stockValue}`);
+          } catch (err) {
+            console.error(`   ❌ Failed to update ${color}/${sizeLower}:`, err);
+          }
+        }
+      }
+    }
+
+    // Also handle legacy stockPerVariant if provided
+    if (body.stockPerVariant !== undefined && body.availableColors && body.availableSizes) {
+      console.log('📦 Using stockPerVariant to update all variants');
+      for (const color of body.availableColors) {
+        for (const size of body.availableSizes) {
+          const sizeLower = size.toLowerCase();
+          await prisma.productVariant.upsert({
+            where: {
+              productId_color_size: {
+                productId: productId,
+                color: color,
+                size: sizeLower,
+              }
+            },
+            update: { stock: body.stockPerVariant },
+            create: {
+              productId: productId,
+              color: color,
+              size: sizeLower,
+              sku: `${productId.substring(0, 8)}-${color}-${sizeLower}`.toUpperCase().replace(/\s/g, '-'),
+              stock: body.stockPerVariant,
+              isActive: true,
+            }
+          });
+        }
+      }
+      console.log(`   ✅ Set all variants stock to ${body.stockPerVariant}`);
+    }
+
+    // Calculate total stock from all active variants
+    const allVariants = await prisma.productVariant.findMany({
+      where: { productId: productId, isActive: true }
     });
+    const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0);
     
+    // Update product total stock
+    await prisma.product.update({
+      where: { id: productId },
+      data: { stock: totalStock }
+    });
+
+    console.log(`✅ Total stock updated to ${totalStock}`);
+
+    // Fetch updated product with variants to return
+    const updatedProduct = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        variants: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            color: true,
+            size: true,
+            stock: true,
+            sku: true,
+          }
+        }
+      }
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Product updated successfully',
-      product,
+      product: updatedProduct,
+      totalStock,
     });
     
   } catch (error: any) {
-    console.error('Error updating product:', error);
+    console.error('❌ Error updating product:', error);
     
-    // Handle Prisma errors
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'A product with similar details already exists' },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
-      { error: 'Failed to update product. Please try again.' },
+      { error: error.message || 'Failed to update product. Please try again.' },
       { status: 500 }
     );
   }
 }
 
-// DELETE - Soft delete single product (deactivates instead of removing)
+// DELETE - Soft delete single product
 export async function DELETE(
   request: NextRequest
 ) {
@@ -322,7 +394,6 @@ export async function DELETE(
       );
     }
 
-    // Check if product exists
     const product = await prisma.product.findUnique({
       where: { id: productId },
     });
@@ -334,7 +405,6 @@ export async function DELETE(
       );
     }
 
-    // Check if already deactivated
     if (!product.isActive) {
       return NextResponse.json(
         { error: 'Product is already deactivated' },
@@ -342,13 +412,19 @@ export async function DELETE(
       );
     }
 
-    // Soft delete — deactivate instead of removing
+    // Deactivate all variants
+    await prisma.productVariant.updateMany({
+      where: { productId: productId },
+      data: { isActive: false }
+    });
+
+    // Soft delete the product
     const deactivatedProduct = await prisma.product.update({
       where: { id: productId },
       data: { isActive: false },
     });
 
-    console.log('✅ Product deactivated:', productId);
+    console.log('✅ Product and all variants deactivated:', productId);
 
     return NextResponse.json({
       success: true,

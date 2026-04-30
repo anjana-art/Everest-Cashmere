@@ -22,6 +22,10 @@ const COLORS = [
   { value: 'red-900', name: 'Red 900', hex: '#7F1D1D' },
   { value: 'beige', name: 'Beige', hex: '#D4B896' },
   { value: 'charcoal', name: 'Charcoal', hex: '#4A4A4A' },
+  { name: 'Taupe', value:'taupe', hex: '#483C32' },
+   { name: 'Indigo', value:'indigo',  hex: '#4B0082' },
+
+
 ];
 
 const SIZES = ['XS','S', 'M', 'L','XL'];

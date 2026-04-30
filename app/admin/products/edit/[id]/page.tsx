@@ -23,29 +23,18 @@ const COLORS = [
   { value: 'red-900', name: 'Red 900', hex: '#7F1D1D' },
   { value: 'beige', name: 'Beige', hex: '#D4B896' },
   { value: 'charcoal', name: 'Charcoal', hex: '#4A4A4A' },
+  { name: 'Taupe', value:'taupe', hex: '#483C32' },
+  { name: 'Indigo', value:'indigo', hex: '#4B0082' },
 ];
 
-const SIZES = ['XS','S', 'M', 'L', 'XL'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
 
-interface Product {
+interface ProductVariant {
   id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  images: string[];
-  category: string | null;
-  clothingType: string | null;
-  gender: string | null;
-  accessoriesType: string | null;
-  availableColors: string[];
-  availableSizes: string[];
-  defaultColor: string | null;
-  defaultSize: string | null;
+  color: string;
+  size: string;
   stock: number;
-  isActive: boolean;
-  stripeId: string | null;
-  createdAt: string;
-  updatedAt: string;
+  sku: string;
 }
 
 export default function EditProductPage() {
@@ -75,6 +64,8 @@ export default function EditProductPage() {
     isActive: true,
   });
 
+  const [variantStocks, setVariantStocks] = useState<Record<string, number>>({});
+
   useEffect(() => {
     if (productId) {
       fetchProduct();
@@ -84,35 +75,78 @@ export default function EditProductPage() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
+      setError('');
+      
+      console.log('📦 Fetching product:', productId);
+      
       const response = await fetch(`/api/admin/products/${productId}`);
       
-      if (!response.ok) throw new Error('Failed to fetch product');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch product');
+      }
       
       const product = await response.json();
+      
+      console.log('✅ Full product data:', product);
+      console.log('✅ Variants:', product.variants);
+      console.log('✅ Available Colors:', product.availableColors);
+      console.log('✅ Available Sizes:', product.availableSizes);
 
-      // Set form data with all fields
       setFormData({
-        name: product.name,
+        name: product.name || '',
         description: product.description || '',
-        price: product.price.toString(),
-        images: product.images || [],
+        price: product.price ? product.price.toString() : '0',
+        images: product.images && Array.isArray(product.images) ? product.images : [],
         category: product.category || '',
         clothingType: product.clothingType || '',
         gender: product.gender || '',
         accessoriesType: product.accessoriesType || '',
-        availableColors: product.availableColors || [],
-        availableSizes: product.availableSizes || [],
+        availableColors: product.availableColors && Array.isArray(product.availableColors) ? product.availableColors : [],
+        availableSizes: product.availableSizes && Array.isArray(product.availableSizes) ? product.availableSizes : [],
         defaultColor: product.defaultColor || '',
         defaultSize: product.defaultSize || '',
-        stock: product.stock.toString(),
-        isActive: product.isActive,
+        stock: product.stock ? product.stock.toString() : '0',
+        isActive: product.isActive !== undefined ? product.isActive : true,
       });
+
+      const stocks: Record<string, number> = {};
+      
+      if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+        product.variants.forEach((variant: ProductVariant) => {
+          if (variant && variant.color && variant.size) {
+            const key = `${variant.color}|${variant.size}`;
+            stocks[key] = variant.stock || 0;
+          }
+        });
+        console.log('📊 Loaded stocks from existing variants:', stocks);
+      } else if (product.availableColors && product.availableColors.length > 0 && 
+                 product.availableSizes && product.availableSizes.length > 0) {
+        for (const color of product.availableColors) {
+          for (const size of product.availableSizes) {
+            const key = `${color}|${size.toLowerCase()}`;
+            stocks[key] = 10;
+          }
+        }
+        console.log('📊 Initialized default stocks:', stocks);
+      }
+      
+      setVariantStocks(stocks);
       
     } catch (err: any) {
+      console.error('❌ Error fetching product:', err);
       setError(err.message || 'Failed to load product');
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateVariantStock = (color: string, size: string, stock: number) => {
+    const key = `${color}|${size.toLowerCase()}`;
+    setVariantStocks(prev => ({
+      ...prev,
+      [key]: stock
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,7 +155,6 @@ export default function EditProductPage() {
     setError('');
     setSuccess('');
 
-    // Validate required fields
     if (!formData.name || !formData.price || formData.images.length === 0) {
       setError('Please fill in all required fields: Name, Price, and at least one image');
       setSaving(false);
@@ -129,7 +162,8 @@ export default function EditProductPage() {
     }
 
     try {
-      // CHANGE: Removed id from request body since it's in the URL
+      const totalStock = Object.values(variantStocks).reduce((sum, stock) => sum + (stock || 0), 0);
+      
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -143,9 +177,12 @@ export default function EditProductPage() {
         availableSizes: formData.availableSizes,
         defaultColor: formData.defaultColor || formData.availableColors[0] || null,
         defaultSize: formData.defaultSize || formData.availableSizes[0] || null,
-        stock: parseInt(formData.stock),
+        stock: totalStock,
         isActive: formData.isActive,
+        variantStocks: variantStocks,
       };
+
+      console.log('📤 Updating product with data:', productData);
 
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'PATCH',
@@ -163,12 +200,12 @@ export default function EditProductPage() {
 
       setSuccess('Product updated successfully!');
       
-      // Redirect after 2 seconds
       setTimeout(() => {
         router.push('/admin/products');
       }, 2000);
 
     } catch (err: any) {
+      console.error('❌ Error updating product:', err);
       setError(err.message);
     } finally {
       setSaving(false);
@@ -176,24 +213,65 @@ export default function EditProductPage() {
   };
 
   const toggleColor = (colorValue: string) => {
-    setFormData(prev => ({
-      ...prev,
-      availableColors: prev.availableColors.includes(colorValue)
+    setFormData(prev => {
+      const newColors = prev.availableColors.includes(colorValue)
         ? prev.availableColors.filter(c => c !== colorValue)
-        : [...prev.availableColors, colorValue]
-    }));
+        : [...prev.availableColors, colorValue];
+      
+      if (prev.availableSizes.length > 0) {
+        const newStocks: Record<string, number> = { ...variantStocks };
+        
+        if (newColors.includes(colorValue) && !prev.availableColors.includes(colorValue)) {
+          for (const size of prev.availableSizes) {
+            const key = `${colorValue}|${size.toLowerCase()}`;
+            if (newStocks[key] === undefined) {
+              newStocks[key] = 10;
+            }
+          }
+        } else if (!newColors.includes(colorValue) && prev.availableColors.includes(colorValue)) {
+          for (const size of prev.availableSizes) {
+            const key = `${colorValue}|${size.toLowerCase()}`;
+            delete newStocks[key];
+          }
+        }
+        
+        setVariantStocks(newStocks);
+      }
+      
+      return { ...prev, availableColors: newColors };
+    });
   };
 
   const toggleSize = (size: string) => {
-    setFormData(prev => ({
-      ...prev,
-      availableSizes: prev.availableSizes.includes(size)
+    setFormData(prev => {
+      const newSizes = prev.availableSizes.includes(size)
         ? prev.availableSizes.filter(s => s !== size)
-        : [...prev.availableSizes, size]
-    }));
+        : [...prev.availableSizes, size];
+      
+      if (prev.availableColors.length > 0) {
+        const newStocks: Record<string, number> = { ...variantStocks };
+        
+        if (newSizes.includes(size) && !prev.availableSizes.includes(size)) {
+          for (const color of prev.availableColors) {
+            const key = `${color}|${size.toLowerCase()}`;
+            if (newStocks[key] === undefined) {
+              newStocks[key] = 10;
+            }
+          }
+        } else if (!newSizes.includes(size) && prev.availableSizes.includes(size)) {
+          for (const color of prev.availableColors) {
+            const key = `${color}|${size.toLowerCase()}`;
+            delete newStocks[key];
+          }
+        }
+        
+        setVariantStocks(newStocks);
+      }
+      
+      return { ...prev, availableSizes: newSizes };
+    });
   };
 
-  // Reset type fields when category changes
   const handleCategoryChange = (category: string) => {
     setFormData(prev => ({
       ...prev,
@@ -212,9 +290,10 @@ export default function EditProductPage() {
     );
   }
 
+  const totalStock = Object.values(variantStocks).reduce((sum, stock) => sum + (stock || 0), 0);
+
   return (
     <div>
-      {/* Header with Back Button */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <Link
@@ -225,7 +304,7 @@ export default function EditProductPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Edit Product</h1>
-            <p className="text-gray-600">Update product details</p>
+            <p className="text-gray-600">Update product details and stock per size</p>
           </div>
         </div>
       </div>
@@ -296,7 +375,6 @@ export default function EditProductPage() {
               />
             </div>
 
-            {/* Category Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Category *
@@ -307,14 +385,13 @@ export default function EditProductPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               >
-                <option value="">Select Category *</option>
+                <option value="">Select Category</option>
                 <option value="CLOTHING">Clothing</option>
                 <option value="HOME_DECORE">Home Decore</option>
                 <option value="ACCESSORIES">Accessories</option>
               </select>
             </div>
 
-            {/* Conditional: Clothing Type & Gender */}
             {formData.category === 'CLOTHING' && (
               <>
                 <div>
@@ -351,7 +428,6 @@ export default function EditProductPage() {
               </>
             )}
 
-            {/* Conditional: Accessories Type */}
             {formData.category === 'ACCESSORIES' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -369,20 +445,6 @@ export default function EditProductPage() {
                 </select>
               </div>
             )}
-
-            {/* Stock field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Stock Quantity
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={formData.stock}
-                onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
           </div>
         </div>
 
@@ -501,6 +563,84 @@ export default function EditProductPage() {
             )}
           </div>
         </div>
+
+        {/* Stock per Size/Color Matrix */}
+        {formData.availableColors.length > 0 && formData.availableSizes.length > 0 && (
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Stock per Size & Color</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Set stock quantity for each color and size combination
+            </p>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-200 rounded-lg">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Color / Size</th>
+                    {formData.availableSizes.map(size => (
+                      <th key={size} className="px-4 py-3 text-center text-sm font-medium text-gray-700">
+                        {size}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData.availableColors.map(color => {
+                    const colorInfo = COLORS.find(c => c.value === color);
+                    return (
+                      <tr key={color} className="border-b border-gray-200 hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-4 h-4 rounded-full border border-gray-300"
+                              style={{ backgroundColor: colorInfo?.hex || '#000' }}
+                            />
+                            {colorInfo?.name || color}
+                          </div>
+                        </td>
+                        {formData.availableSizes.map(size => {
+                          const key = `${color}|${size.toLowerCase()}`;
+                          const stock = variantStocks[key] || 0;
+                          return (
+                            <td key={`${color}-${size}`} className="px-4 py-2 text-center">
+                              <input
+                                type="number"
+                                min="0"
+                                value={stock}
+                                onChange={(e) => updateVariantStock(color, size, parseInt(e.target.value) || 0)}
+                                className="w-20 px-2 py-1 text-center border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              />
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-50 border-t border-gray-200">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">Total Stock</td>
+                    {formData.availableSizes.map(size => {
+                      const totalForSize = formData.availableColors.reduce((sum, color) => {
+                        const key = `${color}|${size.toLowerCase()}`;
+                        return sum + (variantStocks[key] || 0);
+                      }, 0);
+                      return (
+                        <td key={`total-${size}`} className="px-4 py-3 text-center font-medium text-gray-900">
+                          {totalForSize}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            
+            <div className="mt-4 text-sm text-gray-500">
+              <p>Total Stock: <strong>{totalStock}</strong> items</p>
+            </div>
+          </div>
+        )}
 
         {/* Status */}
         <div className="bg-white rounded-xl shadow p-6">

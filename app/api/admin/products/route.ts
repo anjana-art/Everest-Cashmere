@@ -1,4 +1,4 @@
-// app/api/admin/products/route.ts - COMPLETE REPLACEMENT
+// app/api/admin/products/route.ts - UPDATED with auto-variant creation
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -92,6 +92,125 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
   }
 }
 
+// Helper function to auto-create variants
+async function autoCreateVariants(productId: string, colors: string[], sizes: string[], defaultStock: number = 10) {
+  console.log(`🔄 Auto-creating variants for product ${productId}`);
+  console.log(`   Colors: ${colors.join(', ')}`);
+  console.log(`   Sizes: ${sizes.join(', ')}`);
+  
+  const variants = [];
+  
+  for (const color of colors) {
+    for (const size of sizes) {
+      const sku = `${productId.substring(0, 8)}-${color}-${size}`.toUpperCase().replace(/\s/g, '-');
+      
+      variants.push(
+        prisma.productVariant.upsert({
+          where: {
+            productId_color_size: {
+              productId: productId,
+              color: color,
+              size: size.toLowerCase(),
+            }
+          },
+          update: {
+            stock: defaultStock,
+            isActive: true,
+          },
+          create: {
+            productId: productId,
+            color: color,
+            size: size.toLowerCase(),
+            sku: sku,
+            stock: defaultStock,
+            isActive: true,
+          }
+        })
+      );
+    }
+  }
+  
+  const results = await Promise.all(variants);
+  console.log(`✅ Created/Updated ${results.length} variants`);
+  return results;
+}
+
+// Helper function to sync variants when product is updated
+async function syncVariantsOnUpdate(productId: string, newColors: string[], newSizes: string[]) {
+  // Get existing variants
+  const existingVariants = await prisma.productVariant.findMany({
+    where: { productId: productId }
+  });
+  
+  const existingKeys = new Set(
+    existingVariants.map(v => `${v.color}|${v.size}`)
+  );
+  
+  const newCombinations = [];
+  
+  // Find missing combinations
+  for (const color of newColors) {
+    for (const size of newSizes) {
+      const key = `${color}|${size.toLowerCase()}`;
+      if (!existingKeys.has(key)) {
+        newCombinations.push({ color, size: size.toLowerCase() });
+      }
+    }
+  }
+  
+  // Create missing variants
+  if (newCombinations.length > 0) {
+    console.log(`🆕 Creating ${newCombinations.length} new variant combinations`);
+    
+    for (const combo of newCombinations) {
+      const sku = `${productId.substring(0, 8)}-${combo.color}-${combo.size}`.toUpperCase().replace(/\s/g, '-');
+      
+      await prisma.productVariant.upsert({
+        where: {
+          productId_color_size: {
+            productId: productId,
+            color: combo.color,
+            size: combo.size,
+          }
+        },
+        update: {
+          isActive: true,
+        },
+        create: {
+          productId: productId,
+          color: combo.color,
+          size: combo.size,
+          sku: sku,
+          stock: 10,
+          isActive: true,
+        }
+      });
+    }
+    
+    console.log(`✅ Created ${newCombinations.length} new variants`);
+  }
+  
+  // Optionally deactivate variants for removed combinations
+  const validKeys = new Set();
+  for (const color of newColors) {
+    for (const size of newSizes) {
+      validKeys.add(`${color}|${size.toLowerCase()}`);
+    }
+  }
+  
+  const variantsToDeactivate = existingVariants.filter(v => !validKeys.has(`${v.color}|${v.size}`));
+  if (variantsToDeactivate.length > 0) {
+    await prisma.productVariant.updateMany({
+      where: {
+        productId: productId,
+        id: { in: variantsToDeactivate.map(v => v.id) }
+      },
+      data: { isActive: false }
+    });
+    console.log(`⚠️ Deactivated ${variantsToDeactivate.length} variants for removed combinations`);
+  }
+}
+
 // GET - List all products
 export async function GET(request: NextRequest) {
   try {
@@ -118,6 +237,16 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          variants: {
+            select: {
+              id: true,
+              color: true,
+              size: true,
+              stock: true,
+            }
+          }
+        }
       }),
       prisma.product.count(),
     ]);
@@ -143,7 +272,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new product
+// POST - Create new product with auto-variants
 export async function POST(request: NextRequest) {
   try {
     console.log('➕ POST /api/admin/products called');
@@ -179,7 +308,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Validate clothing type if category is CLOTHING
       if (body.category === 'CLOTHING' && body.clothingType) {
         const validClothingTypes = ['CASHMERE', 'CASHMERE_MARINO_WOOL', 'MARINO_WOOL'];
         if (!validClothingTypes.includes(body.clothingType)) {
@@ -190,7 +318,6 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Validate gender if category is CLOTHING
       if (body.category === 'CLOTHING' && body.gender) {
         const validGenders = ['MEN', 'WOMEN', 'UNISEX'];
         if (!validGenders.includes(body.gender)) {
@@ -201,7 +328,6 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Validate accessories type if category is ACCESSORIES
       if (body.category === 'ACCESSORIES' && body.accessoriesType) {
         const validAccessoriesTypes = ['MEN', 'WOMEN', 'UNISEX'];
         if (!validAccessoriesTypes.includes(body.accessoriesType)) {
@@ -212,7 +338,6 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Clear type fields if category doesn't match
       if (body.category !== 'CLOTHING') {
         body.clothingType = null;
         body.gender = null;
@@ -232,8 +357,8 @@ export async function POST(request: NextRequest) {
       : (body.availableSizes ? [body.availableSizes] : []);
 
     // Validate colors and sizes
-    const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal', 'toupe'];
-    const validSizes = ['S', 'M', 'L', 'XS', 'XL'];
+    const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal', 'indigo', 'taupe'];
+    const validSizes = ['XS', 'S', 'M', 'L', 'XL'];
 
     const invalidColors = availableColors.filter((color: string) => !validColors.includes(color));
     const invalidSizes = availableSizes.filter((size: string) => !validSizes.includes(size));
@@ -261,14 +386,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate stock
-    const stock = parseInt(body.stock || '0');
-    if (isNaN(stock) || stock < 0) {
-      return NextResponse.json(
-        { error: 'Stock must be a non-negative number' },
-        { status: 400 }
-      );
-    }
+    // Get stock per variant (default 10 if not specified)
+    const stockPerVariant = body.stockPerVariant || 10;
 
     // Validate images
     const images = Array.isArray(body.images) ? body.images : [body.images];
@@ -294,7 +413,7 @@ export async function POST(request: NextRequest) {
         availableSizes: availableSizes,
         defaultColor: body.defaultColor || availableColors[0] || null,
         defaultSize: body.defaultSize || availableSizes[0] || null,
-        stock: stock,
+        stock: availableColors.length * availableSizes.length * stockPerVariant, // Total stock
         isActive: body.isActive !== false,
         metadata: body.metadata || {},
       },
@@ -304,20 +423,21 @@ export async function POST(request: NextRequest) {
       id: product.id,
       name: product.name,
       category: product.category,
-      clothingType: product.clothingType,
-      gender: product.gender,
-      accessoriesType: product.accessoriesType
     });
+
+    // AUTO-CREATE VARIANTS for each color and size combination
+    if (availableColors.length > 0 && availableSizes.length > 0) {
+      await autoCreateVariants(product.id, availableColors, availableSizes, stockPerVariant);
+    }
     
     return NextResponse.json({
       success: true,
-      message: 'Product created successfully',
+      message: 'Product created successfully with variants',
       product,
     }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating product:', error);
     
-    // Handle Prisma unique constraint errors
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'A product with similar details already exists' },
@@ -332,7 +452,177 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE method
+// PATCH - Update product and sync variants
+export async function PATCH(request: NextRequest) {
+  try {
+    console.log('✏️ PATCH /api/admin/products called');
+    const admin = await isAdmin(request);
+    
+    if (!admin) {
+      console.log('🚫 Access denied - not admin');
+      return NextResponse.json(
+        { error: 'Unauthorized - Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    console.log('✅ Access granted - processing update');
+    
+    const body = await request.json();
+    const { id, ...updateData } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Product ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true }
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
+    // Validate category if provided
+    if (updateData.category !== undefined) {
+      const validCategories = ['CLOTHING', 'HOME_DECORE', 'ACCESSORIES'];
+      if (updateData.category && !validCategories.includes(updateData.category)) {
+        return NextResponse.json(
+          { error: `Invalid category. Must be one of: ${validCategories.join(', ')}` },
+          { status: 400 }
+        );
+      }
+
+      if (updateData.category === 'CLOTHING' && updateData.clothingType) {
+        const validClothingTypes = ['CASHMERE', 'CASHMERE_MARINO_WOOL', 'MARINO_WOOL'];
+        if (!validClothingTypes.includes(updateData.clothingType)) {
+          return NextResponse.json(
+            { error: `Invalid clothing type. Must be one of: ${validClothingTypes.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      if (updateData.category === 'CLOTHING' && updateData.gender) {
+        const validGenders = ['MEN', 'WOMEN', 'UNISEX'];
+        if (!validGenders.includes(updateData.gender)) {
+          return NextResponse.json(
+            { error: `Invalid gender. Must be one of: ${validGenders.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      if (updateData.category === 'ACCESSORIES' && updateData.accessoriesType) {
+        const validAccessoriesTypes = ['MEN', 'WOMEN', 'UNISEX'];
+        if (!validAccessoriesTypes.includes(updateData.accessoriesType)) {
+          return NextResponse.json(
+            { error: `Invalid accessories type. Must be one of: ${validAccessoriesTypes.join(', ')}` },
+            { status: 400 }
+          );
+        }
+      }
+
+      if (updateData.category !== 'CLOTHING') {
+        updateData.clothingType = null;
+        updateData.gender = null;
+      }
+      if (updateData.category !== 'ACCESSORIES') {
+        updateData.accessoriesType = null;
+      }
+    }
+
+    // Track color/size changes for variant sync
+    let newColors = existingProduct.availableColors;
+    let newSizes = existingProduct.availableSizes;
+    
+    if (updateData.availableColors !== undefined) {
+      const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal', 'indigo', 'taupe'];
+      newColors = Array.isArray(updateData.availableColors) 
+        ? updateData.availableColors 
+        : (updateData.availableColors ? [updateData.availableColors] : []);
+      
+      const invalidColors = newColors.filter((color: string) => !validColors.includes(color));
+      if (invalidColors.length > 0) {
+        return NextResponse.json(
+          { error: `Invalid colors: ${invalidColors.join(', ')}` },
+          { status: 400 }
+        );
+      }
+      updateData.availableColors = newColors;
+    }
+
+    if (updateData.availableSizes !== undefined) {
+      const validSizes = ['XS', 'S', 'M', 'L', 'XL'];
+      newSizes = Array.isArray(updateData.availableSizes)
+        ? updateData.availableSizes
+        : (updateData.availableSizes ? [updateData.availableSizes] : []);
+      
+      const invalidSizes = newSizes.filter((size: string) => !validSizes.includes(size));
+      if (invalidSizes.length > 0) {
+        return NextResponse.json(
+          { error: `Invalid sizes: ${invalidSizes.join(', ')}` },
+          { status: 400 }
+        );
+      }
+      updateData.availableSizes = newSizes;
+    }
+
+    // Prepare update data
+    const dataToUpdate: any = {
+      ...updateData,
+      ...(updateData.price && { price: parseFloat(updateData.price) }),
+      ...(updateData.stock !== undefined && { stock: parseInt(updateData.stock) }),
+    };
+
+    // Update product
+    const product = await prisma.product.update({
+      where: { id },
+      data: dataToUpdate,
+    });
+
+    console.log('✅ Product updated:', {
+      id: product.id,
+      name: product.name,
+    });
+
+    // SYNC VARIANTS if colors or sizes changed
+    if (updateData.availableColors || updateData.availableSizes) {
+      await syncVariantsOnUpdate(id, newColors, newSizes);
+    }
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Product updated successfully with variants synced',
+      product,
+    });
+    
+  } catch (error: any) {
+    console.error('Error updating product:', error);
+    
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A product with similar details already exists' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to update product. Please try again.' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE method (unchanged)
 export async function DELETE(request: NextRequest) {
   try {
     console.log('🗑️ DELETE /api/admin/products called');
@@ -381,6 +671,11 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Delete variants first (cascade should handle this, but explicit for safety)
+    await prisma.productVariant.deleteMany({
+      where: { productId: id }
+    });
+
     // Delete the product
     await prisma.product.delete({
       where: { id }
@@ -396,187 +691,6 @@ export async function DELETE(request: NextRequest) {
     console.error('Error deleting product:', error);
     return NextResponse.json(
       { error: 'Failed to delete product' },
-      { status: 500 }
-    );
-  }
-}
-
-// PATCH method
-export async function PATCH(request: NextRequest) {
-  try {
-    console.log('✏️ PATCH /api/admin/products called');
-    const admin = await isAdmin(request);
-    
-    if (!admin) {
-      console.log('🚫 Access denied - not admin');
-      return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 403 }
-      );
-    }
-
-    console.log('✅ Access granted - processing update');
-    
-    const body = await request.json();
-    const { id, ...updateData } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Product ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Check if product exists
-    const existingProduct = await prisma.product.findUnique({
-      where: { id },
-    });
-
-    if (!existingProduct) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
-
-    // Validate category if provided
-    if (updateData.category !== undefined) {
-      const validCategories = ['CLOTHING', 'HOME_DECORE', 'ACCESSORIES'];
-      if (updateData.category && !validCategories.includes(updateData.category)) {
-        return NextResponse.json(
-          { error: `Invalid category. Must be one of: ${validCategories.join(', ')}` },
-          { status: 400 }
-        );
-      }
-
-      // Validate clothing type if category is CLOTHING
-      if (updateData.category === 'CLOTHING' && updateData.clothingType) {
-        const validClothingTypes = ['CASHMERE', 'CASHMERE_MARINO_WOOL', 'MARINO_WOOL'];
-        if (!validClothingTypes.includes(updateData.clothingType)) {
-          return NextResponse.json(
-            { error: `Invalid clothing type. Must be one of: ${validClothingTypes.join(', ')}` },
-            { status: 400 }
-          );
-        }
-      }
-
-      // Validate gender if category is CLOTHING
-      if (updateData.category === 'CLOTHING' && updateData.gender) {
-        const validGenders = ['MEN', 'WOMEN', 'UNISEX'];
-        if (!validGenders.includes(updateData.gender)) {
-          return NextResponse.json(
-            { error: `Invalid gender. Must be one of: ${validGenders.join(', ')}` },
-            { status: 400 }
-          );
-        }
-      }
-
-      // Validate accessories type if category is ACCESSORIES
-      if (updateData.category === 'ACCESSORIES' && updateData.accessoriesType) {
-        const validAccessoriesTypes = ['MEN', 'WOMEN', 'UNISEX'];
-        if (!validAccessoriesTypes.includes(updateData.accessoriesType)) {
-          return NextResponse.json(
-            { error: `Invalid accessories type. Must be one of: ${validAccessoriesTypes.join(', ')}` },
-            { status: 400 }
-          );
-        }
-      }
-
-      // Clear type fields if category doesn't match
-      if (updateData.category !== 'CLOTHING') {
-        updateData.clothingType = null;
-        updateData.gender = null;
-      }
-      if (updateData.category !== 'ACCESSORIES') {
-        updateData.accessoriesType = null;
-      }
-    }
-
-    // Validate colors if provided
-    if (updateData.availableColors !== undefined) {
-      const validColors = ['baby-pink', 'amber-200', 'black-300', 'gray', 'sky-blue', 'cream', 'black', 'green', 'yellow-200', 'red-900', 'beige', 'charcoal','toupe'];
-      const availableColors = Array.isArray(updateData.availableColors) 
-        ? updateData.availableColors 
-        : (updateData.availableColors ? [updateData.availableColors] : []);
-      
-      const invalidColors = availableColors.filter((color: string) => !validColors.includes(color));
-      if (invalidColors.length > 0) {
-        return NextResponse.json(
-          { error: `Invalid colors: ${invalidColors.join(', ')}` },
-          { status: 400 }
-        );
-      }
-      updateData.availableColors = availableColors;
-    }
-
-    // Validate sizes if provided
-    if (updateData.availableSizes !== undefined) {
-      const validSizes = ['S', 'M', 'L', 'XS', 'XL'];
-      const availableSizes = Array.isArray(updateData.availableSizes)
-        ? updateData.availableSizes
-        : (updateData.availableSizes ? [updateData.availableSizes] : []);
-      
-      const invalidSizes = availableSizes.filter((size: string) => !validSizes.includes(size));
-      if (invalidSizes.length > 0) {
-        return NextResponse.json(
-          { error: `Invalid sizes: ${invalidSizes.join(', ')}` },
-          { status: 400 }
-        );
-      }
-      updateData.availableSizes = availableSizes;
-    }
-
-    // If price changes
-    if (updateData.price) {
-      const newPrice = parseFloat(updateData.price);
-      const oldPrice = parseFloat(existingProduct.price.toString());
-      if (newPrice !== oldPrice) {
-        console.log(`💰 Price changed from ${oldPrice} to ${newPrice}`);
-      }
-    }
-
-    // Prepare update data
-    const dataToUpdate: any = {
-      ...updateData,
-      // Handle numeric conversions
-      ...(updateData.price && { price: parseFloat(updateData.price) }),
-      ...(updateData.stock !== undefined && { stock: parseInt(updateData.stock) }),
-    };
-
-    // Update product
-    const product = await prisma.product.update({
-      where: { id },
-      data: dataToUpdate,
-    });
-
-    console.log('✅ Product updated:', {
-      id: product.id,
-      name: product.name,
-      category: product.category,
-      clothingType: product.clothingType,
-      gender: product.gender,
-      accessoriesType: product.accessoriesType
-    });
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Product updated successfully',
-      product,
-    });
-    
-  } catch (error: any) {
-    console.error('Error updating product:', error);
-    
-    // Handle Prisma errors
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'A product with similar details already exists' },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to update product. Please try again.' },
       { status: 500 }
     );
   }

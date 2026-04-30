@@ -5,14 +5,19 @@ export const COLORS = [
   { name: 'black-300', value: 'black-300', hex: '#A1A1AA' },
   { name: 'gray', value: 'gray', hex: '#6B7280' },
   { name: 'sky blue', value: 'sky-blue', hex: '#7DD3FC' },
+  { name: 'Indigo', value:'indigo',  hex: '#4B0082' },
+  { name: 'Beige',value:'beige',  hex: '#F5F5DC' },
+  { name: 'Charcoal',value:'charcoal', hex: '#36454F' },
   { name: 'cream', value: 'cream', hex: '#FFFDD0' },
   { name: 'black', value: 'black', hex: '#000000' },
   { name: 'green', value: 'green', hex: '#10B981' },
   { name: 'yellow-200', value: 'yellow-200', hex: '#FEF08A' },
   { name: 'red-900', value: 'red-900', hex: '#7F1D1D' },
+  { name: 'Taupe', value:'taupe', hex: '#483C32' },
+
 ] as const;
 
-export const SIZES = ['S', 'M', 'L'] as const;
+export const SIZES = ['XS','S', 'M', 'L', 'XL' ] as const;
 
 export const getColorName = (colorValue: string) => {
   const color = COLORS.find(c => c.value === colorValue);
