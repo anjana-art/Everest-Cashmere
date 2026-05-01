@@ -1,4 +1,4 @@
-// app/api/checkout/create/route.ts - FIXED VERSION
+// app/api/checkout/create/route.ts - UPDATED with stock check
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { cookies } from 'next/headers';
@@ -17,9 +17,9 @@ export async function POST(request: Request) {
         name: items[0].name,
         price: items[0].price,
         quantity: items[0].quantity,
-        // Don't log the entire base64 image
+        color: items[0].color,
+        size: items[0].size,
         hasImage: !!items[0].imageUrl,
-        imageLength: items[0].imageUrl?.length
       } : null
     });
     
@@ -31,9 +31,32 @@ export async function POST(request: Request) {
       );
     }
     
-    // Check if user is authenticated (optional but recommended)
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('user');
+    // CHECK STOCK BEFORE CREATING CHECKOUT
+    for (const item of items) {
+      // Find the variant for this product/color/size
+      const variant = await prisma.productVariant.findFirst({
+        where: {
+          productId: item.id,
+          color: item.color,
+          size: item.size,
+          isActive: true,
+        }
+      });
+      
+      if (!variant) {
+        return NextResponse.json(
+          { error: `Product variant not found for ${item.name} (${item.color}, ${item.size})` },
+          { status: 400 }
+        );
+      }
+      
+      if (variant.stock < item.quantity) {
+        return NextResponse.json(
+          { error: `Insufficient stock for ${item.name} - ${item.color} / ${item.size}. Only ${variant.stock} left.` },
+          { status: 400 }
+        );
+      }
+    }
     
     // Validate each item has required fields
     for (const item of items) {
@@ -48,6 +71,7 @@ export async function POST(request: Request) {
     
     // First, ensure all products exist in Stripe
     const lineItems = [];
+    const checkoutItems = []; // Store item details for metadata
     
     for (const item of items) {
       // 1. Get product from your database
@@ -69,27 +93,31 @@ export async function POST(request: Request) {
         );
       }
       
+      // Get variant ID for stock tracking
+      const variant = await prisma.productVariant.findFirst({
+        where: {
+          productId: item.id,
+          color: item.color,
+          size: item.size,
+        }
+      });
+      
       // 2. If product doesn't have stripeId, create it in Stripe
       let stripeProductId = dbProduct.stripeId;
       
       if (!stripeProductId) {
         console.log(`Creating Stripe product for: ${dbProduct.name}`);
         
-        // Filter out base64 images (too long for Stripe)
         const validImages = dbProduct.images.filter(img => {
-          // Check if it's a base64 string (starts with data:image)
           if (img.startsWith('data:image')) {
-            console.warn(`Skipping base64 image for Stripe (${img.length} chars)`);
             return false;
           }
-          // Check if it's a valid URL and not too long
           return img.length <= 2000 && (img.startsWith('http') || img.startsWith('/'));
         });
         
         const stripeProduct = await stripe.products.create({
           name: dbProduct.name,
           description: `Product ID: ${dbProduct.id}`,
-          // Only send valid images (not base64)
           images: validImages.length > 0 ? validImages : undefined,
           metadata: {
             dbId: dbProduct.id,
@@ -99,7 +127,6 @@ export async function POST(request: Request) {
         
         stripeProductId = stripeProduct.id;
         
-        // Update database with Stripe ID
         await prisma.product.update({
           where: { id: dbProduct.id },
           data: { stripeId: stripeProductId },
@@ -109,17 +136,17 @@ export async function POST(request: Request) {
       }
       
       // 3. Create or get price in Stripe
-      // Convert price to cents for Stripe
       const priceInCents = Math.round(Number(dbProduct.price) * 100);
       
       const price = await stripe.prices.create({
         product: stripeProductId,
         unit_amount: priceInCents,
-        currency: 'eur', // or 'usd' depending on your region
+        currency: 'eur',
         metadata: {
           dbProductId: dbProduct.id,
           color: item.color || 'default',
           size: item.size || 'default',
+          variantId: variant?.id || '',
         },
       });
       
@@ -133,10 +160,33 @@ export async function POST(request: Request) {
           maximum: 10,
         },
       });
+      
+      // Store item details for metadata
+      checkoutItems.push({
+        productId: item.id,
+        variantId: variant?.id,
+        name: item.name,
+        color: item.color,
+        size: item.size,
+        quantity: item.quantity,
+        price: item.price,
+      });
     }
     
     // 5. Create Stripe Checkout Session
     const origin = request.headers.get('origin') || 'http://localhost:3001';
+    const cookieStore = await cookies();
+    const userCookie = cookieStore.get('user');
+    let actualUserId = userId;
+    
+    if (!actualUserId && userCookie) {
+      try {
+        const user = JSON.parse(userCookie.value);
+        actualUserId = user.id;
+      } catch (e) {
+        console.error('Error parsing user cookie:', e);
+      }
+    }
     
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -145,11 +195,12 @@ export async function POST(request: Request) {
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout/cancel`,
       metadata: {
-        userId: userId || 'guest',
+        userId: actualUserId || 'guest',
         itemsCount: items.length.toString(),
+        checkoutItems: JSON.stringify(checkoutItems), // Store items for webhook
       },
       shipping_address_collection: {
-        allowed_countries: ['PT','ES', 'NO', 'FI', 'SE', 'DK', 'NL', 'DE', 'BE', 'LU', 'AT', 'CH', 'IT', 'FR', 'IE', ], // Add your countries
+        allowed_countries: ['PT', 'ES', 'NO', 'FI', 'SE', 'DK', 'NL', 'DE', 'BE', 'LU', 'AT', 'CH', 'IT', 'FR', 'IE'],
       },
       allow_promotion_codes: true,
     });

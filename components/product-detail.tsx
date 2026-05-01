@@ -1,4 +1,4 @@
-// components/product-detail.tsx - Full page with variant wishlist tracking
+// components/product-detail.tsx - Full page with size chart
 
 "use client";
 
@@ -59,7 +59,6 @@ const COLOR_MAP: Record<string, { name: string, class: string, hex?: string }> =
   'charcoal': { name: 'Charcoal', class: 'bg-[#36454F] border border-gray-600', hex: '#36454F' },
   'taupe': { name: 'Taupe', class: 'bg-[#483C32] border border-amber-700', hex: '#483C32' },
   'indigo': { name: 'Indigo', class: 'bg-[#4B0082] border border-purple-800', hex: '#4B0082' },  
-
 };
 
 export const ProductDetail = ({ product }: Props) => {
@@ -84,6 +83,7 @@ export const ProductDetail = ({ product }: Props) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [showCareDetails, setShowCareDetails] = useState(false);
+  const [showSizeChart, setShowSizeChart] = useState(false); // ADD THIS
 
   
   const cartItem = items.find((item) => 
@@ -675,6 +675,54 @@ export const ProductDetail = ({ product }: Props) => {
                       <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
                         🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
                       </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Size Chart Section - ADD THIS */}
+              <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+                <button 
+                  onClick={() => setShowSizeChart(!showSizeChart)}
+                  className="flex items-start gap-3 w-full text-left"
+                >
+                  <div className="flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                        Size Guide
+                      </h4>
+                      <span className="text-amber-600 text-xl">
+                        {showSizeChart ? '−' : '+'}
+                      </span>
+                    </div>
+                    
+                    {!showSizeChart && (
+                      <p className="text-sm text-red-700 font-light mt-1">
+                        Click to view our size measurements guide →
+                      </p>
+                    )}
+                  </div>
+                </button>
+                
+                {showSizeChart && (
+                  <div className="mt-4 pt-2">
+                    <div className="relative w-full overflow-hidden rounded-lg">
+                      <Image
+                        src="/size_chart_himkash_fr_castelo.webp"
+                        alt="Size chart for cashmere sweaters - measurements in cm and inches"
+                        width={800}
+                        height={600}
+                        className="w-full h-auto object-contain"
+                        sizes="(max-width: 768px) 100vw, 800px"
+                      />
+                    </div>
+                    <div className="mt-3 text-xs text-center text-red-700 font-light">
+                      <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
                     </div>
                   </div>
                 )}

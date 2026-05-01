@@ -1,11 +1,12 @@
-// app/api/verify-order/route.ts (WITH INVOICE INTEGRATION)
+// app/api/verify-order/route.ts - CORRECTED VERSION (no 'description' field)
+
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
-import { createInvoiceAfterOrder } from '@/lib/invoice'; // ✅ Import invoice function
+import { createInvoiceAfterOrder } from '@/lib/invoice';
 
 export async function POST(request: Request) {
   console.log('=== VERIFY ORDER API CALLED ===');
@@ -46,7 +47,6 @@ export async function POST(request: Request) {
     if (existingOrder) {
       console.log('Order already exists:', existingOrder.id);
       
-      // ✅ Even if order exists, check if invoice is missing and create it
       if (!existingOrder.invoiceId) {
         console.log('🔵 Order exists but no invoice found. Creating invoice...');
         await createInvoiceForOrder(existingOrder, user);
@@ -97,8 +97,8 @@ export async function POST(request: Request) {
       }
     });
     
-    // Create order items with VALID product IDs
-    const orderItems = lineItems.map((item: any, index: number) => {
+    // Create order items - NO 'description' field
+    const orderItems = lineItems.map((item: any) => {
       const description = item.description || '';
       
       let name = description;
@@ -119,11 +119,7 @@ export async function POST(request: Request) {
         const matchingProduct = allProducts.find(p => p.stripeId === stripeProductId);
         if (matchingProduct) {
           productId = matchingProduct.id;
-        } else if (allProducts.length > 0) {
-          productId = allProducts[0].id;
         }
-      } else if (allProducts.length > 0) {
-        productId = allProducts[0].id;
       }
       
       return {
@@ -133,7 +129,8 @@ export async function POST(request: Request) {
         quantity: item.quantity || 1,
         image: item.price?.product?.images?.[0] || null,
         color: color,
-        size: size
+        size: size,
+        // NO description field here!
       };
     });
     
@@ -222,7 +219,62 @@ export async function POST(request: Request) {
     
     console.log('✅ Order created successfully:', newOrder.id);
     
-    // 🆕🆕🆕 CREATE INVOICE FOR THE ORDER 🆕🆕🆕
+    // 🔥 STOCK UPDATE SECTION 🔥
+    console.log('\n📦 === STARTING STOCK UPDATE ===\n');
+    
+    for (const item of orderItems) {
+      console.log(`🔍 Processing item: ${item.name}`);
+      console.log(`   Product ID: ${item.productId}`);
+      console.log(`   Color: ${item.color}`);
+      console.log(`   Size: ${item.size}`);
+      console.log(`   Quantity: ${item.quantity}`);
+      
+      if (item.productId && item.productId !== 'unknown') {
+        try {
+          const variant = await prisma.productVariant.findFirst({
+            where: {
+              productId: item.productId,
+              color: item.color || undefined,
+              size: item.size?.toLowerCase() || undefined,
+            }
+          });
+          
+          if (variant) {
+            console.log(`   📉 Current stock before update: ${variant.stock}`);
+            
+            const updatedVariant = await prisma.productVariant.update({
+              where: { id: variant.id },
+              data: {
+                stock: {
+                  decrement: item.quantity
+                }
+              }
+            });
+            console.log(`   ✅ Stock after update: ${updatedVariant.stock}`);
+            
+            // Update product's total stock
+            const allVariants = await prisma.productVariant.findMany({
+              where: { productId: item.productId, isActive: true }
+            });
+            const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0);
+            
+            await prisma.product.update({
+              where: { id: item.productId },
+              data: { stock: totalStock }
+            });
+            console.log(`   ✅ Product total stock updated to: ${totalStock}`);
+          } else {
+            console.warn(`   ⚠️ VARIANT NOT FOUND for ${item.name}`);
+          }
+        } catch (stockError: any) {
+          console.error(`   ❌ Error updating stock:`, stockError.message);
+        }
+      }
+    }
+    
+    console.log('\n✅ === STOCK UPDATE COMPLETED ===\n');
+    
+    // Create invoice
     console.log('🔵🔵🔵 STARTING INVOICE CREATION 🔵🔵🔵');
     await createInvoiceForOrder(newOrder, user);
     console.log('🔵🔵🔵 INVOICE CREATION COMPLETE 🔵🔵🔵');
@@ -252,18 +304,6 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Error in verify-order:', error);
     
-    if (error.code === 'P2003') {
-      return NextResponse.json(
-        { 
-          error: 'Database constraint error. Product not found.',
-          details: 'Make sure products exist in your database and match Stripe product IDs.',
-          code: error.code,
-          suggestion: 'Check that your products table has records with stripeId matching Stripe product IDs.'
-        },
-        { status: 400 }
-      );
-    }
-    
     return NextResponse.json(
       { 
         error: error.message || 'Failed to verify order',
@@ -274,17 +314,10 @@ export async function POST(request: Request) {
   }
 }
 
-// ============================================
-// HELPER FUNCTION TO CREATE INVOICE
-// ============================================
-
 async function createInvoiceForOrder(order: any, user: any) {
   console.log('🔵 createInvoiceForOrder called for order:', order.orderNumber);
-  console.log('🔵 User email:', user?.email);
-  console.log('🔵 Items count:', order.items?.length);
   
   try {
-    // Parse shipping address if it exists
     let shippingAddress = null;
     if (order.shippingAddress && typeof order.shippingAddress === 'string') {
       try {
@@ -318,14 +351,12 @@ async function createInvoiceForOrder(order: any, user: any) {
       await prisma.order.update({
         where: { id: order.id },
         data: {
-          invoiceId: invoiceResult.invoiceId,
+          invoiceId: invoiceResult.invoiceId?.toString(),
           invoiceNumber: invoiceResult.invoiceNumber,
           invoiceUrl: invoiceResult.pdfUrl,
         }
       });
-      console.log(`✅✅✅ INVOICE CREATED! ID: ${invoiceResult.invoiceId}`);
-      console.log(`✅✅✅ Invoice Number: ${invoiceResult.invoiceNumber}`);
-      console.log(`✅✅✅ PDF URL: ${invoiceResult.pdfUrl}`);
+      console.log(`✅✅✅ INVOICE CREATED! Number: ${invoiceResult.invoiceNumber}`);
     } else {
       console.error(`❌❌❌ INVOICE FAILED: ${invoiceResult.error}`);
     }

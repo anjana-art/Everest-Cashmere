@@ -1,4 +1,4 @@
-// app/api/webhooks/stripe/route.ts
+// app/api/webhooks/stripe/route.ts - COMPLETE UPDATED VERSION
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
@@ -123,7 +123,9 @@ export async function POST(request: Request) {
         }
 
         return {
-          productId: item.price?.product?.metadata?.productId || 'unknown',
+          productId: item.price?.product?.metadata?.productId || 
+                     item.price?.product?.metadata?.dbProductId || 
+                     'unknown',
           name,
           price: item.price?.unit_amount ? item.price.unit_amount / 100 : 0,
           quantity: item.quantity || 1,
@@ -132,6 +134,82 @@ export async function POST(request: Request) {
           size,
         };
       });
+
+      // 🔥 STOCK UPDATE - Added with safe error handling 🔥
+      console.log('📦 === STARTING STOCK UPDATE ===');
+      console.log('📦 Order items to process:', JSON.stringify(orderItems, null, 2));
+      
+      for (const item of orderItems) {
+        console.log(`\n🔍 Processing item: ${item.name}`);
+        console.log(`   Product ID: ${item.productId}`);
+        console.log(`   Color: ${item.color}`);
+        console.log(`   Size: ${item.size}`);
+        console.log(`   Quantity: ${item.quantity}`);
+        
+        if (item.productId && item.productId !== 'unknown') {
+          try {
+            // Find the variant for this product/color/size
+            const variant = await prisma.productVariant.findFirst({
+              where: {
+                productId: item.productId,
+                color: item.color || undefined,
+                size: item.size?.toLowerCase() || undefined,
+              }
+            });
+            
+            console.log(`   🔍 Variant found:`, variant ? {
+              id: variant.id,
+              color: variant.color,
+              size: variant.size,
+              stock: variant.stock
+            } : 'NO VARIANT FOUND');
+            
+            if (variant) {
+              console.log(`   📉 Current stock before update: ${variant.stock}`);
+              
+              // Decrement stock
+              const updatedVariant = await prisma.productVariant.update({
+                where: { id: variant.id },
+                data: {
+                  stock: {
+                    decrement: item.quantity
+                  }
+                }
+              });
+              console.log(`   ✅ Stock after update: ${updatedVariant.stock}`);
+              
+              // Update product's total stock
+              const allVariants = await prisma.productVariant.findMany({
+                where: { productId: item.productId, isActive: true }
+              });
+              const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0);
+              
+              await prisma.product.update({
+                where: { id: item.productId },
+                data: { stock: totalStock }
+              });
+              console.log(`   ✅ Product total stock updated to: ${totalStock}`);
+            } else {
+              console.warn(`   ⚠️ VARIANT NOT FOUND for ${item.name}`);
+              console.warn(`      Looked for: color=${item.color}, size=${item.size?.toLowerCase()}`);
+              
+              // Log all variants for this product to debug
+              const allVariantsForProduct = await prisma.productVariant.findMany({
+                where: { productId: item.productId }
+              });
+              console.log(`   📦 Available variants for product:`, 
+                allVariantsForProduct.map(v => ({ color: v.color, size: v.size, stock: v.stock }))
+              );
+            }
+          } catch (stockError: any) {
+            console.error(`   ❌ Error updating stock for ${item.name}:`, stockError.message);
+          }
+        } else {
+          console.warn(`   ⚠️ Skipping: productId is 'unknown'`);
+        }
+      }
+      
+      console.log('✅ === STOCK UPDATE COMPLETED ===');
 
       // Shipping address
       let shippingData = sessionAny.shipping_details || sessionAny.shipping || null;
@@ -190,7 +268,7 @@ export async function POST(request: Request) {
 
       console.log(`Order created: ${order.id} (${orderNumber})`);
 
-      // ── Invoice creation ───────────────────────────────────────────────
+      // ── Invoice creation (non-fatal) ───────────────────────────────────
       try {
         const invoicePayload = {
           client: {
@@ -230,7 +308,6 @@ export async function POST(request: Request) {
           console.error('Invoice creation failed:', { orderNumber, error: invoiceData.error });
         }
       } catch (invoiceError) {
-        // Non-fatal — order is already saved, invoice can be retried manually
         console.error('Invoice error (non-fatal):', { orderNumber, error: invoiceError });
       }
       // ── End invoice creation ───────────────────────────────────────────
