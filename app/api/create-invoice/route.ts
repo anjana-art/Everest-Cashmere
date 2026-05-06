@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 interface InvoiceClient {
   name: string;
   email: string;
-  vat_number?: string;      // NIF (optional for B2C customers)
+  vat_number?: string;
   address?: string;
   city?: string;
   postal_code?: string;
@@ -19,13 +19,13 @@ interface InvoiceItem {
   description?: string;
   quantity: number;
   unit_price: number;
-  vat_rate?: number;        // Defaults to 23% for clothing
+  vat_rate?: number;
 }
 
 interface CreateInvoiceRequest {
   client: InvoiceClient;
   items: InvoiceItem[];
-  orderId?: string;         // Your internal order ID
+  orderId?: string;
   observations?: string;
 }
 
@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   
   try {
-    // 1. Parse and validate request body
     const body: CreateInvoiceRequest = await request.json();
     const { client, items, orderId, observations } = body;
 
@@ -50,7 +49,6 @@ export async function POST(request: NextRequest) {
       itemsCount: items.length,
     });
 
-    // 2. Validate required fields
     const validationError = validateRequest(client, items);
     if (validationError) {
       console.error('❌ Validation error:', validationError);
@@ -60,7 +58,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Get environment variables
     const apiKey = process.env.INVOICEXPRESS_API_KEY;
     const account = process.env.INVOICEXPRESS_ACCOUNT;
 
@@ -77,11 +74,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Build the invoice payload
     const invoicePayload = buildInvoicePayload(client, items, orderId, observations);
     console.log('📦 Invoice payload built successfully');
 
-    // 5. Call InvoiceXpress API
     const url = `https://${account}/invoices.json?api_key=${apiKey}`;
     console.log(`🌐 Calling InvoiceXpress API: ${url}`);
     
@@ -96,14 +91,12 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     
-    // 🔵🔵🔵 DEBUG: Log the raw response from InvoiceXpress
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🔵🔵🔵 RAW INVOICEXPRESS RESPONSE 🔵🔵🔵');
     console.log('Status code:', response.status);
     console.log('Response data:', JSON.stringify(data, null, 2));
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // 6. Handle API errors
     if (!response.ok) {
       console.error('❌ InvoiceXpress API Error:', {
         status: response.status,
@@ -120,7 +113,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 🔵 DEBUG: Check what's in the response
     console.log('🔵 Response contains invoice?', !!data.invoice);
     console.log('🔵 Response keys:', Object.keys(data));
     
@@ -128,24 +120,35 @@ export async function POST(request: NextRequest) {
       console.log('🔵 Invoice data:', {
         id: data.invoice.id,
         number: data.invoice.number,
-        pdf_url: data.invoice.pdf_url,
+        sequence_number: data.invoice.sequence_number,
+        permalink: data.invoice.permalink,
       });
     }
 
-    // 7. Return success response
+    // ✅ FIXED: Map InvoiceXpress fields correctly
+    const invoiceData = data.invoice;
+    const invoiceNumber = invoiceData.number || invoiceData.sequence_number || `DRAFT-${invoiceData.id}`;
+    const pdfUrl = invoiceData.pdf_url || invoiceData.permalink;
+    
+    console.log('✅ Mapped invoice data:', {
+      id: invoiceData.id,
+      number: invoiceNumber,
+      pdfUrl: pdfUrl,
+    });
+
     const responseData = {
       success: true,
       invoice: {
-        id: data.invoice?.id,
-        number: data.invoice?.number,
-        status: data.invoice?.status,
-        date: data.invoice?.date,
-        due_date: data.invoice?.due_date,
-        subtotal: data.invoice?.subtotal,
-        tax: data.invoice?.tax,
-        total: data.invoice?.total,
-        pdf_url: data.invoice?.pdf_url,
-        invoice_url: `/invoice/${data.invoice?.id}`,
+        id: invoiceData.id,
+        number: invoiceNumber,
+        status: invoiceData.status,
+        date: invoiceData.date,
+        due_date: invoiceData.due_date,
+        subtotal: invoiceData.before_taxes,
+        tax: invoiceData.taxes,
+        total: invoiceData.total,
+        pdf_url: pdfUrl,
+        invoice_url: `/invoice/${invoiceData.id}`,
       },
     };
     

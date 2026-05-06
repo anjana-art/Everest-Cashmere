@@ -1,4 +1,4 @@
-// lib/invoice.ts - WITH DEBUG LOGS
+// lib/invoice.ts - UPDATED WITH FIXED FIELD MAPPING
 
 interface CreateInvoiceParams {
   client: {
@@ -27,12 +27,10 @@ export async function createInvoiceAfterOrder(params: CreateInvoiceParams) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   
   try {
-    // ✅ CRITICAL FIX: Use absolute URL for server-side calls
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
-    const url = `${baseUrl}/api/create-invoice`;
+    // ✅ Use relative URL (works in both local and production)
+    const url = '/api/create-invoice';
     
     console.log('🔵 Invoice API URL:', url);
-    console.log('🔵 Environment:', process.env.NEXT_PUBLIC_APP_URL || 'localhost fallback');
     
     const requestBody = {
       client: {
@@ -68,7 +66,6 @@ export async function createInvoiceAfterOrder(params: CreateInvoiceParams) {
     
     const result = await response.json();
     
-    // 🔵🔵🔵 DEBUG: Log the full response
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🔵🔵🔵 RESPONSE FROM /api/create-invoice 🔵🔵🔵');
     console.log('Full response:', JSON.stringify(result, null, 2));
@@ -77,11 +74,11 @@ export async function createInvoiceAfterOrder(params: CreateInvoiceParams) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     if (result.success) {
-      // Extract invoice data with fallbacks
+      // ✅ FIXED: Extract invoice data with correct field mapping
       const invoice = result.invoice || result.document || result;
-      const invoiceId = invoice?.id || result.invoiceId;
-      const invoiceNumber = invoice?.number || invoice?.invoice_number || result.number;
-      const pdfUrl = invoice?.pdf_url || invoice?.pdfUrl || result.pdf_url;
+      const invoiceId = invoice?.id;
+      const invoiceNumber = invoice?.number || invoice?.sequence_number || `DRAFT-${invoiceId}`;
+      const pdfUrl = invoice?.pdf_url || invoice?.permalink;
       
       console.log('✅✅✅ INVOICE CREATION SUCCESSFUL ✅✅✅');
       console.log('Extracted invoiceId:', invoiceId);
