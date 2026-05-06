@@ -1,4 +1,5 @@
-// lib/invoice.ts (FIXED - WITH ABSOLUTE URL)
+// lib/invoice.ts - WITH DEBUG LOGS
+
 interface CreateInvoiceParams {
   client: {
     name: string;
@@ -18,58 +19,92 @@ interface CreateInvoiceParams {
 }
 
 export async function createInvoiceAfterOrder(params: CreateInvoiceParams) {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🔵🔵🔵 CREATE INVOICE AFTER ORDER STARTED 🔵🔵🔵');
+  console.log('Order ID:', params.orderId);
+  console.log('Client:', params.client.name, params.client.email);
+  console.log('Items count:', params.items.length);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
   try {
     // ✅ CRITICAL FIX: Use absolute URL for server-side calls
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
     const url = `${baseUrl}/api/create-invoice`;
     
     console.log('🔵 Invoice API URL:', url);
-    console.log('🔵 Sending invoice request for order:', params.orderId);
+    console.log('🔵 Environment:', process.env.NEXT_PUBLIC_APP_URL || 'localhost fallback');
+    
+    const requestBody = {
+      client: {
+        name: params.client.name,
+        email: params.client.email,
+        vat_number: params.client.nif,
+        address: params.client.address,
+        city: params.client.city,
+        postal_code: params.client.postal_code,
+      },
+      items: params.items.map(item => ({
+        name: item.name,
+        description: item.description || item.name,
+        quantity: item.quantity,
+        unit_price: item.price,
+        vat_rate: 23,
+      })),
+      orderId: params.orderId,
+      observations: `Online purchase - Order #${params.orderId}`,
+    };
+    
+    console.log('🔵 Request body:', JSON.stringify(requestBody, null, 2));
     
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        client: {
-          name: params.client.name,
-          email: params.client.email,
-          vat_number: params.client.nif,
-          address: params.client.address,
-          city: params.client.city,
-          postal_code: params.client.postal_code,
-        },
-        items: params.items.map(item => ({
-          name: item.name,
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.price,
-          vat_rate: 23,
-        })),
-        orderId: params.orderId,
-        observations: `Online purchase - Order #${params.orderId}`,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    console.log('🔵 Response status:', response.status);
+    
     const result = await response.json();
+    
+    // 🔵🔵🔵 DEBUG: Log the full response
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔵🔵🔵 RESPONSE FROM /api/create-invoice 🔵🔵🔵');
+    console.log('Full response:', JSON.stringify(result, null, 2));
+    console.log('Result.success:', result.success);
+    console.log('Result.invoice:', result.invoice);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     if (result.success) {
-      console.log('✅ Invoice created:', result.invoice.number);
+      // Extract invoice data with fallbacks
+      const invoice = result.invoice || result.document || result;
+      const invoiceId = invoice?.id || result.invoiceId;
+      const invoiceNumber = invoice?.number || invoice?.invoice_number || result.number;
+      const pdfUrl = invoice?.pdf_url || invoice?.pdfUrl || result.pdf_url;
+      
+      console.log('✅✅✅ INVOICE CREATION SUCCESSFUL ✅✅✅');
+      console.log('Extracted invoiceId:', invoiceId);
+      console.log('Extracted invoiceNumber:', invoiceNumber);
+      console.log('Extracted pdfUrl:', pdfUrl);
+      
       return {
         success: true,
-        invoiceId: result.invoice.id,
-        invoiceNumber: result.invoice.number,
-        pdfUrl: result.invoice.pdf_url,
+        invoiceId: invoiceId,
+        invoiceNumber: invoiceNumber,
+        pdfUrl: pdfUrl,
       };
     } else {
-      console.error('❌ Invoice creation failed:', result.error);
+      console.error('❌❌❌ INVOICE CREATION FAILED ❌❌❌');
+      console.error('Error:', result.error);
+      console.error('Details:', result.details);
       return {
         success: false,
-        error: result.error,
+        error: result.error || 'Unknown error',
       };
     }
   } catch (error) {
+    console.error('❌❌❌ INVOICE API ERROR ❌❌❌');
     console.error('Error calling invoice API:', error);
     return {
       success: false,

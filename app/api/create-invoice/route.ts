@@ -34,14 +34,26 @@ interface CreateInvoiceRequest {
 // ============================================
 
 export async function POST(request: NextRequest) {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📄 CREATE-INVOICE API CALLED');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
   try {
     // 1. Parse and validate request body
     const body: CreateInvoiceRequest = await request.json();
     const { client, items, orderId, observations } = body;
 
+    console.log('📋 Request body:', {
+      orderId,
+      clientName: client.name,
+      clientEmail: client.email,
+      itemsCount: items.length,
+    });
+
     // 2. Validate required fields
     const validationError = validateRequest(client, items);
     if (validationError) {
+      console.error('❌ Validation error:', validationError);
       return NextResponse.json(
         { success: false, error: validationError },
         { status: 400 }
@@ -52,8 +64,13 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.INVOICEXPRESS_API_KEY;
     const account = process.env.INVOICEXPRESS_ACCOUNT;
 
+    console.log('🔑 InvoiceXpress config:', {
+      hasApiKey: !!apiKey,
+      account: account,
+    });
+
     if (!apiKey || !account) {
-      console.error('Missing InvoiceXpress credentials');
+      console.error('❌ Missing InvoiceXpress credentials');
       return NextResponse.json(
         { success: false, error: 'Invoice service not configured' },
         { status: 500 }
@@ -62,25 +79,33 @@ export async function POST(request: NextRequest) {
 
     // 4. Build the invoice payload
     const invoicePayload = buildInvoicePayload(client, items, orderId, observations);
+    console.log('📦 Invoice payload built successfully');
 
     // 5. Call InvoiceXpress API
-    const response = await fetch(
-      `https://${account}/invoices.json?api_key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(invoicePayload),
-      }
-    );
+    const url = `https://${account}/invoices.json?api_key=${apiKey}`;
+    console.log(`🌐 Calling InvoiceXpress API: ${url}`);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(invoicePayload),
+    });
 
     const data = await response.json();
+    
+    // 🔵🔵🔵 DEBUG: Log the raw response from InvoiceXpress
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔵🔵🔵 RAW INVOICEXPRESS RESPONSE 🔵🔵🔵');
+    console.log('Status code:', response.status);
+    console.log('Response data:', JSON.stringify(data, null, 2));
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     // 6. Handle API errors
     if (!response.ok) {
-      console.error('InvoiceXpress API Error:', {
+      console.error('❌ InvoiceXpress API Error:', {
         status: response.status,
         error: data
       });
@@ -95,8 +120,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 🔵 DEBUG: Check what's in the response
+    console.log('🔵 Response contains invoice?', !!data.invoice);
+    console.log('🔵 Response keys:', Object.keys(data));
+    
+    if (data.invoice) {
+      console.log('🔵 Invoice data:', {
+        id: data.invoice.id,
+        number: data.invoice.number,
+        pdf_url: data.invoice.pdf_url,
+      });
+    }
+
     // 7. Return success response
-    return NextResponse.json({
+    const responseData = {
       success: true,
       invoice: {
         id: data.invoice?.id,
@@ -110,10 +147,19 @@ export async function POST(request: NextRequest) {
         pdf_url: data.invoice?.pdf_url,
         invoice_url: `/invoice/${data.invoice?.id}`,
       },
+    };
+    
+    console.log('✅ Invoice created successfully:', {
+      invoiceId: responseData.invoice.id,
+      invoiceNumber: responseData.invoice.number,
+      pdfUrl: responseData.invoice.pdf_url,
     });
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error('Unexpected error creating invoice:', error);
+    console.error('❌ Unexpected error creating invoice:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -167,10 +213,9 @@ function buildInvoicePayload(
   orderId?: string, 
   observations?: string
 ) {
-  // Format dates for Portuguese format (dd/mm/yyyy)
   const today = new Date();
   const dueDate = new Date();
-  dueDate.setDate(today.getDate() + 7); // 7 days due date
+  dueDate.setDate(today.getDate() + 7);
   
   return {
     invoice: {
@@ -179,7 +224,7 @@ function buildInvoicePayload(
       client: {
         name: client.name.trim(),
         email: client.email.trim(),
-        fiscal_id: client.vat_number?.trim() || '',     // NIF - optional
+        fiscal_id: client.vat_number?.trim() || '',
         address: client.address?.trim() || '',
         city: client.city?.trim() || '',
         postal_code: client.postal_code?.trim() || '',
@@ -223,7 +268,6 @@ function buildObservations(orderId?: string, customObservations?: string): strin
 }
 
 function formatApiError(errorData: any): string {
-  // Common InvoiceXpress error messages
   if (errorData?.errors) {
     const errors = errorData.errors;
     if (errors.client_name) return 'Client name is invalid';
