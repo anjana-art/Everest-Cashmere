@@ -1,4 +1,5 @@
-// app/api/checkout/create/route.ts - UPDATED with stock check
+// app/api/checkout/create/route.ts - ONLY METADATA FIXED (removed large JSON)
+
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { cookies } from 'next/headers';
@@ -31,9 +32,24 @@ export async function POST(request: Request) {
       );
     }
     
+    // Get user from cookie to ensure we have real user ID
+    const cookieStore = await cookies();
+    const userCookie = cookieStore.get('user');
+    let actualUserId = userId;
+    let userEmail = null;
+    
+    if (userCookie) {
+      try {
+        const user = JSON.parse(userCookie.value);
+        actualUserId = user.id;
+        userEmail = user.email;
+      } catch (e) {
+        console.error('Error parsing user cookie:', e);
+      }
+    }
+    
     // CHECK STOCK BEFORE CREATING CHECKOUT
     for (const item of items) {
-      // Find the variant for this product/color/size
       const variant = await prisma.productVariant.findFirst({
         where: {
           productId: item.id,
@@ -71,10 +87,9 @@ export async function POST(request: Request) {
     
     // First, ensure all products exist in Stripe
     const lineItems = [];
-    const checkoutItems = []; // Store item details for metadata
+    const checkoutItems = []; // Still used for internal logic, NOT sent to Stripe
     
     for (const item of items) {
-      // 1. Get product from your database
       const dbProduct = await prisma.product.findUnique({
         where: { id: item.id },
         select: {
@@ -93,7 +108,6 @@ export async function POST(request: Request) {
         );
       }
       
-      // Get variant ID for stock tracking
       const variant = await prisma.productVariant.findFirst({
         where: {
           productId: item.id,
@@ -102,7 +116,6 @@ export async function POST(request: Request) {
         }
       });
       
-      // 2. If product doesn't have stripeId, create it in Stripe
       let stripeProductId = dbProduct.stripeId;
       
       if (!stripeProductId) {
@@ -135,7 +148,6 @@ export async function POST(request: Request) {
         console.log(`Created Stripe product: ${stripeProductId}`);
       }
       
-      // 3. Create or get price in Stripe
       const priceInCents = Math.round(Number(dbProduct.price) * 100);
       
       const price = await stripe.prices.create({
@@ -150,7 +162,6 @@ export async function POST(request: Request) {
         },
       });
       
-      // 4. Add to line items
       lineItems.push({
         price: price.id,
         quantity: item.quantity,
@@ -161,7 +172,6 @@ export async function POST(request: Request) {
         },
       });
       
-      // Store item details for metadata
       checkoutItems.push({
         productId: item.id,
         variantId: variant?.id,
@@ -173,20 +183,20 @@ export async function POST(request: Request) {
       });
     }
     
-    // 5. Create Stripe Checkout Session
     const origin = request.headers.get('origin') || 'http://localhost:3001';
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('user');
-    let actualUserId = userId;
     
-    if (!actualUserId && userCookie) {
-      try {
-        const user = JSON.parse(userCookie.value);
-        actualUserId = user.id;
-      } catch (e) {
-        console.error('Error parsing user cookie:', e);
-      }
-    }
+    // ✅ FIXED METADATA - ONLY small key-value pairs (no large JSON)
+    const metadata: Record<string, string> = {
+      userId: actualUserId || 'unknown',
+      userEmail: userEmail || '',
+      itemsCount: items.length.toString(),
+    };
+    
+    // ✅ IMPORTANT: DO NOT add checkoutItems to metadata (was causing Stripe to drop all metadata)
+    // The line below is REMOVED - do not add it back
+    // metadata.checkoutItems = JSON.stringify(checkoutItems.slice(0, 5));
+    
+    console.log('Creating checkout with metadata:', metadata);
     
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -194,11 +204,7 @@ export async function POST(request: Request) {
       mode: 'payment',
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout/cancel`,
-      metadata: {
-        userId: actualUserId || 'guest',
-        itemsCount: items.length.toString(),
-        checkoutItems: JSON.stringify(checkoutItems), // Store items for webhook
-      },
+      metadata: metadata,
       shipping_address_collection: {
         allowed_countries: ['PT', 'ES', 'NO', 'FI', 'SE', 'DK', 'NL', 'DE', 'BE', 'LU', 'AT', 'CH', 'IT', 'FR', 'IE'],
       },

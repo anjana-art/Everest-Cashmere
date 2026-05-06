@@ -1,4 +1,4 @@
-// app/api/verify-order/route.ts - COMPLETE WITH BACKUP LOGS
+// app/api/verify-order/route.ts - YOUR EXISTING VERSION (KEEP AS IS)
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -359,7 +359,7 @@ export async function POST(request: Request) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// BACKUP INVOICE CREATION FUNCTION (Same as before)
+// BACKUP INVOICE CREATION FUNCTION
 // ──────────────────────────────────────────────────────────────
 async function createInvoiceForOrder(order: any, user: any) {
   console.log('🔵 createInvoiceForOrder called for order:', order.orderNumber);
