@@ -1,4 +1,4 @@
-// app/api/verify-order/route.ts - YOUR EXISTING VERSION (KEEP AS IS)
+// app/api/verify-order/route.ts - COMPLETE FIXED VERSION
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -66,6 +66,19 @@ export async function POST(request: Request) {
         console.log('🔵 Creating invoice as backup...');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         await createInvoiceForOrder(existingOrder, user);
+        
+        // ✅ Refetch to get updated invoice data
+        const updatedExistingOrder = await prisma.order.findUnique({
+          where: { id: existingOrder.id },
+          include: { items: true }
+        });
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Order found (webhook already processed)',
+          order: updatedExistingOrder,
+          source: 'webhook_already_processed'
+        });
       } else {
         console.log('✅ Invoice already exists - backup not needed');
       }
@@ -314,6 +327,12 @@ export async function POST(request: Request) {
     await createInvoiceForOrder(newOrder, user);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
+    // ✅ REFETCH the order to get updated invoice data
+    const finalOrder = await prisma.order.findUnique({
+      where: { id: newOrder.id },
+      include: { items: true }
+    });
+    
     // Clear user's cart
     try {
       const userCart = await prisma.cart.findUnique({
@@ -337,7 +356,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'Order created successfully (webhook backup)',
-      order: newOrder,
+      order: finalOrder,
       source: 'verify_order_backup'
     });
     
@@ -395,7 +414,7 @@ async function createInvoiceForOrder(order: any, user: any) {
     console.log('🔵 Invoice result:', invoiceResult);
     
     if (invoiceResult.success) {
-      await prisma.order.update({
+      const updatedOrder = await prisma.order.update({
         where: { id: order.id },
         data: {
           invoiceId: invoiceResult.invoiceId?.toString(),
@@ -403,7 +422,9 @@ async function createInvoiceForOrder(order: any, user: any) {
           invoiceUrl: invoiceResult.pdfUrl,
         }
       });
-      console.log(`✅✅✅ INVOICE CREATED! Number: ${invoiceResult.invoiceNumber}`);
+      console.log(`✅✅✅ INVOICE SAVED TO ORDER!`);
+      console.log(`   Invoice ID: ${invoiceResult.invoiceId}`);
+      console.log(`   Invoice Number: ${invoiceResult.invoiceNumber}`);
       console.log(`   URL: ${invoiceResult.pdfUrl}`);
     } else {
       console.error(`❌❌❌ INVOICE FAILED: ${invoiceResult.error}`);
