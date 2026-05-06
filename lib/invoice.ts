@@ -1,4 +1,4 @@
-// lib/invoice.ts - UPDATED WITH FIXED FIELD MAPPING
+// lib/invoice.ts - UPDATED WITH ABSOLUTE URL AND FIELD MAPPING
 
 interface CreateInvoiceParams {
   client: {
@@ -27,10 +27,12 @@ export async function createInvoiceAfterOrder(params: CreateInvoiceParams) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   
   try {
-    // ✅ Use relative URL (works in both local and production)
-    const url = '/api/create-invoice';
+    // ✅ FIXED: Use absolute URL with your production domain
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.himkash.com';
+    const url = `${baseUrl}/api/create-invoice`;
     
     console.log('🔵 Invoice API URL:', url);
+    console.log('🔵 Base URL from env:', process.env.NEXT_PUBLIC_APP_URL || 'using fallback');
     
     const requestBody = {
       client: {
@@ -74,7 +76,7 @@ export async function createInvoiceAfterOrder(params: CreateInvoiceParams) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     if (result.success) {
-      // ✅ FIXED: Extract invoice data with correct field mapping
+      // ✅ Extract invoice data with correct field mapping
       const invoice = result.invoice || result.document || result;
       const invoiceId = invoice?.id;
       const invoiceNumber = invoice?.number || invoice?.sequence_number || `DRAFT-${invoiceId}`;
