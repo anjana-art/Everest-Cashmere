@@ -1,4 +1,5 @@
-// app/api/webhooks/stripe/route.ts - COMPLETE UPDATED VERSION
+// app/api/webhooks/stripe/route.ts - COMPLETE WITH RETRY LOGIC
+
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
@@ -7,7 +8,39 @@ import { Prisma } from '@prisma/client';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+// ──────────────────────────────────────────────────────────────
+// 🔄 RETRY HELPER FUNCTION - FIXES THE 500 ERROR
+// ──────────────────────────────────────────────────────────────
+async function fetchSessionWithRetry(
+  sessionId: string, 
+  maxRetries: number = 5, 
+  delayMs: number = 500
+): Promise<Stripe.Checkout.Session> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      console.log(`🔍 Fetching session ${sessionId} (attempt ${i + 1}/${maxRetries})...`);
+      return await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['line_items.data.price.product']
+      });
+    } catch (error: any) {
+      if (error.message?.includes('No such checkout session') && i < maxRetries - 1) {
+        console.log(`⏳ Session not ready, retry ${i + 1}/${maxRetries} in ${delayMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        continue;
+      }
+      console.error(`❌ Failed to fetch session after ${i + 1} attempts:`, error.message);
+      throw error;
+    }
+  }
+  throw new Error(`Failed to retrieve session ${sessionId} after ${maxRetries} retries`);
+}
+// ──────────────────────────────────────────────────────────────
+
 export async function POST(request: Request) {
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📨 WEBHOOK RECEIVED');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
   const body = await request.text();
   const signature = request.headers.get('stripe-signature')!;
 
@@ -15,82 +48,86 @@ export async function POST(request: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    console.log('✅ Webhook signature verified');
   } catch (error: any) {
-    console.error('Webhook signature verification failed:', error.message);
+    console.error('❌ Webhook signature verification failed:', error.message);
     return NextResponse.json(
       { error: `Webhook Error: ${error.message}` },
       { status: 400 }
     );
   }
 
-  console.log('Stripe webhook event type:', event.type);
+  console.log(`📌 Event type: ${event.type}`);
 
+  // ──────────────────────────────────────────────────────────────
+  // HANDLE: checkout.session.completed
+  // ──────────────────────────────────────────────────────────────
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const sessionAny = session as any;
+    const sessionReceived = event.data.object as Stripe.Checkout.Session;
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🛒 CHECKOUT.SESSION.COMPLETED RECEIVED');
+    console.log(`📋 Session ID: ${sessionReceived.id}`);
+    console.log(`💳 Payment status: ${sessionReceived.payment_status}`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    console.log('Processing checkout.session.completed:', {
-      sessionId: session.id,
-      customerEmail: session.customer_email,
-      metadata: session.metadata,
-      paymentStatus: session.payment_status,
-    });
+    // 🔄 USE RETRY TO FETCH FULL SESSION DATA
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await fetchSessionWithRetry(sessionReceived.id);
+      console.log('✅ Session retrieved successfully with line items');
+    } catch (error: any) {
+      console.error('❌ Failed to retrieve session after retries:', error.message);
+      return NextResponse.json(
+        { error: 'Failed to retrieve session' },
+        { status: 500 }
+      );
+    }
+
+    const sessionAny = session as any;
 
     // ── Portugal-only enforcement ──────────────────────────────────────────
     const shippingCountry =
       sessionAny.shipping_details?.address?.country ||
       sessionAny.shipping?.address?.country;
-    const billingCountry =
-      sessionAny.customer_details?.address?.country;
     const userId = session.metadata?.userId ?? 'unknown';
     const userEmail = session.metadata?.userEmail ?? session.customer_email ?? 'unknown';
 
+    console.log(`🌍 Shipping country: ${shippingCountry}`);
+    console.log(`👤 User ID: ${userId}`);
+    console.log(`📧 User email: ${userEmail}`);
+
     if (shippingCountry && shippingCountry !== 'PT') {
-      console.warn('[BLOCKED] Non-PT purchase attempt', {
-        sessionId: session.id,
-        userId,
-        userEmail,
-        shippingCountry,
-        billingCountry,
-        amount: session.amount_total,
-        currency: session.currency,
-        timestamp: new Date().toISOString(),
-      });
+      console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.warn('🚫 [BLOCKED] Non-PT purchase attempt');
+      console.warn(`   Session: ${session.id}`);
+      console.warn(`   User: ${userId}`);
+      console.warn(`   Country: ${shippingCountry}`);
+      console.warn(`   Amount: ${session.amount_total}`);
+      console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       if (session.payment_intent) {
         await stripe.refunds.create({
           payment_intent: session.payment_intent as string,
           reason: 'fraudulent',
         });
-        console.info('[REFUND] Issued refund for non-PT order', {
-          sessionId: session.id,
-          userId,
-          userEmail,
-        });
+        console.info('💰 [REFUND] Issued refund for non-PT order');
       }
 
       return NextResponse.json({ received: true, action: 'refunded_non_pt' });
     }
 
-    console.info('[CHECKOUT] Portugal order confirmed', {
-      sessionId: session.id,
-      userId,
-      userEmail,
-      shippingCountry: shippingCountry ?? 'PT',
-      amount: session.amount_total,
-      timestamp: new Date().toISOString(),
-    });
-    // ── End Portugal enforcement ───────────────────────────────────────────
+    console.info('✅ [CHECKOUT] Portugal order confirmed - proceeding with order creation');
 
     try {
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
         expand: ['data.price.product']
       });
 
-      console.log('Line items retrieved:', lineItems.data.length);
+      console.log(`📦 Line items retrieved: ${lineItems.data.length}`);
 
       if (!userId || userId === 'unknown') {
-        console.error('No userId in session metadata');
+        console.error('❌ No userId in session metadata - cannot create order');
         return NextResponse.json(
           { error: 'No user ID found in metadata' },
           { status: 400 }
@@ -102,11 +139,13 @@ export async function POST(request: Request) {
         select: { name: true, email: true, nif: true }
       });
 
+      console.log(`👤 User found: ${user?.email || 'No email'}`);
+
       const subtotal = session.amount_subtotal ? session.amount_subtotal / 100 : 0;
       const total = session.amount_total ? session.amount_total / 100 : 0;
       const tax = session.total_details?.amount_tax ? session.total_details.amount_tax / 100 : 0;
 
-      console.log('Creating order with totals:', { subtotal, total, tax });
+      console.log(`💰 Totals: subtotal=$${subtotal}, total=$${total}, tax=$${tax}`);
 
       const orderItems = lineItems.data.map((item: any) => {
         const description = item.description || '';
@@ -135,20 +174,18 @@ export async function POST(request: Request) {
         };
       });
 
-      // 🔥 STOCK UPDATE - Added with safe error handling 🔥
-      console.log('📦 === STARTING STOCK UPDATE ===');
-      console.log('📦 Order items to process:', JSON.stringify(orderItems, null, 2));
+      console.log(`📋 Order items: ${orderItems.length}`);
+      orderItems.forEach((item, idx) => {
+        console.log(`   ${idx + 1}. ${item.name} x${item.quantity} - $${item.price}`);
+      });
+
+      // ── Stock update ──────────────────────────────────────────────────────
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📦 STARTING STOCK UPDATE (WEBHOOK)');
       
       for (const item of orderItems) {
-        console.log(`\n🔍 Processing item: ${item.name}`);
-        console.log(`   Product ID: ${item.productId}`);
-        console.log(`   Color: ${item.color}`);
-        console.log(`   Size: ${item.size}`);
-        console.log(`   Quantity: ${item.quantity}`);
-        
         if (item.productId && item.productId !== 'unknown') {
           try {
-            // Find the variant for this product/color/size
             const variant = await prisma.productVariant.findFirst({
               where: {
                 productId: item.productId,
@@ -157,28 +194,13 @@ export async function POST(request: Request) {
               }
             });
             
-            console.log(`   🔍 Variant found:`, variant ? {
-              id: variant.id,
-              color: variant.color,
-              size: variant.size,
-              stock: variant.stock
-            } : 'NO VARIANT FOUND');
-            
             if (variant) {
-              console.log(`   📉 Current stock before update: ${variant.stock}`);
-              
-              // Decrement stock
-              const updatedVariant = await prisma.productVariant.update({
+              console.log(`   📉 ${item.name}: stock ${variant.stock} → ${variant.stock - item.quantity}`);
+              await prisma.productVariant.update({
                 where: { id: variant.id },
-                data: {
-                  stock: {
-                    decrement: item.quantity
-                  }
-                }
+                data: { stock: { decrement: item.quantity } }
               });
-              console.log(`   ✅ Stock after update: ${updatedVariant.stock}`);
               
-              // Update product's total stock
               const allVariants = await prisma.productVariant.findMany({
                 where: { productId: item.productId, isActive: true }
               });
@@ -188,32 +210,19 @@ export async function POST(request: Request) {
                 where: { id: item.productId },
                 data: { stock: totalStock }
               });
-              console.log(`   ✅ Product total stock updated to: ${totalStock}`);
             } else {
-              console.warn(`   ⚠️ VARIANT NOT FOUND for ${item.name}`);
-              console.warn(`      Looked for: color=${item.color}, size=${item.size?.toLowerCase()}`);
-              
-              // Log all variants for this product to debug
-              const allVariantsForProduct = await prisma.productVariant.findMany({
-                where: { productId: item.productId }
-              });
-              console.log(`   📦 Available variants for product:`, 
-                allVariantsForProduct.map(v => ({ color: v.color, size: v.size, stock: v.stock }))
-              );
+              console.warn(`   ⚠️ Variant not found for ${item.name} (color:${item.color}, size:${item.size})`);
             }
           } catch (stockError: any) {
-            console.error(`   ❌ Error updating stock for ${item.name}:`, stockError.message);
+            console.error(`   ❌ Stock error for ${item.name}:`, stockError.message);
           }
-        } else {
-          console.warn(`   ⚠️ Skipping: productId is 'unknown'`);
         }
       }
-      
-      console.log('✅ === STOCK UPDATE COMPLETED ===');
+      console.log('✅ STOCK UPDATE COMPLETED (WEBHOOK)');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-      // Shipping address
+      // ── Shipping address ──────────────────────────────────────────────────
       let shippingData = sessionAny.shipping_details || sessionAny.shipping || null;
-
       const shippingAddress = shippingData ? {
         name: shippingData.name || '',
         address: {
@@ -226,9 +235,8 @@ export async function POST(request: Request) {
         }
       } : Prisma.DbNull;
 
-      // Billing address
+      // ── Billing address ───────────────────────────────────────────────────
       const billingData = sessionAny.customer_details || null;
-
       const billingAddress = billingData ? {
         name: billingData.name || '',
         email: billingData.email || '',
@@ -243,6 +251,23 @@ export async function POST(request: Request) {
       } : Prisma.DbNull;
 
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+      // ✅ Check if order already exists (idempotency - prevents duplicates)
+      const existingOrder = await prisma.order.findUnique({
+        where: { stripeSessionId: session.id }
+      });
+
+      if (existingOrder) {
+        console.log(`⚠️ Order already exists (idempotency check), skipping creation`);
+        console.log(`   Existing order ID: ${existingOrder.id}`);
+        console.log(`   Order number: ${existingOrder.orderNumber}`);
+        return NextResponse.json({
+          success: true,
+          message: 'Order already exists',
+          orderId: existingOrder.id,
+          source: 'webhook_idempotent'
+        });
+      }
 
       const order = await prisma.order.create({
         data: {
@@ -263,12 +288,21 @@ export async function POST(request: Request) {
           paidAt: new Date(),
           preparingAt: new Date(),
         },
-        include: { items: true, user: true }
+        include: { items: true }
       });
 
-      console.log(`Order created: ${order.id} (${orderNumber})`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`✅✅✅ ORDER CREATED VIA WEBHOOK ✅✅✅`);
+      console.log(`   Order ID: ${order.id}`);
+      console.log(`   Order Number: ${orderNumber}`);
+      console.log(`   User ID: ${userId}`);
+      console.log(`   Total: $${total}`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-      // ── Invoice creation (non-fatal) ───────────────────────────────────
+      // ── Invoice creation (non-fatal - webhook primary) ───────────────────
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📄 CREATING INVOICE (WEBHOOK PRIMARY)');
+      
       try {
         const invoicePayload = {
           client: {
@@ -286,6 +320,8 @@ export async function POST(request: Request) {
         };
 
         const apiUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
+        console.log(`   Calling invoice API at ${apiUrl}/api/create-invoice`);
+        
         const invoiceResponse = await fetch(`${apiUrl}/api/create-invoice`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -303,55 +339,63 @@ export async function POST(request: Request) {
               invoiceUrl: invoiceData.invoice.pdf_url,
             }
           });
-          console.log(`Invoice created: ${invoiceData.invoice.number} for order ${orderNumber}`);
+          console.log(`✅✅✅ INVOICE CREATED VIA WEBHOOK ✅✅✅`);
+          console.log(`   Invoice Number: ${invoiceData.invoice.number}`);
+          console.log(`   Invoice URL: ${invoiceData.invoice.pdf_url}`);
         } else {
-          console.error('Invoice creation failed:', { orderNumber, error: invoiceData.error });
+          console.error(`❌ Invoice creation failed (webhook): ${invoiceData.error}`);
         }
       } catch (invoiceError) {
-        console.error('Invoice error (non-fatal):', { orderNumber, error: invoiceError });
+        console.error('❌ Invoice error (non-fatal - webhook):', invoiceError);
       }
-      // ── End invoice creation ───────────────────────────────────────────
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-      // Clear cart
-      const userCart = await prisma.cart.findUnique({
-        where: { userId },
-        include: { items: true }
-      });
-
+      // ── Clear cart ────────────────────────────────────────────────────────
+      const userCart = await prisma.cart.findUnique({ where: { userId } });
       if (userCart) {
         await prisma.cartItem.deleteMany({ where: { cartId: userCart.id } });
-        console.log(`Cart cleared for user ${userId}`);
+        console.log(`🗑️ Cart cleared for user ${userId}`);
       }
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🎉 WEBHOOK PROCESSING COMPLETE - SUCCESS 🎉');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       return NextResponse.json({
         success: true,
         orderId: order.id,
         orderNumber,
-        message: 'Order created successfully',
+        message: 'Order created successfully via webhook',
+        source: 'webhook'
       });
 
     } catch (error: any) {
-      console.error('Error creating order:', {
-        sessionId: session.id,
-        userId,
-        error: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-      });
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('❌ ERROR IN WEBHOOK HANDLER ❌');
+      console.error(`   Error: ${error.message}`);
+      console.error(`   Session ID: ${session.id}`);
+      console.error(`   User ID: ${userId}`);
+      if (error.stack) console.error(`   Stack: ${error.stack}`);
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       return NextResponse.json(
-        {
-          error: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-        },
+        { error: error.message },
         { status: 500 }
       );
     }
   }
 
+  // ──────────────────────────────────────────────────────────────
+  // HANDLE: payment_intent.succeeded
+  // ──────────────────────────────────────────────────────────────
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object as Stripe.PaymentIntent;
-    console.log('Payment succeeded:', paymentIntent.id);
+    console.log(`💰 Payment succeeded: ${paymentIntent.id} for amount ${paymentIntent.amount / 100} ${paymentIntent.currency}`);
   }
+
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('✅ WEBHOOK HANDLED (non-checkout event)');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   return NextResponse.json({ received: true });
 }

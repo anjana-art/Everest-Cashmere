@@ -1,4 +1,4 @@
-// app/api/verify-order/route.ts - CORRECTED VERSION (no 'description' field)
+// app/api/verify-order/route.ts - COMPLETE WITH BACKUP LOGS
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -9,15 +9,18 @@ import Stripe from 'stripe';
 import { createInvoiceAfterOrder } from '@/lib/invoice';
 
 export async function POST(request: Request) {
-  console.log('=== VERIFY ORDER API CALLED ===');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🔵 VERIFY-ORDER API CALLED (Backup/Safety Net)');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   
   try {
     const body = await request.json();
     const { sessionId } = body;
     
-    console.log('Session ID received:', sessionId);
+    console.log(`📋 Session ID received: ${sessionId}`);
     
     if (!sessionId) {
+      console.error('❌ No session ID provided');
       return NextResponse.json(
         { error: 'Session ID is required' },
         { status: 400 }
@@ -29,6 +32,7 @@ export async function POST(request: Request) {
     const userCookie = cookieStore.get('user')?.value;
     
     if (!userCookie) {
+      console.error('❌ User not authenticated');
       return NextResponse.json(
         { error: 'Not authenticated. Please login again.' },
         { status: 401 }
@@ -36,30 +40,55 @@ export async function POST(request: Request) {
     }
     
     const user = JSON.parse(userCookie);
-    console.log('User ID:', user.id);
+    console.log(`👤 User ID: ${user.id}`);
+    console.log(`👤 User Email: ${user.email}`);
     
-    // Check if order already exists
+    // ──────────────────────────────────────────────────────────────
+    // CHECK IF ORDER ALREADY EXISTS (Webhook may have already created it)
+    // ──────────────────────────────────────────────────────────────
     const existingOrder = await prisma.order.findUnique({
       where: { stripeSessionId: sessionId },
       include: { items: true }
     });
     
     if (existingOrder) {
-      console.log('Order already exists:', existingOrder.id);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`✅✅✅ ORDER ALREADY EXISTS (Created by Webhook) ✅✅✅`);
+      console.log(`   Order ID: ${existingOrder.id}`);
+      console.log(`   Order Number: ${existingOrder.orderNumber}`);
+      console.log(`   Has Invoice: ${existingOrder.invoiceId ? 'YES' : 'NO'}`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       
+      // 🔵 Backup: If webhook succeeded but invoice creation failed
       if (!existingOrder.invoiceId) {
-        console.log('🔵 Order exists but no invoice found. Creating invoice...');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔵 BACKUP TRIGGERED: Order exists but NO invoice found');
+        console.log('🔵 Creating invoice as backup...');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         await createInvoiceForOrder(existingOrder, user);
+      } else {
+        console.log('✅ Invoice already exists - backup not needed');
       }
       
       return NextResponse.json({
         success: true,
-        message: 'Order found',
-        order: existingOrder
+        message: 'Order found (webhook already processed)',
+        order: existingOrder,
+        source: 'webhook_already_processed'
       });
     }
     
+    // ──────────────────────────────────────────────────────────────
+    // NO ORDER EXISTS - Webhook must have failed.
+    // Verify-order acts as backup to create order and invoice.
+    // ──────────────────────────────────────────────────────────────
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('⚠️ NO ORDER FOUND - Webhook likely failed');
+    console.log('🔵 VERIFY-ORDER ACTING AS PRIMARY BACKUP');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
     // Retrieve session from Stripe
+    console.log(`🔍 Retrieving session from Stripe: ${sessionId}`);
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ['line_items.data.price.product']
     });
@@ -72,12 +101,13 @@ export async function POST(request: Request) {
       customer_details?: Stripe.Checkout.Session.CustomerDetails;
     };
     
-    console.log('Session retrieved:', {
-      id: session.id,
-      payment_status: session.payment_status,
-    });
+    console.log(`📋 Session retrieved:`);
+    console.log(`   ID: ${session.id}`);
+    console.log(`   Payment status: ${session.payment_status}`);
+    console.log(`   Amount total: ${session.amount_total}`);
     
     if (session.payment_status !== 'paid') {
+      console.error(`❌ Payment not completed - status: ${session.payment_status}`);
       return NextResponse.json(
         { error: 'Payment not completed' },
         { status: 400 }
@@ -86,7 +116,7 @@ export async function POST(request: Request) {
     
     // Get line items
     const lineItems = session.line_items?.data || [];
-    console.log('Number of line items:', lineItems.length);
+    console.log(`📦 Line items: ${lineItems.length}`);
     
     // Get ALL products from database to find matching ones
     const allProducts = await prisma.product.findMany({
@@ -96,6 +126,8 @@ export async function POST(request: Request) {
         name: true
       }
     });
+    
+    console.log(`📦 Products in database: ${allProducts.length}`);
     
     // Create order items - NO 'description' field
     const orderItems = lineItems.map((item: any) => {
@@ -130,14 +162,18 @@ export async function POST(request: Request) {
         image: item.price?.product?.images?.[0] || null,
         color: color,
         size: size,
-        // NO description field here!
       };
+    });
+    
+    // Log order items
+    orderItems.forEach((item, idx) => {
+      console.log(`   ${idx + 1}. ${item.name} x${item.quantity} - $${item.price} (Product ID: ${item.productId})`);
     });
     
     // Check if any order items have invalid productId
     const invalidItems = orderItems.filter(item => item.productId === 'unknown');
     if (invalidItems.length > 0 && allProducts.length === 0) {
-      console.error('No products in database to link order items to');
+      console.error('❌ No products in database to link order items to');
       return NextResponse.json(
         { 
           error: 'No products found in database. Please add products first.',
@@ -152,7 +188,7 @@ export async function POST(request: Request) {
     const total = session.amount_total ? session.amount_total / 100 : 0;
     const tax = session.total_details?.amount_tax ? session.total_details.amount_tax / 100 : 0;
     
-    console.log('Creating order with totals:', { subtotal, total, tax });
+    console.log(`💰 Totals: subtotal=$${subtotal}, total=$${total}, tax=$${tax}`);
     
     // Generate order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
@@ -190,7 +226,7 @@ export async function POST(request: Request) {
         })
       : Prisma.DbNull;
     
-    // Create order in database
+    // Create order in database (BACKUP CREATION)
     const newOrder = await prisma.order.create({
       data: {
         userId: user.id,
@@ -217,17 +253,20 @@ export async function POST(request: Request) {
       }
     });
     
-    console.log('✅ Order created successfully:', newOrder.id);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`✅✅✅ ORDER CREATED VIA VERIFY-ORDER (BACKUP) ✅✅✅`);
+    console.log(`   Order ID: ${newOrder.id}`);
+    console.log(`   Order Number: ${orderNumber}`);
+    console.log(`   User ID: ${user.id}`);
+    console.log(`   Total: $${total}`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    // 🔥 STOCK UPDATE SECTION 🔥
-    console.log('\n📦 === STARTING STOCK UPDATE ===\n');
+    // 🔥 STOCK UPDATE SECTION (BACKUP) 🔥
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📦 STARTING STOCK UPDATE (VERIFY-ORDER BACKUP)');
     
     for (const item of orderItems) {
-      console.log(`🔍 Processing item: ${item.name}`);
-      console.log(`   Product ID: ${item.productId}`);
-      console.log(`   Color: ${item.color}`);
-      console.log(`   Size: ${item.size}`);
-      console.log(`   Quantity: ${item.quantity}`);
+      console.log(`   Processing: ${item.name} x${item.quantity}`);
       
       if (item.productId && item.productId !== 'unknown') {
         try {
@@ -240,17 +279,11 @@ export async function POST(request: Request) {
           });
           
           if (variant) {
-            console.log(`   📉 Current stock before update: ${variant.stock}`);
-            
-            const updatedVariant = await prisma.productVariant.update({
+            console.log(`      📉 Stock: ${variant.stock} → ${variant.stock - item.quantity}`);
+            await prisma.productVariant.update({
               where: { id: variant.id },
-              data: {
-                stock: {
-                  decrement: item.quantity
-                }
-              }
+              data: { stock: { decrement: item.quantity } }
             });
-            console.log(`   ✅ Stock after update: ${updatedVariant.stock}`);
             
             // Update product's total stock
             const allVariants = await prisma.productVariant.findMany({
@@ -262,22 +295,24 @@ export async function POST(request: Request) {
               where: { id: item.productId },
               data: { stock: totalStock }
             });
-            console.log(`   ✅ Product total stock updated to: ${totalStock}`);
+            console.log(`      ✅ Stock updated`);
           } else {
-            console.warn(`   ⚠️ VARIANT NOT FOUND for ${item.name}`);
+            console.warn(`      ⚠️ Variant not found`);
           }
         } catch (stockError: any) {
-          console.error(`   ❌ Error updating stock:`, stockError.message);
+          console.error(`      ❌ Error updating stock:`, stockError.message);
         }
       }
     }
     
-    console.log('\n✅ === STOCK UPDATE COMPLETED ===\n');
+    console.log('✅ STOCK UPDATE COMPLETED (VERIFY-ORDER BACKUP)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    // Create invoice
-    console.log('🔵🔵🔵 STARTING INVOICE CREATION 🔵🔵🔵');
+    // Create invoice (BACKUP)
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📄 CREATING INVOICE (VERIFY-ORDER BACKUP)');
     await createInvoiceForOrder(newOrder, user);
-    console.log('🔵🔵🔵 INVOICE CREATION COMPLETE 🔵🔵🔵');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     // Clear user's cart
     try {
@@ -289,20 +324,29 @@ export async function POST(request: Request) {
         await prisma.cartItem.deleteMany({
           where: { cartId: userCart.id }
         });
-        console.log('Cart cleared for user:', user.id);
+        console.log(`🗑️ Cart cleared for user: ${user.id}`);
       }
     } catch (cartError) {
-      console.log('Error clearing cart:', cartError);
+      console.log('⚠️ Error clearing cart (non-fatal):', cartError);
     }
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🎉 VERIFY-ORDER (BACKUP) PROCESSING COMPLETE 🎉');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     return NextResponse.json({
       success: true,
-      message: 'Order created successfully',
-      order: newOrder
+      message: 'Order created successfully (webhook backup)',
+      order: newOrder,
+      source: 'verify_order_backup'
     });
     
   } catch (error: any) {
-    console.error('Error in verify-order:', error);
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('❌ ERROR IN VERIFY-ORDER ❌');
+    console.error(`   Error: ${error.message}`);
+    if (error.stack) console.error(`   Stack: ${error.stack}`);
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     return NextResponse.json(
       { 
@@ -314,6 +358,9 @@ export async function POST(request: Request) {
   }
 }
 
+// ──────────────────────────────────────────────────────────────
+// BACKUP INVOICE CREATION FUNCTION (Same as before)
+// ──────────────────────────────────────────────────────────────
 async function createInvoiceForOrder(order: any, user: any) {
   console.log('🔵 createInvoiceForOrder called for order:', order.orderNumber);
   
@@ -357,6 +404,7 @@ async function createInvoiceForOrder(order: any, user: any) {
         }
       });
       console.log(`✅✅✅ INVOICE CREATED! Number: ${invoiceResult.invoiceNumber}`);
+      console.log(`   URL: ${invoiceResult.pdfUrl}`);
     } else {
       console.error(`❌❌❌ INVOICE FAILED: ${invoiceResult.error}`);
     }
