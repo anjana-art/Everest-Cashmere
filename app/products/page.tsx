@@ -1,7 +1,8 @@
-// app/products/page.tsx
+// app/products/page.tsx - IMAGE OPTIMIZATION ONLY
+
 import { ProductList } from "@/components/product-list";
 import { prisma } from "@/lib/prisma";
-import ClothingFiltersSidebar from "@/components/filters/ClothingFiltersSidebar"
+import ClothingFiltersSidebar from "@/components/filters/ClothingFiltersSidebar";
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -20,7 +21,6 @@ interface ProductsPageProps {
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const params = await Promise.resolve(searchParams);
   
-  // Build filter based on search params
   const where: any = { isActive: true };
   
   if (params.category && params.category !== 'all') {
@@ -35,12 +35,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     }
   }
 
-  // Sort order
   let orderBy: any = { createdAt: 'desc' };
   if (params.sort === 'price-low') orderBy = { price: 'asc' };
   if (params.sort === 'price-high') orderBy = { price: 'desc' };
 
-  // Fetch products
   const products = await prisma.product.findMany({
     where,
     select: {
@@ -63,13 +61,11 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     orderBy,
   });
 
-  // Get counts for filters
   const totalProducts = await prisma.product.count({ where: { isActive: true } });
   const clothingCount = await prisma.product.count({ 
     where: { isActive: true, category: 'CLOTHING' } 
   });
 
-  // Format products to match ProductList's expected type
   const formattedProducts = products.map(product => ({
     id: product.id,
     stripeId: product.stripeId || product.id,
@@ -92,7 +88,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Filters Sidebar */}
         <div className="lg:col-span-1">
           <ClothingFiltersSidebar 
             totalProductCount={totalProducts}
@@ -103,7 +98,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           />
         </div>
 
-        {/* Products Grid */}
         <div className="lg:col-span-3">
           {formattedProducts.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">

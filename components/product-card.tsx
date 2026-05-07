@@ -1,4 +1,5 @@
-// components/product-card.tsx - LUXURY EDITION
+// components/product-card.tsx - IMAGE OPTIMIZATION FIXED (removed quality prop)
+
 "use client";
 
 import Image from "next/image";
@@ -9,14 +10,13 @@ import { useState, useEffect } from "react";
 import { HeartIcon, ShoppingBagIcon, PlusIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { PlaceholderImage } from "./placeholder-image";
-// import { ProductRating } from '@/components/ProductRating'; // Commented as in original
 
 interface Product {
-  id: string;           // Database ID
-  stripeId: string;     // Stripe ID
+  id: string;
+  stripeId: string;
   name: string;
   description: string | null;
-  price: number;        // Should be in euros
+  price: number;
   images: string[];
   metadata?: {
     category?: string;
@@ -26,9 +26,10 @@ interface Product {
 
 interface Props {
   product: Product;
+  priority?: boolean; // ✅ Added priority prop
 }
 
-export const ProductCard = ({ product }: Props) => {
+export const ProductCard = ({ product, priority = false }: Props) => {
   const { items, addItem } = useCartStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -189,30 +190,23 @@ export const ProductCard = ({ product }: Props) => {
     }
   };
 
-  // LUXURY PRICE FORMATTING
   const displayPrice = () => {
     const price = product.price;
     if (typeof price !== 'number' || isNaN(price)) {
       console.warn('Invalid price for product:', product.id, product.name, price);
       return '€0,00';
     }
-    
-    // Format with comma as decimal separator for European luxury feel
     return `€${price.toFixed(2).replace('.', ',')}`;
   };
 
-  // Format name with elegant handling
   const formatProductName = (name: string) => {
     if (!name) return '';
-    
-    // Add a subtle luxury touch for long names
     if (name.length > 30) {
       return name.substring(0, 27) + '...';
     }
     return name;
   };
 
-  // Wishlist button render
   const renderWishlistButton = () => {
     if (!userId) {
       return (
@@ -251,7 +245,6 @@ export const ProductCard = ({ product }: Props) => {
   return (
     <div className="group bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer relative border border-amber-100/50">
       <Link href={`/products/${product.id}`} className="block">
-        {/* Image Container with Luxury Overlay */}
         <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-amber-50 to-red-50">
           {product.images && product.images[0] ? (
             <Image
@@ -259,31 +252,26 @@ export const ProductCard = ({ product }: Props) => {
               alt={product.name}
               fill
               className="object-contain transition-transform duration-700 group-hover:scale-110"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              // ✅ REMOVED: quality prop (uses Next.js default)
+              priority={priority}
             />
           ) : (
             <PlaceholderImage />
           )}
-          
-          {/* Elegant Gradient Overlay on Hover */}
-{/*           <div className="absolute inset-0 bg-gradient-to-t from-red-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
- */}          
-         
         </div>
 
-        {/* Product Info with Luxury Typography */}
         <div className="p-5">
           <h3 className="font-serif text-lg text-red-900 mb-2 line-clamp-1 group-hover:text-amber-700 transition-colors duration-300 tracking-wide">
             {formatProductName(product.name)}
           </h3>
           
           {product.description && (
-            <p className="text-sm text-red-950 mb-3 line-clamp-2 font-light italic ">
+            <p className="text-sm text-red-950 mb-3 line-clamp-2 font-light italic">
               {product.description}
             </p>
           )}
           
-          {/* Price and Cart Status - Luxury Presentation */}
           <div className="flex items-end justify-between">
             <div>
               <p className="text-xs text-red-950 font-light tracking-wider mb-0.5">PRICE</p>
@@ -299,7 +287,6 @@ export const ProductCard = ({ product }: Props) => {
               </div>
             </div>
             
-            {/* Elegant View Details Link */}
             <div className="flex items-center gap-1 text-red-900 group-hover:text-amber-600 transition-colors duration-300">
               <span className="text-xs font-light tracking-wide">Discover</span>
               <span className="text-lg leading-none transform group-hover:translate-x-1 transition-transform duration-300">→</span>
@@ -308,12 +295,10 @@ export const ProductCard = ({ product }: Props) => {
         </div>
       </Link>
       
-      {/* Action Buttons - Repositioned for Luxury */}
       <div className="absolute top-4 right-4 z-10">
         {renderWishlistButton()}
       </div>
       
-      {/* Add to Cart Button - Luxury Style */}
       <div className="absolute bottom-20 left-5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
         <Button
           onClick={onAddToCart}
@@ -336,7 +321,6 @@ export const ProductCard = ({ product }: Props) => {
         </Button>
       </div>
 
-      {/* Luxury Accent Line */}
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-300 via-red-400 to-amber-300 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
     </div>
   );

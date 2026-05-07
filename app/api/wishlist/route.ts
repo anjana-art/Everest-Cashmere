@@ -1,16 +1,28 @@
-// app/api/wishlist/route.ts - Best practice with variant support
+// app/api/wishlist/route.ts - FULLY FIXED with OPTIONS handler
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// GET - Get user's wishlist OR check if product variant is in wishlist
+// ✅ ADDED: OPTIONS handler for CORS/preflight requests
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, x-user-id',
+    },
+  });
+}
+
+// GET - Get user's wishlist OR check if product is in wishlist
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id');
     const { searchParams } = new URL(request.url);
     const check = searchParams.get('check');
     const productId = searchParams.get('productId');
-    const variantId = searchParams.get('variantId'); // Optional: check specific variant
+    const variantId = searchParams.get('variantId');
     
     if (!userId) {
       return NextResponse.json(
@@ -19,15 +31,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // If checking specific product/variant
+    // If checking specific product
     if (check === 'true' && productId) {
       const wishlist = await prisma.wishlist.findUnique({
         where: { userId },
         include: {
           items: {
             where: variantId 
-              ? { productId, variantId }  // Check specific variant
-              : { productId }              // Check any variant of product
+              ? { productId, variantId }
+              : { productId }
           }
         }
       });
@@ -38,14 +50,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Return full wishlist with variant details
+    // Return full wishlist
     const wishlist = await prisma.wishlist.findUnique({
       where: { userId },
       include: {
         items: {
           include: {
             product: true,
-            variant: true  // Include variant details
+            variant: true
           },
           orderBy: {
             addedAt: 'desc'
@@ -64,7 +76,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Add product variant to wishlist
+// POST - Add product to wishlist
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id');
@@ -77,9 +89,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Adding to wishlist:', { userId, productId, variantId, color, size });
+    console.log('Adding to wishlist:', { userId, productId, variantId });
 
-    // First, ensure wishlist exists for user
+    // Ensure wishlist exists
     let wishlist = await prisma.wishlist.findUnique({
       where: { userId }
     });
@@ -102,33 +114,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If variantId provided, verify it exists and belongs to product
+    // ✅ FIXED: Use findFirst instead of findUnique (handles null variantId)
+    let existingItem = null;
+    
     if (variantId) {
-      const variant = await prisma.productVariant.findFirst({
-        where: { 
-          id: variantId,
-          productId: productId
-        }
-      });
-
-      if (!variant) {
-        return NextResponse.json(
-          { error: 'Variant not found' },
-          { status: 404 }
-        );
-      }
-    }
-
-    // Check if already in wishlist (with same variant)
-    const existingItem = await prisma.wishlistItem.findUnique({
-      where: {
-        wishlistId_productId_variantId: {
+      existingItem = await prisma.wishlistItem.findFirst({
+        where: {
           wishlistId: wishlist.id,
           productId: product.id,
-          variantId: variantId || null  // null for product-level wishlist
+          variantId: variantId,
         }
-      }
-    });
+      });
+    } else {
+      existingItem = await prisma.wishlistItem.findFirst({
+        where: {
+          wishlistId: wishlist.id,
+          productId: product.id,
+          variantId: null,
+        }
+      });
+    }
 
     if (existingItem) {
       return NextResponse.json({
@@ -173,7 +178,7 @@ export async function DELETE(request: NextRequest) {
     const userId = request.headers.get('x-user-id');
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
-    const variantId = searchParams.get('variantId'); // Optional: remove specific variant
+    const variantId = searchParams.get('variantId');
     
     if (!userId || !productId) {
       return NextResponse.json(
@@ -195,23 +200,23 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Remove specific variant or any variant of product
+    // ✅ FIXED: Use findFirst + delete instead of delete with composite key
     if (variantId) {
-      await prisma.wishlistItem.delete({
+      const item = await prisma.wishlistItem.findFirst({
         where: {
-          wishlistId_productId_variantId: {
-            wishlistId: wishlist.id,
-            productId: productId,
-            variantId: variantId
-          }
+          wishlistId: wishlist.id,
+          productId: productId,
+          variantId: variantId,
         }
       });
+      if (item) {
+        await prisma.wishlistItem.delete({ where: { id: item.id } });
+      }
     } else {
-      // Remove all variants of this product from wishlist
       await prisma.wishlistItem.deleteMany({
         where: {
           wishlistId: wishlist.id,
-          productId: productId
+          productId: productId,
         }
       });
     }

@@ -1,4 +1,5 @@
-// components/carousel.tsx - CLEAN VERSION (No white space, transparent background)
+// components/carousel.tsx - OPTIMIZED IMAGES (Clean version)
+
 'use client';
 import { Card } from "./ui/card";
 import { useState, useEffect } from "react";
@@ -56,14 +57,20 @@ export const Carousel = ({ products = [] }: Props) => {
         <div className="relative w-full h-full">
           {currentProduct?.images?.[0] ? (
             <>
-              {/* Image - object-contain to show full product on transparent bg */}
+              {/* ✅ OPTIMIZED: Image with proper sizing and quality */}
               <Image
                 src={currentProduct.images[0]}
                 alt={currentProduct.name || "Product image"}
                 fill
                 className="object-contain transition-all duration-700 ease-in-out group-hover:scale-105"
-                sizes="(max-width: 850px) 100vw, (max-width: 1500px) 50vw, 33vw"
+                // ✅ OPTIMIZED: Responsive sizes for different screen widths
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, (max-width: 1500px) 50vw, 33vw"
+                // ✅ OPTIMIZED: Quality setting (80-85 is sweet spot for product images)
+                quality={85}
+                // ✅ OPTIMIZED: Priority for carousel (above the fold)
                 priority
+                // ✅ OPTIMIZED: Fetch priority for faster LCP
+                fetchPriority="high"
               />
               
               {/* Minimal gradient for text readability only */}

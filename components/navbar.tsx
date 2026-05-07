@@ -1,5 +1,6 @@
 'use client';
 import Link from "next/link";
+import Image from "next/image"; // ✅ ADDED: Import Next.js Image
 import { useState, useEffect } from "react";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 
@@ -159,17 +160,20 @@ export const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="container mx-auto flex items-center justify-between px-3 sm:px-5 py-1.5 sm:py-2">
         
-        {/* Logo Section - LARGER LOGO */}
+        {/* Logo Section - OPTIMIZED */}
         <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-          
           <Link href="/" className="inline-block flex-shrink-0">
-            <img
-              src="/himkash_favicon.png"
+            <Image
+              src="/himkash_favicon.webp"
               alt="HIMKASH_logo"
-              className="h-16 sm:h-20 md:h-24 w-auto" // Increased logo size
+              width={96}   // ✅ Explicit width
+              height={96}  // ✅ Explicit height (matches md:h-24)
+              className="w-auto h-16 sm:h-20 md:h-24 object-contain"
+              priority
+              quality={90}
             />
           </Link>
-
+          
           {/* Tagline - slightly adjusted */}
           <div className="min-w-0 w-24 sm:w-32 md:w-44 flex items-center overflow-hidden">
             <p className={`text-red-950 text-[10px] sm:text-xs md:text-sm 
@@ -456,21 +460,21 @@ export const Navbar = () => {
                                   className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                                   onClick={() => setMobileOpen(false)}
                                 >
-                                  👔 Men's Clothing
+                                  Men's Clothing
                                 </Link>
                                 <Link 
                                   href="/products?category=CLOTHING&gender=WOMEN" 
                                   className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                                   onClick={() => setMobileOpen(false)}
                                 >
-                                  👗 Women's Clothing
+                                   Women's Clothing
                                 </Link>
                                 <Link 
                                   href="/products?category=CLOTHING&gender=UNISEX" 
                                   className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                                   onClick={() => setMobileOpen(false)}
                                 >
-                                  👤 Unisex Clothing
+                                   Unisex Clothing
                                 </Link>
                               </div>
                             )}
@@ -481,7 +485,7 @@ export const Navbar = () => {
                               onClick={() => setOpenMaterial(!openMaterial)}
                               className="w-full flex items-center justify-between p-2.5 text-red-800 text-sm hover:bg-amber-50 rounded-lg"
                             >
-                              <span>🧵 Material Types</span>
+                              <span> Material Types</span>
                               <ChevronRightIcon className={`h-3 w-3 transition-transform ${openMaterial ? 'rotate-90' : ''}`} />
                             </button>
                             
@@ -492,21 +496,21 @@ export const Navbar = () => {
                                   className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                                   onClick={() => setMobileOpen(false)}
                                 >
-                                  🐐 Cashmere
+                                  Cashmere
                                 </Link>
                                 <Link 
                                   href="/products?category=CLOTHING&type=CASHMERE_MARINO_WOOL" 
                                   className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                                   onClick={() => setMobileOpen(false)}
                                 >
-                                  🧶 Cashmere + Marino Wool
+                                   Cashmere + Marino Wool
                                 </Link>
                                 <Link 
                                   href="/products?category=CLOTHING&type=MARINO_WOOL" 
                                   className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                                   onClick={() => setMobileOpen(false)}
                                 >
-                                  🐑 Marino Wool
+                                   Marino Wool
                                 </Link>
                               </div>
                             )}

@@ -2,6 +2,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+      qualities: [75, 85, 90], // Add this line
+
     // Use remotePatterns instead of domains (recommended by Next.js)
     remotePatterns: [
       // Stripe images

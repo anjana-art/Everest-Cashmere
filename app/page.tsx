@@ -1,4 +1,5 @@
-// app/page.tsx
+// app/page.tsx - OPTIMIZED VERSION with Navigation Spinner
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -9,6 +10,7 @@ import SignupForm from "@/components/signup-form";
 import ShareButtons from '@/components/ShareButtons';
 import type { Metadata } from "next";
 import { SimpleImageGrid } from "@/components/simple-image-grid";
+import { NavigationLink } from  '@/components/navigation-link'; 
 
 export const metadata: Metadata = {
   title: "Pure Cashmere | Kashmere & Wool | Nepalese Luxury | Finest Quality | Elegance + Softness | Timeless | Finest Fiber",
@@ -71,7 +73,7 @@ export default async function Home() {
     <div className="bg-[#FDFBF7]">
       
       {/* SECTION 1: Hero Section - FULL WIDTH with Image Grid */}
-      <section className="relative w-full min-h-screen flex items-center justify-center  overflow-hidden">
+      <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
         {/* Full width image grid - takes priority */}
         <div className="absolute inset-0 z-0">
           <SimpleImageGrid />
@@ -104,13 +106,21 @@ export default async function Home() {
                 </p>
                 
                 <div className="flex flex-wrap gap-4 pt-4">
-                  <Button asChild className="text-lg inline-flex items-center justify-center rounded-full px-8 py-6 text-white bg-amber-600 hover:bg-amber-700 border-none transform transition-all duration-300 hover:-translate-y-0.5 shadow-xl">
-                    <Link href="/clothing">Browse all Products</Link>
-                  </Button>
+                  {/* ✅ OPTIMIZED: NavigationLink with spinner */}
+                  <NavigationLink 
+                    href="/clothing" 
+                    className="text-lg inline-flex items-center justify-center rounded-full px-8 py-6 text-white bg-amber-600 hover:bg-amber-700 border-none transform transition-all duration-300 hover:-translate-y-0.5 shadow-xl"
+                  >
+                    Browse all Products
+                  </NavigationLink>
                   
-                  <Button asChild variant="outline" className="text-lg rounded-full px-8 py-6 border-white text-black hover:bg-white/10">
-                    <Link href="/about">Learn More</Link>
-                  </Button>
+                  <NavigationLink 
+                    href="/about" 
+                    variant="outline"
+                    className="text-lg rounded-full px-8 py-6 border-white text-black hover:bg-white/10"
+                  >
+                    Learn More
+                  </NavigationLink>
                 </div>
               </div>
               
@@ -138,7 +148,7 @@ export default async function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: "🏔️", title: "Nepalese Craftsmanship", desc: "Each piece is handmade by skilled artisans in Nepal, preserving century-old traditions." },
+              { icon: "", title: "Nepalese Craftsmanship", desc: "Each piece is handmade by skilled artisans in Nepal, preserving century-old traditions." },
               { icon: "🌿", title: "Sustainably Made", desc: "Pure cashmere and fine wool, sourced responsibly with respect for nature and community." },
               { icon: "✨", title: "Timeless Quality", desc: "Designed to outlast trends — pieces you'll wear and love for years to come." }
             ].map((item, i) => (
@@ -161,19 +171,22 @@ export default async function Home() {
             <h2 className="text-3xl md:text-4xl font-light tracking-wide text-red-900">
               Launching 
               <span className="block text-amber-600 font-medium">
-                May 20, 2026
+                June 1st, 2026
               </span>
             </h2>
             <div className="w-16 h-[2px] bg-amber-600 mx-auto md:mx-0"></div>
             <p className="text-neutral-700 text-lg leading-relaxed max-w-xl mx-auto md:mx-0">
               Be among the first to experience 
-              <span className="text-red-900 font-medium"> HIMKASH</span> —
+              <span className="text-red-900 font-medium"> Himkash</span> —
               timeless Nepalese craftsmanship reimagined for Europe.
             </p>
             <div className="pt-6 flex justify-center md:justify-start">
-              <Link href='/signup' className="px-8 py-3 cursor-pointer bg-red-800 text-white rounded-full tracking-wide hover:bg-amber-700 transition-all duration-300 shadow-md hover:shadow-lg">
+              <NavigationLink 
+                href="/signup" 
+                className="px-8 py-3 cursor-pointer bg-red-800 text-white rounded-full tracking-wide hover:bg-amber-700 transition-all duration-300 shadow-md hover:shadow-lg"
+              >
                 Sign Up to Join the Launch List
-              </Link>
+              </NavigationLink>
             </div>
           </div>
         </div>
@@ -184,12 +197,14 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="relative w-80 h-80 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-amber-100">
+              {/* ✅ OPTIMIZED: Priority image with proper sizing */}
               <Image
-                src="/anjana_formal_dress.webp"
+                src="/founder_image_1.webp"
                 alt="Anjana Bhatta - Founder of HIM-KASH"
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
+                sizes="(max-width: 768px) 320px, 320px"
+                priority={true}
               />
             </div>
             
@@ -201,88 +216,89 @@ export default async function Home() {
                 this journey has been one of continuous growth, resilience, and purpose."
               </p>
               <p className="text-neutral-700 leading-relaxed">
-                HIM-KASH was born from a vision to bridge two worlds—the timeless craftsmanship of Nepal 
+                Himkash was born from a vision to bridge two worlds—the timeless craftsmanship of Nepal 
                 and the conscious, quality-driven lifestyle of Europe.
               </p>
-              <Link href="/founders-story" className="inline-flex items-center text-amber-600 font-medium group">
+              <NavigationLink 
+                href="/founders-story" 
+                className="inline-flex items-center text-amber-600 font-medium group"
+              >
                 Read full story 
                 <span className="ml-2 group-hover:translate-x-2 transition-transform">→</span>
-              </Link>
+              </NavigationLink>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 4: Category Collection Grid */}
-      <section className="py-16 bg-white relative z-10">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-10 lg:gap-16">
-            
-            <Link href="/clothing/women" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
-              <Image
-                src="/women_s_xs_roundneck_cashmere_sweaters.webp"
-                alt="Women's Collection"
-                fill
-                className="object-contain transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
-                <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
-                  Women's Collection
-                </h3>
-              </div>
-              <div className="absolute top-3 right-3 md:top-5 md:right-5 z-10">
-                <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-medium shadow-lg border border-white/20">
-                  Coming Soon
-                </span>
-              </div>
-            </Link>
-
-            <Link href="/clothing/men" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
-              <Image
-                src="/men's_m_l_xl_roundneck_cashmere_sweaters.webp"
-                alt="Men's Collection"
-                fill
-                className="object-contain transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
-                <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
-                  Men's Collection
-                </h3>
-              </div>
-              <div className="absolute top-3 right-3 md:top-5 md:right-5 z-10">
-                <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-medium shadow-lg border border-white/20">
-                  Coming Soon
-                </span>
-              </div>
-            </Link>
-
-            <Link href="/clothing/unisex" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
-              <Image
-                src="/himkash_logo_ragister.webp"
-                alt="Unisex Collection"
-                fill
-                className="object-contain transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
-                <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
-                  Uni-Sex Collection
-                </h3>
-              </div>
-              <div className="absolute top-3 right-3 md:top-5 md:right-5 z-10">
-                <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-medium shadow-lg border border-white/20">
-                  Coming Soon
-                </span>
-              </div>
-            </Link>
-          </div>
+    {/* SECTION 4: Category Collection Grid */}
+<section className="py-16 bg-white relative z-10">
+  <div className="container mx-auto px-4 max-w-6xl">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-10 lg:gap-16">
+      
+      {/* Women's Collection - NO Coming Soon badge */}
+      <NavigationLink href="/clothing/women" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
+        <Image
+          src="/ladies_lay_flat_cashmere_sweater.webp"
+          alt="Women's Collection"
+          fill
+          className="object-contain transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          priority={true}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
+        <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
+          <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
+            Women's Collection
+          </h3>
         </div>
-      </section>
+        {/* ✅ Coming Soon badge REMOVED for Women */}
+      </NavigationLink>
+
+      {/* Men's Collection - NO Coming Soon badge */}
+      <NavigationLink href="/clothing/men" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
+        <Image
+          src="/indigo_cashmere_sweater.webp"
+          alt="Men's Collection"
+          fill
+          className="object-contain transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          priority={true}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
+        <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
+          <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
+            Men's Collection
+          </h3>
+        </div>
+        {/* ✅ Coming Soon badge REMOVED for Men */}
+      </NavigationLink>
+
+      {/* Unisex Collection - KEEP Coming Soon badge */}
+      <NavigationLink href="/clothing/unisex" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
+        <Image
+          src="/himkash_logo_ragister.webp"
+          alt="Unisex Collection"
+          fill
+          className="object-contain transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
+        <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
+          <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
+            Uni-Sex Collection
+          </h3>
+        </div>
+        {/* ✅ Coming Soon badge KEPT for Unisex */}
+        <div className="absolute top-3 right-3 md:top-5 md:right-5 z-10">
+          <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-medium shadow-lg border border-white/20">
+            Coming Soon
+          </span>
+        </div>
+      </NavigationLink>
+    </div>
+  </div>
+</section>
 
       {/* Share Section */}
       <section className="relative bg-gradient-to-r from-red-800/5 to-amber-800/5 py-16 z-10">
