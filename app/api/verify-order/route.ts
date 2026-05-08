@@ -1,4 +1,4 @@
-// app/api/verify-order/route.ts - COMPLETE FIXED VERSION
+// app/api/verify-order/route.ts - STOCK VALIDATION ADDED
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -274,7 +274,7 @@ export async function POST(request: Request) {
     console.log(`   Total: $${total}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    // 🔥 STOCK UPDATE SECTION (BACKUP) 🔥
+    // 🔥 STOCK UPDATE SECTION (BACKUP) WITH VALIDATION 🔥
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📦 STARTING STOCK UPDATE (VERIFY-ORDER BACKUP)');
     
@@ -292,6 +292,14 @@ export async function POST(request: Request) {
           });
           
           if (variant) {
+            // ✅ FIX: Check if enough stock before deducting
+            if (variant.stock < item.quantity) {
+              console.error(`      ❌ INSUFFICIENT STOCK: Available: ${variant.stock}, Requested: ${item.quantity}`);
+              console.error(`      ⚠️ Skipping stock update for ${item.name}`);
+              // Don't update stock - move to next item
+              continue;
+            }
+            
             console.log(`      📉 Stock: ${variant.stock} → ${variant.stock - item.quantity}`);
             await prisma.productVariant.update({
               where: { id: variant.id },
@@ -378,7 +386,7 @@ export async function POST(request: Request) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// BACKUP INVOICE CREATION FUNCTION
+// BACKUP INVOICE CREATION FUNCTION (UNCHANGED)
 // ──────────────────────────────────────────────────────────────
 async function createInvoiceForOrder(order: any, user: any) {
   console.log('🔵 createInvoiceForOrder called for order:', order.orderNumber);
