@@ -1,4 +1,4 @@
-// app/api/admin/products/[id]/route.ts - COMPLETE REPLACEMENT WITH FIXED PATCH
+// app/api/admin/products/[id]/route.ts - COMPLETE REPLACEMENT WITH FIXED PATCH & ERROR HANDLING
 
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -54,75 +54,35 @@ function extractProductIdFromUrl(url: string): string | null {
   return match ? match[1] : null;
 }
 
-// Helper function to sync variants when product is updated
-async function syncVariantsOnUpdate(
-  productId: string, 
-  colors: string[], 
-  sizes: string[],
-  stockPerVariant?: number
-) {
-  console.log(`🔄 Syncing variants for product ${productId}`);
-  console.log(`   Colors: ${colors.join(', ')}`);
-  console.log(`   Sizes: ${sizes.join(', ')}`);
+// Helper to validate if string is a valid URL (not base64)
+function isValidImageUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  // Check if it's a base64 image (too large, reject)
+  if (url.startsWith('data:image/')) return false;
+  // Check if it's a valid URL
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Helper to validate and filter images
+function validateImages(images: any): string[] | null {
+  if (!images || !Array.isArray(images)) return null;
   
-  const existingVariants = await prisma.productVariant.findMany({
-    where: { productId: productId }
+  const validImages = images.filter(img => {
+    if (typeof img !== 'string') return false;
+    // Reject base64 images
+    if (img.startsWith('data:image/')) {
+      console.warn('⚠️ Rejected base64 image - too large for API');
+      return false;
+    }
+    return true;
   });
   
-  const existingKeys = new Set(
-    existingVariants.map(v => `${v.color}|${v.size}`)
-  );
-  
-  let createdCount = 0;
-  let deactivatedCount = 0;
-  
-  // Create missing variants (ALL combinations)
-  for (const color of colors) {
-    for (const size of sizes) {
-      const sizeLower = size.toLowerCase();
-      const key = `${color}|${sizeLower}`;
-      
-      if (!existingKeys.has(key)) {
-        const sku = `${productId.substring(0, 8)}-${color}-${sizeLower}`.toUpperCase().replace(/\s/g, '-');
-        
-        await prisma.productVariant.create({
-          data: {
-            productId: productId,
-            color: color,
-            size: sizeLower,
-            sku: sku,
-            stock: stockPerVariant || 10,
-            isActive: true,
-          }
-        });
-        createdCount++;
-        console.log(`   ✅ Created new variant: ${color}/${sizeLower}`);
-      }
-    }
-  }
-  
-  // Deactivate variants for removed combinations
-  const validKeys = new Set();
-  for (const color of colors) {
-    for (const size of sizes) {
-      validKeys.add(`${color}|${size.toLowerCase()}`);
-    }
-  }
-  
-  const variantsToDeactivate = existingVariants.filter(v => !validKeys.has(`${v.color}|${v.size}`));
-  if (variantsToDeactivate.length > 0) {
-    await prisma.productVariant.updateMany({
-      where: {
-        productId: productId,
-        id: { in: variantsToDeactivate.map(v => v.id) }
-      },
-      data: { isActive: false }
-    });
-    deactivatedCount = variantsToDeactivate.length;
-    console.log(`   ⚠️ Deactivated ${deactivatedCount} variants for removed combinations`);
-  }
-  
-  console.log(`✅ Sync complete: ${createdCount} created, ${deactivatedCount} deactivated`);
+  return validImages;
 }
 
 // GET - Get single product (includes variants)
@@ -187,7 +147,7 @@ export async function GET(
   }
 }
 
-// PATCH - Update single product with variant stock updates (FIXED)
+// PATCH - Update single product with variant stock updates (FIXED with better error handling)
 export async function PATCH(
   request: NextRequest
 ) {
@@ -202,8 +162,9 @@ export async function PATCH(
     }
 
     console.log('✏️ PATCH /api/admin/products/[id] called for ID:', productId);
-    const admin = await isAdmin(request);
     
+    // Check admin
+    const admin = await isAdmin(request);
     if (!admin) {
       console.log('🚫 Access denied - not admin');
       return NextResponse.json(
@@ -212,8 +173,50 @@ export async function PATCH(
       );
     }
 
-    const body = await request.json();
-    console.log('📥 Received update body:', JSON.stringify(body, null, 2));
+    // Parse body with error handling
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse JSON body:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body. Please check the data being sent.' },
+        { status: 400 }
+      );
+    }
+    
+    console.log('📥 Received update body keys:', Object.keys(body));
+    
+    // Check for base64 images in request - FIXED: Added :string type to img parameter
+    if (body.images && Array.isArray(body.images)) {
+      const hasBase64 = body.images.some((img: string) => typeof img === 'string' && img.startsWith('data:image/'));
+      if (hasBase64) {
+        console.warn('⚠️ WARNING: Base64 images detected in request. These should be uploaded as files first.');
+        return NextResponse.json(
+          { 
+            error: 'Please upload images as files first, not base64 data. Use image upload endpoint before updating product.',
+            hint: 'Images should be stored as URLs, not embedded in the API request.'
+          },
+          { status: 413 }
+        );
+      }
+    }
+
+    // Check request size (rough estimate - 1MB limit)
+    const bodyString = JSON.stringify(body);
+    const bodySizeInMB = bodyString.length / (1024 * 1024);
+    console.log(`📦 Request body size: ${bodySizeInMB.toFixed(2)} MB`);
+    
+    if (bodySizeInMB > 1) {
+      console.warn('⚠️ Request body is large:', bodySizeInMB.toFixed(2), 'MB');
+      return NextResponse.json(
+        { 
+          error: `Request body too large (${bodySizeInMB.toFixed(2)} MB). Limit is 1 MB.`,
+          hint: 'Upload images as files first, then send only the URLs.'
+        },
+        { status: 413 }
+      );
+    }
 
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
@@ -233,7 +236,18 @@ export async function PATCH(
     if (body.name !== undefined) updateFields.name = body.name;
     if (body.description !== undefined) updateFields.description = body.description;
     if (body.price !== undefined) updateFields.price = parseFloat(body.price);
-    if (body.images !== undefined) updateFields.images = body.images;
+    
+    // Handle images - validate and filter
+    if (body.images !== undefined) {
+      const validImages = validateImages(body.images);
+      if (validImages !== null) {
+        updateFields.images = validImages;
+        if (validImages.length !== body.images.length) {
+          console.log(`📸 Filtered images: ${body.images.length} -> ${validImages.length} (removed base64)`);
+        }
+      }
+    }
+    
     if (body.category !== undefined) updateFields.category = body.category;
     if (body.clothingType !== undefined) updateFields.clothingType = body.clothingType;
     if (body.gender !== undefined) updateFields.gender = body.gender;
@@ -256,13 +270,15 @@ export async function PATCH(
     if (body.variantStocks && typeof body.variantStocks === 'object') {
       console.log('📦 Updating variant stocks...');
       
+      let updatedCount = 0;
+      let errorCount = 0;
+      
       for (const [variantKey, stockValue] of Object.entries(body.variantStocks)) {
         const [color, size] = variantKey.split('|');
         if (color && size && typeof stockValue === 'number') {
           const sizeLower = size.toLowerCase();
           
           try {
-            // Use upsert to either update or create the variant
             await prisma.productVariant.upsert({
               where: {
                 productId_color_size: {
@@ -284,12 +300,14 @@ export async function PATCH(
                 isActive: stockValue > 0,
               }
             });
-            console.log(`   ✅ Updated ${color}/${sizeLower} stock to ${stockValue}`);
+            updatedCount++;
           } catch (err) {
+            errorCount++;
             console.error(`   ❌ Failed to update ${color}/${sizeLower}:`, err);
           }
         }
       }
+      console.log(`   ✅ Updated ${updatedCount} variants (${errorCount} errors)`);
     }
 
     // Also handle legacy stockPerVariant if provided
@@ -362,8 +380,26 @@ export async function PATCH(
   } catch (error: any) {
     console.error('❌ Error updating product:', error);
     
+    // Handle Prisma specific errors
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A product with this data already exists.' },
+        { status: 409 }
+      );
+    }
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Product not found or already deleted.' },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: error.message || 'Failed to update product. Please try again.' },
+      { 
+        error: error.message || 'Failed to update product. Please try again.',
+        type: error.name || 'UnknownError'
+      },
       { status: 500 }
     );
   }

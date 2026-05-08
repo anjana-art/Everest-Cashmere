@@ -65,6 +65,10 @@ export default function EditProductPage() {
   });
 
   const [variantStocks, setVariantStocks] = useState<Record<string, number>>({});
+  
+  // Track if images have been modified
+  const [imagesModified, setImagesModified] = useState(false);
+  const [originalImages, setOriginalImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (productId) {
@@ -88,10 +92,7 @@ export default function EditProductPage() {
       
       const product = await response.json();
       
-      console.log('✅ Full product data:', product);
-      console.log('✅ Variants:', product.variants);
-      console.log('✅ Available Colors:', product.availableColors);
-      console.log('✅ Available Sizes:', product.availableSizes);
+      console.log('✅ Product loaded, images:', product.images);
 
       setFormData({
         name: product.name || '',
@@ -109,6 +110,9 @@ export default function EditProductPage() {
         stock: product.stock ? product.stock.toString() : '0',
         isActive: product.isActive !== undefined ? product.isActive : true,
       });
+      
+      // Store original images for comparison
+      setOriginalImages(product.images && Array.isArray(product.images) ? product.images : []);
 
       const stocks: Record<string, number> = {};
       
@@ -149,6 +153,25 @@ export default function EditProductPage() {
     }));
   };
 
+  // Handle image upload result - ensure we only store URLs
+  const handleImagesChange = (images: string[]) => {
+    // Check if any of the new images are base64
+    const hasBase64 = images.some(img => img.startsWith('data:image/'));
+    
+    if (hasBase64) {
+      console.warn('⚠️ Base64 images detected - these should be uploaded to a server first');
+      setError('Please use the image upload button to upload images first. Base64 images are not allowed.');
+      
+      // Show a user-friendly message
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+    
+    setFormData(prev => ({ ...prev, images }));
+    setImagesModified(true);
+    console.log('📸 Images updated (URLs only):', images);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -161,6 +184,14 @@ export default function EditProductPage() {
       return;
     }
 
+    // Check for base64 images before submitting
+    const hasBase64 = formData.images.some(img => img.startsWith('data:image/'));
+    if (hasBase64) {
+      setError('Cannot submit base64 images. Please upload images using the upload button first.');
+      setSaving(false);
+      return;
+    }
+
     try {
       const totalStock = Object.values(variantStocks).reduce((sum, stock) => sum + (stock || 0), 0);
       
@@ -168,7 +199,8 @@ export default function EditProductPage() {
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
-        images: formData.images,
+        // Only send images if they were modified OR if it's a valid URL
+        ...(imagesModified && { images: formData.images }),
         category: formData.category || null,
         clothingType: formData.clothingType || null,
         gender: formData.gender || null,
@@ -182,7 +214,21 @@ export default function EditProductPage() {
         variantStocks: variantStocks,
       };
 
-      console.log('📤 Updating product with data:', productData);
+      // Calculate approximate request size
+      const requestSize = JSON.stringify(productData).length;
+      console.log(`📦 Request size: ${(requestSize / 1024 / 1024).toFixed(2)} MB`);
+      
+      if (requestSize > 900 * 1024) { // 900KB warning (most servers have 1MB limit)
+        console.warn('⚠️ Request size approaching limit:', requestSize);
+        setError('Request is too large. Please ensure images are URLs (not base64) and try again.');
+        setSaving(false);
+        return;
+      }
+
+      console.log('📤 Updating product with data (images are URLs):', {
+        ...productData,
+        images: productData.images?.map(img => img.substring(0, 50) + '...')
+      });
 
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'PATCH',
@@ -195,6 +241,10 @@ export default function EditProductPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 413) {
+          throw new Error('Request too large. Please ensure all images are stored as URLs, not base64 data.');
+        }
         throw new Error(data.error || 'Failed to update product');
       }
 
@@ -207,6 +257,11 @@ export default function EditProductPage() {
     } catch (err: any) {
       console.error('❌ Error updating product:', err);
       setError(err.message);
+      
+      // If error is about request size, give clear instructions
+      if (err.message.includes('large') || err.message.includes('size')) {
+        setError('The product data is too large. This usually happens if images are stored as base64. Please re-upload images using the file upload button.');
+      }
     } finally {
       setSaving(false);
     }
@@ -328,7 +383,7 @@ export default function EditProductPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic Information */}
+        {/* Basic Information - (same as before) */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -448,7 +503,7 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        {/* Images */}
+        {/* Images - with base64 detection */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Product Images *</h2>
           <p className="text-sm text-gray-600 mb-4">
@@ -457,17 +512,20 @@ export default function EditProductPage() {
           
           <MinimalImageUpload 
             images={formData.images}
-            setImages={(images) => setFormData({...formData, images})}
+            setImages={handleImagesChange}
           />
           
           <div className="mt-4 text-sm text-gray-500">
             <p>✓ Images are stored directly in the database</p>
             <p>✓ Max 4 images per product</p>
             <p>✓ Supported formats: JPG, PNG, WEBP</p>
+            {formData.images.some(img => img.length > 1000) && (
+              <p className="text-amber-600 mt-2">⚠️ Warning: Some images appear to be base64 encoded. Please re-upload them as files.</p>
+            )}
           </div>
         </div>
 
-        {/* Colors */}
+        {/* Colors, Sizes, Stock Matrix - (same as before) */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Available Colors</h2>
           <div className="space-y-4">
@@ -520,7 +578,6 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        {/* Sizes */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Available Sizes</h2>
           <div className="space-y-4">
@@ -564,7 +621,6 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        {/* Stock per Size/Color Matrix */}
         {formData.availableColors.length > 0 && formData.availableSizes.length > 0 && (
           <div className="bg-white rounded-xl shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Stock per Size & Color</h2>
@@ -642,7 +698,6 @@ export default function EditProductPage() {
           </div>
         )}
 
-        {/* Status */}
         <div className="bg-white rounded-xl shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Product Status</h2>
           <div className="flex items-center">
@@ -659,7 +714,6 @@ export default function EditProductPage() {
           </div>
         </div>
 
-        {/* Submit */}
         <div className="flex gap-4">
           <button
             type="submit"

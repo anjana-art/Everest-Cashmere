@@ -2,8 +2,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-      qualities: [75, 85, 90], // Add this line
-
     // Use remotePatterns instead of domains (recommended by Next.js)
     remotePatterns: [
       // Stripe images
@@ -12,39 +10,45 @@ const nextConfig = {
         hostname: 'files.stripe.com',
         pathname: '/**',
       },
-      // Your production domain
+      // Cloudinary images (for your new image uploads)
       {
         protocol: 'https',
-        hostname: 'www.evereste.eu',
+        hostname: 'res.cloudinary.com',
         pathname: '/**',
       },
-      // Your domain without www (if needed)
+      // Your production domain (UPDATED)
       {
         protocol: 'https',
-        hostname: 'evereste.eu',
+        hostname: 'www.himkash.com',
+        pathname: '/**',
+      },
+      // Your domain without www (UPDATED)
+      {
+        protocol: 'https',
+        hostname: 'himkash.com',
         pathname: '/**',
       },
       // Local development
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '3001',
+        port: '3000',
         pathname: '/**',
       },
-      // Local development with IP
+      // Local development with IP (keep if needed)
       {
         protocol: 'http',
         hostname: '192.168.1.6',
-        port: '3001',
+        port: '3000',
         pathname: '/**',
       },
-      // Any other domains you use for images
+      // Placeholder images
       {
         protocol: 'https',
-        hostname: 'via.placeholder.com', // For placeholder images
+        hostname: 'via.placeholder.com',
         pathname: '/**',
       },
-      // Add this for any uploaded images in public folder
+      // For uploaded images in public folder (local development only)
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -52,23 +56,21 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.evereste.eu',
+        hostname: 'www.himkash.com',
         pathname: '/uploads/**',
       },
     ],
-    // You can also keep domains for backward compatibility
+    // Keep domains for backward compatibility
     domains: [
       'files.stripe.com',
-      'www.evereste.eu',
-      'evereste.eu',
+      'res.cloudinary.com',
+      'www.himkash.com',  // UPDATED
+      'himkash.com',       // UPDATED
       'localhost',
       '192.168.1.6',
       'via.placeholder.com',
     ],
-    // Optional: Disable image optimization if you have issues
-    // unoptimized: true,
   },
-  // Other Next.js config options...
 };
 
 export default nextConfig;
