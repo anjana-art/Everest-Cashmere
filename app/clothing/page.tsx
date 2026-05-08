@@ -59,7 +59,7 @@ export default async function ClothingPage() {
               </div>
               <h3 className="font-medium text-gray-900">{product.name}</h3>
               <p className="text-amber-700 font-semibold mt-1">
-                ${product.price.toFixed(2)}
+                €{product.price.toFixed(2)}
               </p>
             </Link>
           </div>
