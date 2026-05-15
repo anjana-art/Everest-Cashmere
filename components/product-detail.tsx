@@ -1,4 +1,4 @@
-// components/product-detail.tsx - Full page with size chart
+// components/product-detail.tsx - Full page with stock limits fixed
 
 "use client";
 
@@ -10,6 +10,7 @@ import { HeartIcon, ShoppingBagIcon, PlusIcon, TruckIcon, ShieldCheckIcon, Arrow
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import { SimilarProducts } from "./similar-products";
+import { ProductShare } from './ProductShare';
 
 interface ProductVariant {
   id: string;
@@ -83,7 +84,8 @@ export const ProductDetail = ({ product }: Props) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [showCareDetails, setShowCareDetails] = useState(false);
-  const [showSizeChart, setShowSizeChart] = useState(false); // ADD THIS
+  const [showSizeChart, setShowSizeChart] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   
   const cartItem = items.find((item) => 
@@ -96,6 +98,9 @@ export const ProductDetail = ({ product }: Props) => {
   
   // Get current selected size stock
   const currentStock = sizeStockMap[selectedSize] || 0;
+  
+  // Calculate remaining stock after cart items
+  const remainingStock = currentStock - cartQuantity;
   
   // Get current selected variant
   const selectedVariant = variants.find(v => v.color === selectedColor && v.size === selectedSize);
@@ -253,6 +258,34 @@ export const ProductDetail = ({ product }: Props) => {
     }
   };
 
+  const increaseQuantity = () => {
+    if (quantity < remainingStock) {
+      setQuantity(prev => prev + 1);
+    } else {
+      alert(`Maximum ${remainingStock} items available (you already have ${cartQuantity} in cart)`);
+    }
+  };
+  
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    if (isNaN(val)) {
+      setQuantity(1);
+    } else if (val < 1) {
+      setQuantity(1);
+    } else if (val > remainingStock) {
+      setQuantity(remainingStock);
+      alert(`Maximum ${remainingStock} items available (you already have ${cartQuantity} in cart)`);
+    } else {
+      setQuantity(val);
+    }
+  };
+
   const onAddItem = () => {
     if (!product) {
       alert('Product data is missing');
@@ -270,20 +303,34 @@ export const ProductDetail = ({ product }: Props) => {
       return;
     }
 
-    if (quantity > currentStock) {
-      alert(`Only ${currentStock} items available in ${selectedSize.toUpperCase()}`);
+    // Check if trying to add more than remaining stock
+    if (quantity > remainingStock) {
+      alert(`Maximum ${remainingStock} items available. Please reduce quantity.`);
+      setQuantity(remainingStock > 0 ? remainingStock : 0);
       return;
     }
 
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.images?.[0] || '',
-      quantity: quantity,
-      color: selectedColor,
-      size: selectedSize,
-    });
+    if (quantity < 1) {
+      alert('Please select at least 1 item');
+      return;
+    }
+
+    // Add items based on quantity
+    for (let i = 0; i < quantity; i++) {
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        imageUrl: product.images?.[0] || '',
+        quantity: 1,
+        color: selectedColor,
+        size: selectedSize,
+      });
+    }
+    
+    // Show success message
+    setShowSuccessMessage(true);
+    setTimeout(() => setShowSuccessMessage(false), 3000);
   };
 
   const onBuyNow = () => {
@@ -302,8 +349,15 @@ export const ProductDetail = ({ product }: Props) => {
       return;
     }
 
-    if (quantity > currentStock) {
-      alert(`Only ${currentStock} items available in ${selectedSize.toUpperCase()}`);
+    // Check if trying to buy more than remaining stock
+    if (quantity > remainingStock) {
+      alert(`Maximum ${remainingStock} items available. Please reduce quantity.`);
+      setQuantity(remainingStock > 0 ? remainingStock : 0);
+      return;
+    }
+
+    if (quantity < 1) {
+      alert('Please select at least 1 item');
       return;
     }
 
@@ -324,18 +378,6 @@ export const ProductDetail = ({ product }: Props) => {
 
   const onRemoveItem = () => {
     removeItem(product.id, selectedColor, selectedSize);
-  };
-
-  const increaseQuantity = () => {
-    if (quantity < currentStock) {
-      setQuantity(prev => prev + 1);
-    }
-  };
-  
-  const decreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(prev => prev - 1);
-    }
   };
 
   const displayPrice = () => {
@@ -567,9 +609,16 @@ export const ProductDetail = ({ product }: Props) => {
                     })}
                   </div>
                   {selectedSize && currentStock > 0 && (
-                    <p className="text-xs text-green-600">
-                      ✓ {currentStock} items in stock
-                    </p>
+                    <div className="space-y-1">
+                      <p className="text-xs text-green-600">
+                        ✓ {currentStock} items total in stock
+                      </p>
+                      {cartQuantity > 0 && (
+                        <p className="text-xs text-amber-600">
+                          🛒 {cartQuantity} already in cart • {remainingStock} available to add
+                        </p>
+                      )}
+                    </div>
                   )}
                   {selectedSize && currentStock === 0 && (
                     <p className="text-xs text-red-600">
@@ -579,38 +628,72 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* Quantity Selection */}
+              {/* Quantity Selection - Fixed with remaining stock */}
               {selectedSize && currentStock > 0 && (
                 <div className="space-y-4">
-                  <h3 className="font-serif text-lg text-red-900 tracking-wide">
-                    Quantity
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-serif text-lg text-red-900 tracking-wide">
+                      Quantity
+                    </h3>
+                    <span className="text-sm text-amber-600 font-medium">
+                      {cartQuantity >= currentStock ? 'Max reached' : `${remainingStock} available to add`}
+                    </span>
+                  </div>
                   <div className="flex items-center space-x-4">
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={decreaseQuantity}
-                      disabled={quantity <= 1}
+                      disabled={quantity <= 1 || cartQuantity >= currentStock}
                       className="h-12 w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span className="text-xl">–</span>
                     </Button>
-                    <span className="text-2xl font-serif font-medium w-12 text-center text-red-900">
-                      {quantity}
-                    </span>
+                    
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={handleQuantityChange}
+                      min="1"
+                      max={remainingStock}
+                      disabled={cartQuantity >= currentStock}
+                      className="text-2xl font-serif font-medium w-20 text-center text-red-900 border border-amber-200 rounded-lg py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:bg-gray-100 disabled:text-gray-400"
+                    />
+                    
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={increaseQuantity}
-                      disabled={quantity >= currentStock}
+                      disabled={quantity >= remainingStock || cartQuantity >= currentStock}
                       className="h-12 w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <span className="text-xl">+</span>
                     </Button>
-                    <span className="text-sm text-gray-500">
-                      Max: {currentStock}
-                    </span>
                   </div>
+                  
+                  {cartQuantity >= currentStock && (
+                    <p className="text-xs text-red-600">
+                      You've reached the maximum available stock for this size
+                    </p>
+                  )}
+                  
+                  {quantity === remainingStock && remainingStock > 0 && cartQuantity < currentStock && (
+                    <p className="text-xs text-amber-600">
+                      Maximum quantity reached ({remainingStock} items available to add)
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Share button */}
+              <div className="flex items-center justify-between pt-2">
+                <ProductShare product={product} />
+              </div>
+
+              {/* Success Message */}
+              {showSuccessMessage && (
+                <div className="fixed bottom-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-in slide-in-from-right duration-300">
+                  ✅ Added {quantity} item{quantity > 1 ? 's' : ''} to cart!
                 </div>
               )}
 
@@ -680,7 +763,7 @@ export const ProductDetail = ({ product }: Props) => {
                 )}
               </div>
 
-              {/* Size Chart Section - ADD THIS */}
+              {/* Size Chart Section */}
               <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
                 <button 
                   onClick={() => setShowSizeChart(!showSizeChart)}
@@ -728,14 +811,14 @@ export const ProductDetail = ({ product }: Props) => {
                 )}
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons - Fixed with proper stock limits */}
               <div className="space-y-4 pt-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     onClick={onAddItem}
-                    disabled={!selectedSize || currentStock === 0}
+                    disabled={!selectedSize || currentStock === 0 || cartQuantity >= currentStock}
                     className={`flex-1 flex items-center justify-center gap-3 font-medium py-6 text-lg rounded-xl transition-all duration-300 shadow-md hover:shadow-xl group ${
-                      !selectedSize || currentStock === 0
+                      !selectedSize || currentStock === 0 || cartQuantity >= currentStock
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-amber-600 hover:bg-amber-700 text-white'
                     }`}
@@ -745,16 +828,19 @@ export const ProductDetail = ({ product }: Props) => {
                       <PlusIcon className="h-3 w-3 absolute -top-1 -right-1" />
                     </div>
                     <span className="tracking-wide">
-                      {!selectedSize ? 'Select Size' : currentStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                      {!selectedSize ? 'Select Size' : 
+                       currentStock === 0 ? 'Out of Stock' : 
+                       cartQuantity >= currentStock ? 'Max Reached' : 
+                       `Add ${quantity > 1 ? `${quantity} × ` : ''}to Cart`}
                     </span>
                   </Button>
 
                   <Button
                     onClick={onBuyNow}
-                    disabled={!selectedSize || currentStock === 0}
+                    disabled={!selectedSize || currentStock === 0 || cartQuantity >= currentStock}
                     variant="outline"
                     className={`flex-1 py-6 text-lg font-medium rounded-xl transition-all duration-300 ${
-                      !selectedSize || currentStock === 0
+                      !selectedSize || currentStock === 0 || cartQuantity >= currentStock
                         ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                         : 'border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300'
                     }`}

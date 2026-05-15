@@ -1,4 +1,4 @@
-// lib/user-service.ts - FIXED VERSION WITH PASSWORD RESET METHODS
+// lib/user-service.ts - ADD BLOCKED USER CHECK
 import { Prisma } from '@prisma/client'
 import { AuthUtils } from './auth-utils'
 import { prisma } from './prisma'
@@ -31,17 +31,18 @@ export class UserService {
     // Hash password
     const hashedPassword = await AuthUtils.hashPassword(password)
     
-    // Create user with cart (default isAdmin: false)
+    // Create user with cart (default isAdmin: false, isBlocked: false)
     const user = await prisma.user.create({
       data: {
         email,
         name,
         password: hashedPassword,
-        isAdmin: false, // Explicitly set to false
+        isAdmin: false,
+        isBlocked: false, // ✅ Add this
         cart: {
-          create: {} // Create empty cart
+          create: {}
         },
-        wishlist: { // Also create empty wishlist
+        wishlist: {
           create: {}
         }
       },
@@ -56,7 +57,7 @@ export class UserService {
     return userWithoutPassword
   }
   
-  // Login user
+  // Login user - ✅ ADDED BLOCKED USER CHECK
   static async login(email: string, password: string) {
     // Find user
     const user = await prisma.user.findUnique({
@@ -71,6 +72,20 @@ export class UserService {
       throw new Error('Invalid email or password')
     }
     
+    // ✅ CHECK IF USER IS BLOCKED
+    if (user.isBlocked) {
+      // Check if block is expired (24 hours)
+      if (user.blockedAt && Date.now() - new Date(user.blockedAt).getTime() > 24 * 60 * 60 * 1000) {
+        // Auto unblock after 24 hours
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { isBlocked: false, blockedAt: null }
+        });
+      } else {
+        throw new Error('Account is temporarily blocked. Please contact support.');
+      }
+    }
+    
     // Verify password
     const isValidPassword = await AuthUtils.verifyPassword(password, user.password)
     if (!isValidPassword) {
@@ -82,7 +97,53 @@ export class UserService {
     return userWithoutPassword
   }
   
-  // Get user profile
+  // ✅ NEW METHOD: Block a user (admin only)
+  static async blockUser(userId: string, reason?: string) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isBlocked: true,
+        blockedAt: new Date(),
+        blockReason: reason || 'Suspicious activity detected'
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isBlocked: true,
+        blockedAt: true,
+        blockReason: true
+      }
+    })
+    
+    // Log the block action
+    console.log(`🔒 User blocked: ${user.email} - Reason: ${user.blockReason}`);
+    
+    return user
+  }
+  
+  // ✅ NEW METHOD: Unblock a user (admin only)
+  static async unblockUser(userId: string) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isBlocked: false,
+        blockedAt: null,
+        blockReason: null
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isBlocked: true
+      }
+    })
+    
+    console.log(`🔓 User unblocked: ${user.email}`);
+    return user
+  }
+  
+  // Get user profile (with block status)
   static async getUserProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -182,26 +243,20 @@ export class UserService {
     return { success: true }
   }
   
-  // ============ NEW PASSWORD RESET METHODS ============
+  // ============ PASSWORD RESET METHODS ============
   
-  /**
-   * Request a password reset
-   */
   static async requestPasswordReset(email: string) {
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    // Don't reveal if user exists or not (security best practice)
     if (!user) {
-      return { success: true }; // Still return success to prevent email enumeration
+      return { success: true };
     }
 
-    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExp = new Date(Date.now() + 3600000); // 1 hour from now
+    const resetTokenExp = new Date(Date.now() + 3600000);
 
-    // Hash token before storing (security best practice)
     const hashedToken = crypto
       .createHash('sha256')
       .update(resetToken)
@@ -215,14 +270,11 @@ export class UserService {
       },
     });
 
-    // Send email with unhashed token
-    // Note: You'll need to create an email service or integrate with one
     try {
       const { EmailService } = await import('./email-service');
       await EmailService.sendPasswordResetEmail(email, resetToken);
     } catch (error) {
       console.error('Failed to send email:', error);
-      // In development, you might want to log the token for testing
       if (process.env.NODE_ENV === 'development') {
         console.log('RESET TOKEN (dev only):', resetToken);
       }
@@ -231,9 +283,6 @@ export class UserService {
     return { success: true };
   }
 
-  /**
-   * Validate if a reset token is valid and not expired
-   */
   static async validateResetToken(token: string) {
     const hashedToken = crypto
       .createHash('sha256')
@@ -252,9 +301,6 @@ export class UserService {
     return user;
   }
 
-  /**
-   * Reset password using a valid token
-   */
   static async resetPassword(token: string, newPassword: string) {
     const hashedToken = crypto
       .createHash('sha256')
@@ -274,7 +320,6 @@ export class UserService {
       throw new Error('Invalid or expired reset token');
     }
 
-    // Validate new password
     const passwordValidation = AuthUtils.validatePasswordFormat(newPassword);
     if (!passwordValidation.valid) {
       throw new Error(passwordValidation.message);
@@ -294,11 +339,8 @@ export class UserService {
     return { success: true };
   }
   
-  // ============ END OF NEW METHODS ============
+  // ============ ADMIN FUNCTIONS ============
   
-  // ADMIN FUNCTIONS
-  
-  // Make user admin
   static async makeAdmin(userId: string) {
     const user = await prisma.user.update({
       where: { id: userId },
@@ -308,6 +350,7 @@ export class UserService {
         email: true,
         name: true,
         isAdmin: true,
+        isBlocked: true,
         createdAt: true
       }
     })
@@ -315,7 +358,6 @@ export class UserService {
     return user
   }
   
-  // Remove admin privileges
   static async removeAdmin(userId: string) {
     const user = await prisma.user.update({
       where: { id: userId },
@@ -325,6 +367,7 @@ export class UserService {
         email: true,
         name: true,
         isAdmin: true,
+        isBlocked: true,
         createdAt: true
       }
     })
@@ -332,7 +375,6 @@ export class UserService {
     return user
   }
   
-  // Get all users (admin only)
   static async getAllUsers() {
     const users = await prisma.user.findMany({
       select: {
@@ -340,6 +382,7 @@ export class UserService {
         email: true,
         name: true,
         isAdmin: true,
+        isBlocked: true,
         createdAt: true,
         _count: {
           select: {
@@ -353,7 +396,6 @@ export class UserService {
     return users
   }
   
-  // Get user by ID (admin only)
   static async getUserById(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -362,6 +404,9 @@ export class UserService {
         email: true,
         name: true,
         isAdmin: true,
+        isBlocked: true,
+        blockedAt: true,
+        blockReason: true,
         createdAt: true,
         orders: {
           include: {
@@ -389,9 +434,7 @@ export class UserService {
     return user
   }
   
-  // Delete user (admin only - with cleanup)
   static async deleteUser(userId: string) {
-    // First, check if user exists
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -409,38 +452,29 @@ export class UserService {
       throw new Error('User not found')
     }
     
-    // Check if user has pending orders
     if (user.orders.length > 0) {
       throw new Error('Cannot delete user with pending orders')
     }
     
-    // Delete user and associated data
     await prisma.$transaction([
-      // Delete user's cart items
       prisma.cartItem.deleteMany({
         where: { cart: { userId } }
       }),
-      // Delete user's cart
       prisma.cart.deleteMany({
         where: { userId }
       }),
-      // Delete user's wishlist items
       prisma.wishlistItem.deleteMany({
         where: { wishlist: { userId } }
       }),
-      // Delete user's wishlist
       prisma.wishlist.deleteMany({
         where: { userId }
       }),
-      // Delete user's addresses
       prisma.address.deleteMany({
         where: { userId }
       }),
-      // Delete user's profile
       prisma.userProfile.deleteMany({
         where: { userId }
       }),
-      // Finally delete the user
       prisma.user.delete({
         where: { id: userId }
       })
@@ -449,7 +483,6 @@ export class UserService {
     return { success: true, message: 'User deleted successfully' }
   }
   
-  // Check if user is admin
   static async checkIsAdmin(userId: string): Promise<boolean> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -459,11 +492,9 @@ export class UserService {
     return user?.isAdmin || false
   }
   
-  // Search users (admin only) - FIXED VERSION
   static async searchUsers(query: string, page: number = 1, limit: number = 20) {
     const skip = (page - 1) * limit
     
-    // FIXED: Use Prisma.QueryMode type for mode property
     const where = {
       OR: [
         { email: { contains: query, mode: 'insensitive' as Prisma.QueryMode } },
@@ -479,6 +510,7 @@ export class UserService {
           email: true,
           name: true,
           isAdmin: true,
+          isBlocked: true,
           createdAt: true,
           _count: {
             select: {

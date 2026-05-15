@@ -24,7 +24,7 @@ const values = [
     icon: "✦",
     title: "Radical Transparency",
     description:
-      "We believe you deserve to know exactly what you are wearing. Every Everesté piece comes with full disclosure: fibre origin, artisan region, material composition, and care guidance. Luxury should never be mysterious about what matters.",
+      "We believe you deserve to know exactly what you are wearing. Every Himkash piece comes with full disclosure: fibre origin, artisan region, material composition, and care guidance. Luxury should never be mysterious about what matters.",
   },
   {
     icon: "✦",
@@ -168,8 +168,7 @@ export default function AboutPage() {
               </p>
               <p>
                 From Lisbon, we curate, guide, and bring these pieces to you —
-                with every detail of the process documented and shared. Because
-                at Everesté, transparency is not a feature. It is a foundation.
+                with every detail of the process documented and shared. 
               </p>
             </div>
           </div>

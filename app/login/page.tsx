@@ -1,11 +1,11 @@
-// app/login/page.tsx - FIXED VERSION WITH HOME BUTTON AND PASSWORD VISIBILITY
+// app/login/page.tsx - UPDATED WITH SECURITY ERROR HANDLING
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCartStore } from '@/store/cart-store';
-import { Home, Eye, EyeOff } from 'lucide-react';
+import { Home, Eye, EyeOff, AlertCircle, Clock, Shield } from 'lucide-react';
 
 // Inner component that uses useSearchParams
 function LoginPageContent() {
@@ -18,6 +18,8 @@ function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorType, setErrorType] = useState<'auth' | 'rate-limit' | 'blocked' | 'network'>('auth');
+  const [countdown, setCountdown] = useState(0);
   const { mergeItems } = useCartStore();
   
   const callbackUrl = searchParams.get('callbackUrl') || '/';
@@ -34,14 +36,30 @@ function LoginPageContent() {
     const pendingCart = localStorage.getItem('pending-checkout-items');
     if (pendingCart && callbackUrl.includes('checkout')) {
       console.log('Cart items pending merge after login');
-      // You could show a message to the user
     }
   }, [router, callbackUrl]);
+
+  // Handle countdown timer for rate limiting
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
+    // Basic email validation before sending
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      setErrorType('auth');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -55,10 +73,28 @@ function LoginPageContent() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Invalid credentials');
+        // Handle different error types
+        if (response.status === 429) {
+          setErrorType('rate-limit');
+          // Try to extract wait time from error message
+          const match = data.error.match(/(\d+)/);
+          if (match) {
+            setCountdown(parseInt(match[0]));
+          }
+          throw new Error(data.error || 'Too many login attempts');
+        } else if (response.status === 403) {
+          setErrorType('blocked');
+          throw new Error(data.error || 'Account temporarily blocked');
+        } else if (response.status === 401) {
+          setErrorType('auth');
+          throw new Error(data.error || 'Invalid email or password');
+        } else {
+          setErrorType('auth');
+          throw new Error(data.error || 'Login failed');
+        }
       }
 
-      // Store user data in localStorage (for client-side)
+      // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify(data.user));
       
       // Clear any pending cart items
@@ -70,7 +106,6 @@ function LoginPageContent() {
         try {
           const pendingItems = JSON.parse(pendingCart);
           
-          // Call API to merge cart on server
           await fetch('/api/cart/merge', {
             method: 'POST',
             headers: {
@@ -79,23 +114,14 @@ function LoginPageContent() {
             body: JSON.stringify({ items: pendingItems })
           });
           
-          // Clear pending cart
           localStorage.removeItem('pendingCart');
         } catch (mergeError) {
           console.error('Cart merge error:', mergeError);
         }
       }
       
-      // Show success message
-      alert('Login successful!');
-      
       // ✅ FORCE PAGE REFRESH to update all components
-      if (callbackUrl) {
-        // Full page refresh - this will update user icon immediately
-        window.location.href = callbackUrl;
-      } else {
-        window.location.href = '/';
-      }
+      window.location.href = callbackUrl;
 
     } catch (err: any) {
       setError(err.message);
@@ -103,8 +129,78 @@ function LoginPageContent() {
     }
   };
 
+  // Render different error messages based on type
+  const renderError = () => {
+    if (!error) return null;
+    
+    switch (errorType) {
+      case 'rate-limit':
+        return (
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+            <div className="flex items-start gap-3">
+              <Clock className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-yellow-800">Too many attempts</p>
+                <p className="text-sm text-yellow-700 mt-1">{error}</p>
+                {countdown > 0 && (
+                  <p className="text-xs text-yellow-600 mt-2">
+                    Please wait {countdown} seconds before trying again
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'blocked':
+        return (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+            <div className="flex items-start gap-3">
+              <Shield className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800">Account Temporarily Blocked</p>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+                <p className="text-xs text-red-600 mt-2">
+                  Please contact support if you believe this is an error.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+        
+      case 'network':
+        return (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800">Network Error</p>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+                <p className="text-xs text-red-600 mt-2">
+                  Please check your connection and try again.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+        
+      default:
+        return (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-red-800">Login Failed</p>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 py-12 px-4 sm:px-6 lg:px-8 relative">
       {/* Home Button */}
       <Link 
         href="/" 
@@ -117,38 +213,25 @@ function LoginPageContent() {
       <div className="max-w-md w-full">
         {/* Logo/Header */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-red-900 mb-2">
-            {callbackUrl.includes('checkout') ? 'Login to Checkout' : 'Welcome back'}
+          <h1 className="text-4xl font-serif font-bold text-red-900 mb-2">
+            {callbackUrl.includes('checkout') ? 'Login to Checkout' : 'Welcome Back'}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-red-800">
             {callbackUrl.includes('checkout') 
               ? 'Sign in to complete your purchase' 
-              : 'Sign in to your account to continue'}
+              : 'Sign in to your account'}
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-amber-100/50">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {renderError()}
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-red-900 mb-2">
                 Email address
               </label>
               <div className="relative">
@@ -166,7 +249,8 @@ function LoginPageContent() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition"
+                  disabled={loading || countdown > 0}
+                  className="block w-full pl-10 pr-3 py-3 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition bg-white/50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder="Enter your email"
                 />
               </div>
@@ -175,10 +259,10 @@ function LoginPageContent() {
             {/* Password Field with Visibility Toggle */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium text-red-900">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
+                <Link href="/forgot-password" className="text-sm text-amber-600 hover:text-amber-700">
                   Forgot password?
                 </Link>
               </div>
@@ -196,7 +280,8 @@ function LoginPageContent() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition"
+                  disabled={loading || countdown > 0}
+                  className="block w-full pl-10 pr-10 py-3 border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none transition bg-white/50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder="Enter your password"
                 />
                 <button
@@ -217,8 +302,8 @@ function LoginPageContent() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-black bg-amber-600 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:-translate-y-0.5"
+              disabled={loading || countdown > 0}
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (
                 <>
@@ -228,6 +313,8 @@ function LoginPageContent() {
                   </svg>
                   Signing in...
                 </>
+              ) : countdown > 0 ? (
+                `Wait ${countdown}s...`
               ) : (
                 'Sign in'
               )}
@@ -236,17 +323,17 @@ function LoginPageContent() {
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-amber-200"></div>
               </div>
             </div>  
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-red-800">
               Don't have an account?{' '}
               <Link 
                 href={`/signup?callbackUrl=${encodeURIComponent(callbackUrl)}`} 
-                className="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+                className="font-medium text-amber-600 hover:text-amber-700 transition-colors duration-200"
               >
                 Sign up now
               </Link>
@@ -254,10 +341,10 @@ function LoginPageContent() {
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Security Notice */}
         <div className="mt-8 text-center">
-          <p className="text-xs text-gray-500">
-            © {new Date().getFullYear()} Your Company. All rights reserved.
+          <p className="text-xs text-red-600">
+            🔒 Protected by rate limiting and security monitoring
           </p>
         </div>
       </div>
@@ -269,8 +356,7 @@ function LoginPageContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 relative">
-        {/* Home Button in loading state too */}
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 relative">
         <Link 
           href="/" 
           className="absolute top-4 left-4 sm:top-6 sm:left-6 bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group z-10"
@@ -279,8 +365,8 @@ export default function LoginPage() {
           <Home className="w-5 h-5 text-gray-600 group-hover:text-amber-600" />
         </Link>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading login...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+          <p className="mt-4 text-red-800">Loading login...</p>
         </div>
       </div>
     }>

@@ -1,9 +1,10 @@
-// app/signup/page.tsx
+// app/signup/page.tsx - FIXED: Eye icon ALWAYS visible like login page
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home } from 'lucide-react'; // Make sure to install lucide-react
+import { Home, Eye, EyeOff, AlertCircle, Shield } from 'lucide-react';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -11,8 +12,10 @@ export default function SignupPage() {
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorType, setErrorType] = useState<'spam' | 'auth' | 'network'>('auth');
   const [success, setSuccess] = useState('');
   const [showThankYou, setShowThankYou] = useState(false);
   const [passwordRequirements, setPasswordRequirements] = useState({
@@ -58,7 +61,7 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
+    setErrorType('auth');
 
     // Client-side validation
     if (!formData.email || !formData.email.includes('@')) {
@@ -94,7 +97,6 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle different error types
         let errorMessage = 'Something went wrong';
         if (data.error) {
           if (typeof data.error === 'string') {
@@ -103,6 +105,12 @@ export default function SignupPage() {
             errorMessage = JSON.stringify(data.error);
           }
         }
+        
+        // Detect spam error messages
+        if (errorMessage.includes('valid email') || errorMessage.includes('valid name')) {
+          setErrorType('spam');
+        }
+        
         throw new Error(errorMessage);
       }
 
@@ -111,13 +119,12 @@ export default function SignupPage() {
       setSuccess('Account created successfully!');
       setFormData({ name: '', email: '', password: '' });
       
-      // Redirect after 3 seconds (when thank you message disappears)
+      // Redirect after 3 seconds
       setTimeout(() => {
         window.location.href = '/login';
       }, 3000);
 
     } catch (err: any) {
-      // Show user-friendly error message
       const errorMessage = err.message || 'Failed to create account';
       setError(errorMessage);
       console.error('Signup error:', err);
@@ -140,8 +147,39 @@ export default function SignupPage() {
 
   const passwordStrength = getPasswordStrength();
 
+  // Render error message with appropriate styling
+  const renderError = () => {
+    if (!error) return null;
+    
+    if (errorType === 'spam') {
+      return (
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-md">
+          <div className="flex items-start gap-2">
+            <Shield className="h-5 w-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium">Unable to create account</p>
+              <p className="text-sm mt-1">{error}</p>
+              <p className="text-xs mt-2 text-amber-600">
+                Please use a real email address and your real name.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-5 w-5" />
+          <span>{error}</span>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 py-12 px-4 sm:px-6 lg:px-8 relative">
       {/* Home Button */}
       <Link 
         href="/" 
@@ -175,12 +213,12 @@ export default function SignupPage() {
 
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-red-900">
+          <h2 className="mt-6 text-center text-3xl font-serif font-bold text-red-900">
             Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-red-800">
             Or{' '}
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/login" className="font-medium text-amber-600 hover:text-amber-700">
               sign in to your existing account
             </Link>
           </p>
@@ -189,18 +227,9 @@ export default function SignupPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
             {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  {error}
-                </div>
-              </div>
-            )}
+            {renderError()}
 
-            {/* Success Message (in case you still want to show it) */}
+            {/* Success Message */}
             {success && !showThankYou && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
                 <div className="flex items-center">
@@ -214,7 +243,7 @@ export default function SignupPage() {
 
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-red-900 mb-1">
                 Full Name
               </label>
               <input
@@ -224,14 +253,14 @@ export default function SignupPage() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-amber-200 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:z-10 sm:text-sm bg-white/50"
                 placeholder="John Doe"
               />
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-red-900 mb-1">
                 Email address
               </label>
               <input
@@ -242,14 +271,14 @@ export default function SignupPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none relative block w-full px-3 py-2 border border-amber-200 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:z-10 sm:text-sm bg-white/50"
                 placeholder="you@example.com"
               />
             </div>
 
-            {/* Password Field */}
+            {/* Password Field with Visibility Toggle - Eye ALWAYS visible (like login page) */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-red-900 mb-1">
                 Password
                 {formData.password && (
                   <span className={`ml-2 text-sm font-medium ${passwordStrength.color}`}>
@@ -257,22 +286,42 @@ export default function SignupPage() {
                   </span>
                 )}
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.password}
-                onChange={handlePasswordChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  value={formData.password}
+                  onChange={handlePasswordChange}
+                  className="appearance-none relative block w-full pl-10 pr-10 py-2 border border-amber-200 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:z-10 sm:text-sm bg-white/50"
+                  placeholder="••••••••"
+                />
+                {/* Eye icon ALWAYS visible - same as login page */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                  )}
+                </button>
+              </div>
               
-              {/* Password Requirements */}
-              {formData.password && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Password must contain:</p>
+              {/* Password Requirements - Only shows after typing starts */}
+              {formData.password.length > 0 && (
+                <div className="mt-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
+                  <p className="text-sm font-medium text-red-900 mb-2">Password must contain:</p>
                   <ul className="space-y-1 text-sm">
                     <li className={`flex items-center ${passwordRequirements.length ? 'text-green-600' : 'text-red-600'}`}>
                       <svg className={`w-4 h-4 mr-2 ${passwordRequirements.length ? 'text-green-500' : 'text-red-500'}`} fill="currentColor" viewBox="0 0 20 20">
@@ -334,7 +383,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-black bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             {loading ? (
               <span className="flex items-center">
@@ -350,13 +399,13 @@ export default function SignupPage() {
           </button>
 
           {/* Privacy Notice */}
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-xs text-red-800 text-center">
             By signing up, you agree to our Terms of Service and Privacy Policy
           </p>
         </form>
       </div>
 
-      {/* Add animation styles */}
+      {/* Animation styles */}
       <style jsx>{`
         @keyframes fadeIn {
           from {

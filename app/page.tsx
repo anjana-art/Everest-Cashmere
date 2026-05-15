@@ -239,7 +239,7 @@ export default async function Home() {
       {/* Women's Collection - NO Coming Soon badge */}
       <NavigationLink href="/clothing/women" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
         <Image
-          src="/ladies_lay_flat_cashmere_sweater.webp"
+          src="/ladies_beige_lay_flat_cashmere_sweater.webp"
           alt="Women's Collection"
           fill
           className="object-contain transition-transform duration-300 group-hover:scale-105"
