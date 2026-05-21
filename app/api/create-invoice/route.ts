@@ -1,4 +1,4 @@
-// app/api/create-invoice/route.ts - ORIGINAL (NO NIF)
+// app/api/create-invoice/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -24,6 +24,28 @@ interface CreateInvoiceRequest {
   items: InvoiceItem[];
   orderId?: string;
   observations?: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Fetch the exact tax name from InvoiceXpress for a given rate.
+// Falls back to 'IVA23' if the API call fails.
+// ─────────────────────────────────────────────────────────────
+async function getTaxName(account: string, apiKey: string, vatRate: number): Promise<string> {
+  try {
+    const res = await fetch(`https://${account}/taxes.json?api_key=${apiKey}`);
+    const data = await res.json();
+    const taxes: any[] = data.taxes || [];
+    const match = taxes.find(t => Number(t.value) === vatRate);
+    if (match) {
+      console.log(`🧾 Resolved tax name for ${vatRate}%: "${match.name}"`);
+      return match.name;
+    }
+  } catch (err) {
+    console.error('⚠️ Could not fetch tax names from InvoiceXpress:', err);
+  }
+  const fallback = vatRate === 0 ? 'Isento' : 'IVA23';
+  console.warn(`⚠️ No tax name found for ${vatRate}%, using fallback: "${fallback}"`);
+  return fallback;
 }
 
 export async function POST(request: NextRequest) {
@@ -66,6 +88,14 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // ── Resolve tax names for all unique VAT rates in this order ──
+    const uniqueRates = [...new Set(items.map(i => i.vat_rate ?? 23))];
+    const taxNames: Record<number, string> = {};
+    for (const rate of uniqueRates) {
+      taxNames[rate] = await getTaxName(account, apiKey, rate);
+    }
+    console.log('🧾 Tax name map:', taxNames);
 
     // ✅ FIND OR CREATE CLIENT
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -127,7 +157,7 @@ export async function POST(request: NextRequest) {
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    const invoicePayload = buildInvoicePayload(client, items, orderId, observations);
+    const invoicePayload = buildInvoicePayload(client, items, orderId, observations, taxNames);
     
     console.log('📦 INVOICE PAYLOAD:');
     console.log(JSON.stringify(invoicePayload, null, 2));
@@ -163,7 +193,7 @@ export async function POST(request: NextRequest) {
       if (errorMessage.includes('Client not found') && clientId) {
         console.log('🔄 Retrying invoice with client ID...');
         
-        const retryPayload = buildInvoicePayload(client, items, orderId, observations);
+        const retryPayload = buildInvoicePayload(client, items, orderId, observations, taxNames);
         const retryResponse = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -259,7 +289,8 @@ function buildInvoicePayload(
   client: InvoiceClient, 
   items: InvoiceItem[], 
   orderId?: string, 
-  observations?: string
+  observations?: string,
+  taxNames: Record<number, string> = { 23: 'IVA23', 0: 'Isento' }
 ) {
   const today = new Date();
   const dueDate = new Date();
@@ -286,8 +317,9 @@ function buildInvoicePayload(
       },
       
       items: items.map(item => {
-        const vatRate = item.vat_rate || 23;
+        const vatRate = item.vat_rate ?? 23;
         const basePrice = calculateBasePrice(item.unit_price, vatRate);
+        const taxName = taxNames[vatRate] ?? 'IVA23';
         
         return {
           name: item.name.trim(),
@@ -295,7 +327,7 @@ function buildInvoicePayload(
           quantity: item.quantity,
           unit_price: Number(basePrice).toFixed(4),
           tax: {
-            name:`IVA23`,
+            name: taxName,
             value: vatRate,
           },
         };
@@ -336,6 +368,11 @@ function formatApiError(errorData: any): string {
         e.error?.includes('Cliente não é válido')
       );
       if (clientError) return 'Client not found in InvoiceXpress. Client will be created automatically on next attempt.';
+
+      const taxError = errors.find((e: any) =>
+        e.error?.includes('category') || e.error?.includes('NilClass')
+      );
+      if (taxError) return 'Tax configuration error: tax name does not match any tax in your InvoiceXpress account. Check Settings → Taxes.';
       
       return errors[0]?.error || 'Invoice creation failed';
     }
