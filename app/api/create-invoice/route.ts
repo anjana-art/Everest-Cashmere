@@ -1,4 +1,4 @@
-// app/api/create-invoice/route.ts - ENHANCED WITH BETTER LOGGING
+// app/api/create-invoice/route.ts - WITH FIND-OR-CREATE CLIENT FUNCTIONALITY
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -38,16 +38,13 @@ export async function POST(request: NextRequest) {
     const body: CreateInvoiceRequest = await request.json();
     const { client, items, orderId, observations } = body;
 
-    // Detailed request logging
     console.log('📋 REQUEST DETAILS:');
     console.log(`   Order ID: ${orderId || 'N/A'}`);
     console.log(`   Client Name: ${client.name}`);
     console.log(`   Client Email: ${client.email}`);
     console.log(`   Client NIF: ${client.vat_number || 'Not provided'}`);
     console.log(`   Items Count: ${items.length}`);
-    console.log(`   Items: ${JSON.stringify(items.map(i => ({ name: i.name, qty: i.quantity, price: i.unit_price })))}`);
-    
-    // Validation
+
     const validationError = validateRequest(client, items);
     if (validationError) {
       console.error('❌ VALIDATION ERROR:', validationError);
@@ -63,15 +60,77 @@ export async function POST(request: NextRequest) {
     console.log('🔑 INVOICEXPRESS CONFIG:');
     console.log(`   Account: ${account}`);
     console.log(`   API Key: ${apiKey ? '✓ Present' : '✗ Missing'}`);
-    console.log(`   API Key Length: ${apiKey?.length || 0}`);
 
     if (!apiKey || !account) {
-      console.error('❌ MISSING CREDENTIALS: API Key or Account missing');
+      console.error('❌ MISSING CREDENTIALS');
       return NextResponse.json(
         { success: false, error: 'Invoice service not configured', timestamp: new Date().toISOString() },
         { status: 500 }
       );
     }
+
+    // ✅ FIND OR CREATE CLIENT
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔍 CHECKING/ CREATING CLIENT IN INVOICEXPRESS...');
+    
+    let clientId: string | null = null;
+    
+    try {
+      // Step 1: Search for existing client by email
+      const searchUrl = `https://${account}/clients/search.json?api_key=${apiKey}&query=${encodeURIComponent(client.email)}`;
+      console.log(`🔍 Searching for client: ${client.email}`);
+      
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+      
+      if (searchData.clients && searchData.clients.length > 0) {
+        clientId = searchData.clients[0].id;
+        console.log(`✅ Found existing client! ID: ${clientId}`);
+        console.log(`   Name: ${searchData.clients[0].name}`);
+        console.log(`   Email: ${searchData.clients[0].email}`);
+      } else {
+        // Step 2: Create new client if not found
+        console.log(`📝 Client not found. Creating new client...`);
+        
+        const createClientPayload = {
+          client: {
+            name: client.name.trim(),
+            email: client.email.trim(),
+            fiscal_id: client.vat_number?.trim() || '',
+            address: client.address?.trim() || '',
+            city: client.city?.trim() || '',
+            postal_code: client.postal_code?.trim() || '',
+            phone: client.phone?.trim() || '',
+          }
+        };
+        
+        console.log('📦 Client Payload:', JSON.stringify(createClientPayload, null, 2));
+        
+        const createUrl = `https://${account}/clients.json?api_key=${apiKey}`;
+        const createRes = await fetch(createUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(createClientPayload),
+        });
+        
+        const createData = await createRes.json();
+        
+        if (createRes.ok && createData.client) {
+          clientId = createData.client.id;
+          console.log(`✅ New client created! ID: ${clientId}`);
+          console.log(`   Name: ${createData.client.name}`);
+          console.log(`   Email: ${createData.client.email}`);
+        } else {
+          console.error('❌ Failed to create client:', createData);
+          // Continue anyway - maybe invoice will still work
+        }
+      }
+    } catch (clientError) {
+      console.error('⚠️ Client operation error:', clientError);
+      // Continue - the invoice might still work with the provided client info
+    }
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     const invoicePayload = buildInvoicePayload(client, items, orderId, observations);
     
@@ -79,7 +138,6 @@ export async function POST(request: NextRequest) {
     console.log(JSON.stringify(invoicePayload, null, 2));
 
     const url = `https://${account}/invoices.json?api_key=${apiKey}`;
-    console.log(`🌐 API URL: ${url.replace(apiKey, 'HIDDEN')}`);
     
     const apiStartTime = Date.now();
     const response = await fetch(url, {
@@ -93,37 +151,40 @@ export async function POST(request: NextRequest) {
     const apiDuration = Date.now() - apiStartTime;
 
     console.log(`⏱️ API Response Time: ${apiDuration}ms`);
-    console.log(`📡 Response Status: ${response.status} ${response.statusText}`);
+    console.log(`📡 Response Status: ${response.status}`);
 
     const data = await response.json();
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔵🔵🔵 INVOICEXPRESS API RESPONSE 🔵🔵🔵');
+    console.log('🔵 INVOICEXPRESS API RESPONSE 🔵');
     console.log(`Status: ${response.status}`);
-    console.log(`Success: ${response.ok ? '✅' : '❌'}`);
     console.log('Response Data:');
     console.log(JSON.stringify(data, null, 2));
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     if (!response.ok) {
-      // Enhanced error logging
-      console.error('❌ INVOICEXPRESS API ERROR:');
-      console.error(`   Status: ${response.status}`);
-      console.error(`   Status Text: ${response.statusText}`);
+      let errorMessage = formatApiError(data);
       
-      if (data.errors) {
-        console.error('   Error Details:');
-        if (Array.isArray(data.errors)) {
-          data.errors.forEach((err: any, idx: number) => {
-            console.error(`      ${idx + 1}. ${err.error}`);
-          });
-        } else {
-          console.error(`      ${JSON.stringify(data.errors)}`);
+      // If client error, try to create client first then retry invoice
+      if (errorMessage.includes('Client not found') && clientId) {
+        console.log('🔄 Retrying invoice with client ID...');
+        
+        // Retry invoice creation (client now exists)
+        const retryPayload = buildInvoicePayload(client, items, orderId, observations);
+        const retryResponse = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(retryPayload),
+        });
+        const retryData = await retryResponse.json();
+        
+        if (retryResponse.ok) {
+          console.log('✅ Invoice created on retry!');
+          return createSuccessResponse(retryData, startTime);
         }
       }
       
-      const errorMessage = formatApiError(data);
-      console.error(`   Formatted Error: ${errorMessage}`);
+      console.error('❌ INVOICE ERROR:', errorMessage);
       
       return NextResponse.json(
         { 
@@ -136,48 +197,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const invoiceData = data.invoice;
-    const invoiceNumber = invoiceData.number || invoiceData.sequence_number || `DRAFT-${invoiceData.id}`;
-    const pdfUrl = invoiceData.pdf_url || invoiceData.permalink;
-    
-    console.log('✅ INVOICE CREATED SUCCESSFULLY:');
-    console.log(`   Invoice ID: ${invoiceData.id}`);
-    console.log(`   Invoice Number: ${invoiceNumber}`);
-    console.log(`   Status: ${invoiceData.status}`);
-    console.log(`   PDF URL: ${pdfUrl || 'Not available'}`);
-    console.log(`   Total: ${invoiceData.total} ${invoiceData.currency || 'EUR'}`);
-    
-    const totalDuration = Date.now() - startTime;
-    console.log(`⏱️ Total Request Time: ${totalDuration}ms`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    const responseData = {
-      success: true,
-      invoice: {
-        id: invoiceData.id,
-        number: invoiceNumber,
-        status: invoiceData.status,
-        date: invoiceData.date,
-        due_date: invoiceData.due_date,
-        subtotal: invoiceData.before_taxes,
-        tax: invoiceData.taxes,
-        total: invoiceData.total,
-        pdf_url: pdfUrl,
-        invoice_url: `/invoice/${invoiceData.id}`,
-      },
-      timestamp: new Date().toISOString()
-    };
-    
-    return NextResponse.json(responseData);
+    return createSuccessResponse(data, startTime);
 
   } catch (error: any) {
     const totalDuration = Date.now() - startTime;
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.error('❌ UNEXPECTED ERROR:');
-    console.error(`   Message: ${error.message}`);
-    console.error(`   Stack: ${error.stack}`);
-    console.error(`   Duration: ${totalDuration}ms`);
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('❌ UNEXPECTED ERROR:', error.message);
     
     return NextResponse.json(
       { 
@@ -191,37 +215,51 @@ export async function POST(request: NextRequest) {
   }
 }
 
+function createSuccessResponse(data: any, startTime: number) {
+  const invoiceData = data.invoice;
+  const invoiceNumber = invoiceData.number || invoiceData.sequence_number || `DRAFT-${invoiceData.id}`;
+  const pdfUrl = invoiceData.pdf_url || invoiceData.permalink;
+  
+  console.log('✅ INVOICE CREATED SUCCESSFULLY:');
+  console.log(`   Invoice ID: ${invoiceData.id}`);
+  console.log(`   Invoice Number: ${invoiceNumber}`);
+  console.log(`   PDF URL: ${pdfUrl || 'Not available'}`);
+  console.log(`   Total: ${invoiceData.total} EUR`);
+  console.log(`⏱️ Total Time: ${Date.now() - startTime}ms`);
+
+  return NextResponse.json({
+    success: true,
+    invoice: {
+      id: invoiceData.id,
+      number: invoiceNumber,
+      status: invoiceData.status,
+      date: invoiceData.date,
+      due_date: invoiceData.due_date,
+      subtotal: invoiceData.before_taxes,
+      tax: invoiceData.taxes,
+      total: invoiceData.total,
+      pdf_url: pdfUrl,
+      invoice_url: `/invoice/${invoiceData.id}`,
+    },
+    timestamp: new Date().toISOString()
+  });
+}
+
 function validateRequest(client: InvoiceClient, items: InvoiceItem[]): string | null {
-  if (!client.name || client.name.trim() === '') {
-    return 'Client name is required';
-  }
-  
-  if (!client.email || !isValidEmail(client.email)) {
-    return 'Valid client email is required';
-  }
-  
-  if (!items || items.length === 0) {
-    return 'At least one item is required';
-  }
+  if (!client.name || client.name.trim() === '') return 'Client name is required';
+  if (!client.email || !isValidEmail(client.email)) return 'Valid client email is required';
+  if (!items || items.length === 0) return 'At least one item is required';
   
   for (const item of items) {
-    if (!item.name || item.name.trim() === '') {
-      return 'All items must have a name';
-    }
-    if (item.quantity <= 0) {
-      return 'Item quantity must be greater than zero';
-    }
-    if (item.unit_price <= 0) {
-      return 'Item price must be greater than zero';
-    }
+    if (!item.name || item.name.trim() === '') return 'All items must have a name';
+    if (item.quantity <= 0) return 'Item quantity must be greater than zero';
+    if (item.unit_price <= 0) return 'Item price must be greater than zero';
   }
-  
   return null;
 }
 
 function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function buildInvoicePayload(
@@ -285,18 +323,10 @@ function formatDateToPortuguese(date: Date): string {
 
 function buildObservations(orderId?: string, customObservations?: string): string {
   const observations = [];
-  
-  if (orderId) {
-    observations.push(`Order ID: ${orderId}`);
-  }
-  
-  if (customObservations) {
-    observations.push(customObservations);
-  }
-  
+  if (orderId) observations.push(`Order ID: ${orderId}`);
+  if (customObservations) observations.push(customObservations);
   observations.push('Taxa de IVA 23% incluída no preço.');
   observations.push('Thank you for shopping with us!');
-  
   return observations.join(' | ');
 }
 
@@ -305,50 +335,25 @@ function formatApiError(errorData: any): string {
     if (Array.isArray(errorData.errors)) {
       const errors = errorData.errors;
       
-      // Check for rate limit error
       const rateLimitError = errors.find((e: any) => 
-        e.error?.includes('limite de criação') || 
-        e.error?.includes('document limit')
+        e.error?.includes('limite de criação') || e.error?.includes('document limit')
       );
-      if (rateLimitError) {
-        return 'Invoice limit reached. Please upgrade your plan or try again next month.';
-      }
+      if (rateLimitError) return 'Invoice limit reached. Please upgrade your plan or try again next month.';
       
-      // Check for client errors
       const clientError = errors.find((e: any) => 
         e.error?.includes('Cliente não é válido')
       );
-      if (clientError) {
-        return 'Client not found in InvoiceXpress. Please create the client first.';
-      }
+      if (clientError) return 'Client not found in InvoiceXpress. Client will be created automatically on next attempt.';
       
-      // Check for fiscal ID errors
       const fiscalError = errors.find((e: any) => 
         e.error?.includes('Fiscal não é válido')
       );
-      if (fiscalError) {
-        return 'Invalid NIF/Fiscal ID. Please check the tax number.';
-      }
+      if (fiscalError) return 'Invalid NIF/Fiscal ID. Please check the tax number.';
       
-      // Return first error
       return errors[0]?.error || 'Invoice creation failed';
     }
-    
-    if (errorData.errors.client_name) return 'Client name is invalid';
-    if (errorData.errors.client_email) return 'Client email is invalid';
-    if (errorData.errors.items) return 'Items are invalid';
-    if (errorData.errors.tax) return 'VAT rate is not configured. Check your tax settings.';
   }
   
-  if (errorData?.message) {
-    if (errorData.message.includes('sequence')) {
-      return 'Invoice sequence not configured. Please contact support.';
-    }
-    if (errorData.message.includes('tax')) {
-      return 'VAT rate not found. Please check your tax settings in InvoiceXpress.';
-    }
-    return errorData.message;
-  }
-  
+  if (errorData?.message) return errorData.message;
   return 'Failed to create invoice. Please try again.';
 }
