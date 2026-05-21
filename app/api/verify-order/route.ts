@@ -1,4 +1,4 @@
-// app/api/verify-order/route.ts - ORIGINAL + DEBUG LOGS ONLY
+// app/api/verify-order/route.ts - ORIGINAL + DEBUG LOGS ONLY (WITH NULL CHECKS)
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -67,7 +67,6 @@ export async function POST(request: Request) {
         console.log('🔵 Creating invoice as backup...');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
-        // ✅ ADDED DEBUG LOGGING
         console.log('📄 Calling createInvoiceForOrder with:');
         console.log(`   Order ID: ${existingOrder.id}`);
         console.log(`   Order Number: ${existingOrder.orderNumber}`);
@@ -86,13 +85,18 @@ export async function POST(request: Request) {
           include: { items: true }
         });
         
-        console.log(`📄 After invoice creation - Invoice ID: ${updatedExistingOrder.invoiceId || 'STILL NULL'}`);
-        console.log(`📄 After invoice creation - Invoice Number: ${updatedExistingOrder.invoiceNumber || 'STILL NULL'}`);
+        // ✅ Fixed: Added null check for updatedExistingOrder
+        if (updatedExistingOrder) {
+          console.log(`📄 After invoice creation - Invoice ID: ${updatedExistingOrder.invoiceId || 'STILL NULL'}`);
+          console.log(`📄 After invoice creation - Invoice Number: ${updatedExistingOrder.invoiceNumber || 'STILL NULL'}`);
+        } else {
+          console.log('⚠️ Could not refetch order after invoice creation');
+        }
         
         return NextResponse.json({
           success: true,
           message: 'Order found (webhook already processed)',
-          order: updatedExistingOrder,
+          order: updatedExistingOrder || existingOrder,
           source: 'webhook_already_processed'
         });
       } else {
@@ -134,8 +138,6 @@ export async function POST(request: Request) {
     console.log(`   ID: ${session.id}`);
     console.log(`   Payment status: ${session.payment_status}`);
     console.log(`   Amount total: ${session.amount_total}`);
-    
-    // ✅ ADDED: Log NIF from session metadata
     console.log(`📋 Session metadata NIF: ${session.metadata?.nif || 'Not provided'}`);
     
     if (session.payment_status !== 'paid') {
@@ -161,7 +163,7 @@ export async function POST(request: Request) {
     
     console.log(`📦 Products in database: ${allProducts.length}`);
     
-    // Create order items - NO 'description' field
+    // Create order items
     const orderItems = lineItems.map((item: any) => {
       const description = item.description || '';
       
@@ -258,7 +260,7 @@ export async function POST(request: Request) {
         })
       : Prisma.DbNull;
     
-    // Create order in database (BACKUP CREATION)
+    // Create order in database
     const newOrder = await prisma.order.create({
       data: {
         userId: user.id,
@@ -293,7 +295,7 @@ export async function POST(request: Request) {
     console.log(`   Total: $${total}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    // 🔥 STOCK UPDATE SECTION (BACKUP) WITH VALIDATION 🔥
+    // Stock update
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📦 STARTING STOCK UPDATE (VERIFY-ORDER BACKUP)');
     
@@ -311,11 +313,8 @@ export async function POST(request: Request) {
           });
           
           if (variant) {
-            // ✅ FIX: Check if enough stock before deducting
             if (variant.stock < item.quantity) {
               console.error(`      ❌ INSUFFICIENT STOCK: Available: ${variant.stock}, Requested: ${item.quantity}`);
-              console.error(`      ⚠️ Skipping stock update for ${item.name}`);
-              // Don't update stock - move to next item
               continue;
             }
             
@@ -325,7 +324,6 @@ export async function POST(request: Request) {
               data: { stock: { decrement: item.quantity } }
             });
             
-            // Update product's total stock
             const allVariants = await prisma.productVariant.findMany({
               where: { productId: item.productId, isActive: true }
             });
@@ -348,11 +346,10 @@ export async function POST(request: Request) {
     console.log('✅ STOCK UPDATE COMPLETED (VERIFY-ORDER BACKUP)');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    // Create invoice (BACKUP)
+    // Create invoice
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📄 CREATING INVOICE (VERIFY-ORDER BACKUP)');
     
-    // ✅ ADDED DEBUG LOGGING
     console.log('📄 Calling createInvoiceForOrder with:');
     console.log(`   Order ID: ${newOrder.id}`);
     console.log(`   Order Number: ${orderNumber}`);
@@ -366,7 +363,7 @@ export async function POST(request: Request) {
     console.log(`⏱️ Invoice creation took: ${invoiceDuration}ms`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    // ✅ SEND ADMIN EMAIL NOTIFICATION (ONLY ADDED THIS BLOCK)
+    // Send admin email
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📧 SENDING ADMIN EMAIL NOTIFICATION');
     
@@ -393,18 +390,19 @@ export async function POST(request: Request) {
       console.error('❌ Failed to send admin email:', emailError);
     }
     
-    // ✅ REFETCH the order to get updated invoice data
+    // Refetch order
     const finalOrder = await prisma.order.findUnique({
       where: { id: newOrder.id },
       include: { items: true }
     });
     
-    // ✅ ADDED: Log final invoice status
-    console.log(`📄 Final order - Invoice ID: ${finalOrder.invoiceId || 'NULL'}`);
-    console.log(`📄 Final order - Invoice Number: ${finalOrder.invoiceNumber || 'NULL'}`);
-    console.log(`📄 Final order - Invoice URL: ${finalOrder.invoiceUrl || 'NULL'}`);
+    if (finalOrder) {
+      console.log(`📄 Final order - Invoice ID: ${finalOrder.invoiceId || 'NULL'}`);
+      console.log(`📄 Final order - Invoice Number: ${finalOrder.invoiceNumber || 'NULL'}`);
+      console.log(`📄 Final order - Invoice URL: ${finalOrder.invoiceUrl || 'NULL'}`);
+    }
     
-    // Clear user's cart
+    // Clear cart
     try {
       const userCart = await prisma.cart.findUnique({
         where: { userId: user.id }
@@ -427,7 +425,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'Order created successfully (webhook backup)',
-      order: finalOrder,
+      order: finalOrder || newOrder,
       source: 'verify_order_backup'
     });
     
