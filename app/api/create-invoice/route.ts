@@ -1,11 +1,10 @@
-// app/api/create-invoice/route.ts - WITH FIND-OR-CREATE CLIENT FUNCTIONALITY
+// app/api/create-invoice/route.ts - ORIGINAL (NO NIF)
 
 import { NextRequest, NextResponse } from 'next/server';
 
 interface InvoiceClient {
   name: string;
   email: string;
-  vat_number?: string;
   address?: string;
   city?: string;
   postal_code?: string;
@@ -42,7 +41,6 @@ export async function POST(request: NextRequest) {
     console.log(`   Order ID: ${orderId || 'N/A'}`);
     console.log(`   Client Name: ${client.name}`);
     console.log(`   Client Email: ${client.email}`);
-    console.log(`   Client NIF: ${client.vat_number || 'Not provided'}`);
     console.log(`   Items Count: ${items.length}`);
 
     const validationError = validateRequest(client, items);
@@ -96,7 +94,6 @@ export async function POST(request: NextRequest) {
           client: {
             name: client.name.trim(),
             email: client.email.trim(),
-            fiscal_id: client.vat_number?.trim() || '',
             address: client.address?.trim() || '',
             city: client.city?.trim() || '',
             postal_code: client.postal_code?.trim() || '',
@@ -122,12 +119,10 @@ export async function POST(request: NextRequest) {
           console.log(`   Email: ${createData.client.email}`);
         } else {
           console.error('❌ Failed to create client:', createData);
-          // Continue anyway - maybe invoice will still work
         }
       }
     } catch (clientError) {
       console.error('⚠️ Client operation error:', clientError);
-      // Continue - the invoice might still work with the provided client info
     }
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -165,11 +160,9 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       let errorMessage = formatApiError(data);
       
-      // If client error, try to create client first then retry invoice
       if (errorMessage.includes('Client not found') && clientId) {
         console.log('🔄 Retrying invoice with client ID...');
         
-        // Retry invoice creation (client now exists)
         const retryPayload = buildInvoicePayload(client, items, orderId, observations);
         const retryResponse = await fetch(url, {
           method: 'POST',
@@ -286,7 +279,6 @@ function buildInvoicePayload(
       client: {
         name: client.name.trim(),
         email: client.email.trim(),
-        fiscal_id: client.vat_number?.trim() || '999999990',
         address: client.address?.trim() || '',
         city: client.city?.trim() || '',
         postal_code: client.postal_code?.trim() || '',
@@ -344,11 +336,6 @@ function formatApiError(errorData: any): string {
         e.error?.includes('Cliente não é válido')
       );
       if (clientError) return 'Client not found in InvoiceXpress. Client will be created automatically on next attempt.';
-      
-      const fiscalError = errors.find((e: any) => 
-        e.error?.includes('Fiscal não é válido')
-      );
-      if (fiscalError) return 'Invalid NIF/Fiscal ID. Please check the tax number.';
       
       return errors[0]?.error || 'Invoice creation failed';
     }
