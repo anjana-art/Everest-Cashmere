@@ -1,4 +1,4 @@
-// app/api/verify-order/route.ts - STOCK VALIDATION ADDED
+// app/api/verify-order/route.ts - ORIGINAL + ADMIN EMAIL ONLY
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
 import { createInvoiceAfterOrder } from '@/lib/invoice';
+import { sendAdminOrderNotification } from '@/lib/admin-email'; // ✅ ONLY ADDED THIS LINE
 
 export async function POST(request: Request) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -334,6 +335,33 @@ export async function POST(request: Request) {
     console.log('📄 CREATING INVOICE (VERIFY-ORDER BACKUP)');
     await createInvoiceForOrder(newOrder, user);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    // ✅ SEND ADMIN EMAIL NOTIFICATION (ONLY ADDED THIS BLOCK)
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📧 SENDING ADMIN EMAIL NOTIFICATION');
+    
+    try {
+      await sendAdminOrderNotification({
+        orderId: newOrder.id,
+        orderNumber: orderNumber,
+        customerName: user.name || user.email?.split('@')[0] || 'Customer',
+        customerEmail: user.email,
+        total: total,
+        itemsCount: orderItems.length,
+        items: orderItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          color: item.color || undefined,
+          size: item.size || undefined,
+        })),
+        status: 'PAID',
+        createdAt: new Date(),
+      });
+      console.log('✅ Admin email sent successfully');
+    } catch (emailError) {
+      console.error('❌ Failed to send admin email:', emailError);
+    }
     
     // ✅ REFETCH the order to get updated invoice data
     const finalOrder = await prisma.order.findUnique({

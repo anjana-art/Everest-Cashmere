@@ -379,6 +379,10 @@ model Order {
   deliveredAt           DateTime?
   cancelledAt           DateTime?
   
+  @@index([status])      // For filtering by status
+  @@index([createdAt])   // For date range queries
+  @@index([paidAt])      // For payment date filtering
+  
   @@map("orders")
 }
 

@@ -11,7 +11,8 @@ import {
   ChartBarIcon,
   Cog6ToothIcon,
   ArrowLeftOnRectangleIcon,
-  Squares2X2Icon
+  Squares2X2Icon,
+  ClipboardDocumentListIcon  // ✅ Added for Orders
 } from '@heroicons/react/24/outline';
 
 export default function AdminLayout({
@@ -40,7 +41,8 @@ export default function AdminLayout({
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: Squares2X2Icon },
     { name: 'Products', href: '/admin/products', icon: ShoppingBagIcon },
-    { name: 'Orders', href: '/admin/orders', icon: ChartBarIcon },
+    { name: 'Revenue', href: '/admin/revenue', icon: ChartBarIcon }, // ✅ ADD THIS
+    { name: 'Orders', href: '/admin/orders', icon: ClipboardDocumentListIcon },  // ✅ Updated icon for Orders
     { name: 'Users', href: '/admin/users', icon: UserGroupIcon },
     { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
   ];
@@ -48,7 +50,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-gray-900 text-white">
+      <div className="fixed inset-y-0 left-0 w-64 bg-gray-900 text-white z-50">
         <div className="p-6">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center">
@@ -63,7 +65,7 @@ export default function AdminLayout({
 
         <nav className="mt-8 px-4">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
             return (
               <Link
                 key={item.name}
@@ -84,13 +86,13 @@ export default function AdminLayout({
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-800">
           {user && (
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{user.name || user.email}</p>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{user.name || user.email}</p>
                 <p className="text-sm text-gray-400">Admin</p>
               </div>
               <button
                 onClick={logout}
-                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg"
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
                 title="Logout"
               >
                 <ArrowLeftOnRectangleIcon className="h-5 w-5" />
