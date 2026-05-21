@@ -1,4 +1,5 @@
-// app/api/create-invoice/route.ts - FULL UPDATED PAGE
+// app/api/create-invoice/route.ts - ORIGINAL WORKING + NIF SUPPORT
+
 import { NextRequest, NextResponse } from 'next/server';
 
 // ============================================
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
       orderId,
       clientName: client.name,
       clientEmail: client.email,
+      clientNif: client.vat_number,
       itemsCount: items.length,
     });
 
@@ -232,17 +234,13 @@ function buildInvoicePayload(
   
   return {
     invoice: {
-      // ✅ CRITICAL FIX: These two fields make it a FINAL invoice, not DRAFT
-      type: "Invoice",      // Makes it a real invoice
-      status: "final",      // Finalizes the invoice (no longer "rascunho"/draft)
-      
       date: formatDateToPortuguese(today),
       due_date: formatDateToPortuguese(dueDate),
       
       client: {
         name: client.name.trim(),
         email: client.email.trim(),
-        fiscal_id: client.vat_number?.trim() || '999999990', // Generic NIF for non-Portuguese
+        fiscal_id: client.vat_number?.trim() || '999999990', // ✅ NIF with fallback
         address: client.address?.trim() || '',
         city: client.city?.trim() || '',
         postal_code: client.postal_code?.trim() || '',
@@ -251,7 +249,6 @@ function buildInvoicePayload(
       
       items: items.map(item => {
         const vatRate = item.vat_rate || 23;
-        // Send base price (without VAT) so InvoiceXpress adds the correct tax
         const basePrice = calculateBasePrice(item.unit_price, vatRate);
         
         return {
@@ -261,7 +258,6 @@ function buildInvoicePayload(
           unit_price: Number(basePrice).toFixed(4),
           tax: {
             name: `IVA ${vatRate}%`,
-            value: vatRate,
           },
         };
       }),
@@ -302,17 +298,6 @@ function formatApiError(errorData: any): string {
     if (errors.client_email) return 'Client email is invalid';
     if (errors.items) return 'Items are invalid';
     if (errors.tax) return 'VAT rate is not configured. Check your tax settings.';
-    
-    // Handle the exemption code error
-    if (Array.isArray(errors)) {
-      const exemptionError = errors.find((e: any) => 
-        e.error?.includes('razão de isenção') || 
-        e.error?.includes('exemption')
-      );
-      if (exemptionError) {
-        return 'Tax exemption configuration issue. Please contact support.';
-      }
-    }
   }
   
   if (errorData?.message) {

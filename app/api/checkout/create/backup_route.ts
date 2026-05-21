@@ -1,4 +1,4 @@
-// app/api/checkout/create/route.ts - FIXED (removed validation parameter)
+// app/api/checkout/create/route.ts - ONLY METADATA FIXED (removed large JSON)
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -8,13 +8,11 @@ import { prisma } from '@/lib/prisma';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { items, userId, customerName, customerEmail, customerNif } = body;
+    const { items, userId } = body;
     
     console.log('Checkout API received:', { 
       itemCount: items?.length,
       userId,
-      customerEmail,
-      customerNif,
       firstItem: items?.[0] ? {
         id: items[0].id,
         name: items[0].name,
@@ -26,6 +24,7 @@ export async function POST(request: Request) {
       } : null
     });
     
+    // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { error: 'No items in cart' },
@@ -33,18 +32,17 @@ export async function POST(request: Request) {
       );
     }
     
+    // Get user from cookie to ensure we have real user ID
     const cookieStore = await cookies();
     const userCookie = cookieStore.get('user');
     let actualUserId = userId;
-    let userEmail = customerEmail || null;
-    let userName = customerName || null;
+    let userEmail = null;
     
     if (userCookie) {
       try {
         const user = JSON.parse(userCookie.value);
         actualUserId = user.id;
-        if (!userEmail) userEmail = user.email;
-        if (!userName) userName = user.name;
+        userEmail = user.email;
       } catch (e) {
         console.error('Error parsing user cookie:', e);
       }
@@ -76,6 +74,7 @@ export async function POST(request: Request) {
       }
     }
     
+    // Validate each item has required fields
     for (const item of items) {
       if (!item.id || !item.name || !item.price || !item.quantity) {
         console.error('Invalid item:', item);
@@ -86,7 +85,9 @@ export async function POST(request: Request) {
       }
     }
     
+    // First, ensure all products exist in Stripe
     const lineItems = [];
+    const checkoutItems = []; // Still used for internal logic, NOT sent to Stripe
     
     for (const item of items) {
       const dbProduct = await prisma.product.findUnique({
@@ -170,21 +171,33 @@ export async function POST(request: Request) {
           maximum: 10,
         },
       });
+      
+      checkoutItems.push({
+        productId: item.id,
+        variantId: variant?.id,
+        name: item.name,
+        color: item.color,
+        size: item.size,
+        quantity: item.quantity,
+        price: item.price,
+      });
     }
     
     const origin = request.headers.get('origin') || 'http://localhost:3001';
     
+    // ✅ FIXED METADATA - ONLY small key-value pairs (no large JSON)
     const metadata: Record<string, string> = {
       userId: actualUserId || 'unknown',
       userEmail: userEmail || '',
       itemsCount: items.length.toString(),
-      nif: customerNif || '',
-      customerName: userName || '',
     };
+    
+    // ✅ IMPORTANT: DO NOT add checkoutItems to metadata (was causing Stripe to drop all metadata)
+    // The line below is REMOVED - do not add it back
+    // metadata.checkoutItems = JSON.stringify(checkoutItems.slice(0, 5));
     
     console.log('Creating checkout with metadata:', metadata);
     
-    // ✅ FIXED: Removed 'validation' from custom_fields
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
@@ -192,41 +205,9 @@ export async function POST(request: Request) {
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout/cancel`,
       metadata: metadata,
-      
-      customer_email: userEmail || undefined,
-      customer_creation: 'always',
-      
-      // ✅ TAX ID COLLECTION (for NIF)
-      tax_id_collection: {
-        enabled: true,
-      },
-      
-      // ✅ CUSTOM FIELDS - WITHOUT 'validation' parameter
-      custom_fields: [
-        {
-          key: 'nif',
-          label: {
-            type: 'custom',
-            custom: 'NIF / VAT Number (for invoice)',
-          },
-          type: 'text',
-          optional: true,
-        },
-        {
-          key: 'company_name',
-          label: {
-            type: 'custom',
-            custom: 'Company Name (optional)',
-          },
-          type: 'text',
-          optional: true,
-        },
-      ],
-      
       shipping_address_collection: {
         allowed_countries: ['PT', 'ES', 'NO', 'FI', 'SE', 'DK', 'NL', 'DE', 'BE', 'LU', 'AT', 'CH', 'IT', 'FR', 'IE'],
       },
-      
       allow_promotion_codes: true,
     });
     

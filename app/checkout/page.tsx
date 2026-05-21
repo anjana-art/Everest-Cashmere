@@ -14,10 +14,13 @@ export default function CheckoutPage() {
   const { items, removeItem, addItem, getTotalPrice, getTotalQuantity } = useCartStore();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [userNif, setUserNif] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [validatingStock, setValidatingStock] = useState(false);
   const [stockIssues, setStockIssues] = useState<{ itemId: string; message: string }[]>([]);
+   const [showNifModal, setShowNifModal] = useState(false); // ✅ For collecting NIF
+  const [tempNif, setTempNif] = useState(""); // ✅ Temporary NIF input
 
   // Check authentication status
   const checkAuth = () => {
