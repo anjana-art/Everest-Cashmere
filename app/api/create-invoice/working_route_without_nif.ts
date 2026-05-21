@@ -1,11 +1,10 @@
-// app/api/create-invoice/route.ts - ORIGINAL + NIF ONLY
+// app/api/create-invoice/route.ts - ORIGINAL WORKING VERSION (NO NIF)
 
 import { NextRequest, NextResponse } from 'next/server';
 
 interface InvoiceClient {
   name: string;
   email: string;
-  nif?: string;  // ✅ ADD NIF FIELD
   address?: string;
   city?: string;
   postal_code?: string;
@@ -40,7 +39,6 @@ export async function POST(request: NextRequest) {
       orderId,
       clientName: client.name,
       clientEmail: client.email,
-      clientNif: client.nif || 'Not provided',  // ✅ LOG NIF
       itemsCount: items.length,
     });
 
@@ -227,7 +225,6 @@ function buildInvoicePayload(
       client: {
         name: client.name.trim(),
         email: client.email.trim(),
-        fiscal_id: client.nif?.trim() || '',  // ✅ ADD NIF HERE
         address: client.address?.trim() || '',
         city: client.city?.trim() || '',
         postal_code: client.postal_code?.trim() || '',
