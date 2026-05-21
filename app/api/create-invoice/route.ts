@@ -260,6 +260,9 @@ function buildInvoicePayload(
           unit_price: Number(basePrice).toFixed(4),
           tax: {
             name: `IVA ${vatRate}%`,
+            value: vatRate,
+            category: "IVA",  
+
           },
         };
       }),
