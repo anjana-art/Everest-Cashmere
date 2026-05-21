@@ -234,6 +234,8 @@ function buildInvoicePayload(
   
   return {
     invoice: {
+       type: "Invoice",      
+      status: "rascunho", 
       date: formatDateToPortuguese(today),
       due_date: formatDateToPortuguese(dueDate),
       
