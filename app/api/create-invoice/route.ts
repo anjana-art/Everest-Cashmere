@@ -1,4 +1,4 @@
-// app/api/create-invoice/route.ts - ORIGINAL WORKING + NIF SUPPORT
+// app/api/create-invoice/route.ts - FULL PAGE WITH CORRECTED buildInvoicePayload
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -216,6 +216,7 @@ function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
+// ✅ CORRECTED buildInvoicePayload - NO tax at invoice level, NO category at item level
 function buildInvoicePayload(
   client: InvoiceClient, 
   items: InvoiceItem[], 
@@ -226,23 +227,21 @@ function buildInvoicePayload(
   const dueDate = new Date();
   dueDate.setDate(today.getDate() + 7);
   
-  // Calculate base price (without VAT) from your tax-inclusive prices
-  // Example: €1.00 with 23% VAT -> base = 1.00 / 1.23 = 0.8130
   const calculateBasePrice = (priceWithVat: number, vatRate: number = 23): number => {
     return priceWithVat / (1 + vatRate / 100);
   };
   
   return {
     invoice: {
-       type: "Invoice",      
-      status: "rascunho", 
+      type: "Invoice",
+      status: "rascunho",
       date: formatDateToPortuguese(today),
       due_date: formatDateToPortuguese(dueDate),
       
       client: {
         name: client.name.trim(),
         email: client.email.trim(),
-        fiscal_id: client.vat_number?.trim() || '999999990', // ✅ NIF with fallback
+        fiscal_id: client.vat_number?.trim() || '999999990',
         address: client.address?.trim() || '',
         city: client.city?.trim() || '',
         postal_code: client.postal_code?.trim() || '',
@@ -261,8 +260,6 @@ function buildInvoicePayload(
           tax: {
             name: `IVA ${vatRate}%`,
             value: vatRate,
-            category: "IVA",  
-
           },
         };
       }),
