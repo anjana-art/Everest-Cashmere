@@ -125,7 +125,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ✅ FIXED: Map InvoiceXpress fields correctly
     const invoiceData = data.invoice;
     const invoiceNumber = invoiceData.number || invoiceData.sequence_number || `DRAFT-${invoiceData.id}`;
     const pdfUrl = invoiceData.pdf_url || invoiceData.permalink;
@@ -220,10 +219,21 @@ function buildInvoicePayload(
   const dueDate = new Date();
   dueDate.setDate(today.getDate() + 7);
   
+  // Calculate base price (without VAT) from your tax-inclusive prices
+  // Example: €1.00 with 23% VAT -> base = 1.00 / 1.23 = 0.8130
+  const calculateBasePrice = (priceWithVat: number, vatRate: number = 23): number => {
+    return priceWithVat / (1 + vatRate / 100);
+  };
+  
   return {
     invoice: {
       date: formatDateToPortuguese(today),
       due_date: formatDateToPortuguese(dueDate),
+      
+      // ✅ FIX: REMOVED tax_exemption - we want to charge VAT normally
+      // For customers with Portuguese NIF or without valid EU VAT number,
+      // you charge the standard 23% VAT.
+      
       client: {
         name: client.name.trim(),
         email: client.email.trim(),
@@ -233,15 +243,24 @@ function buildInvoicePayload(
         postal_code: client.postal_code?.trim() || '',
         phone: client.phone?.trim() || '',
       },
-      items: items.map(item => ({
-        name: item.name.trim(),
-        description: item.description?.trim() || item.name.trim(),
-        quantity: item.quantity,
-        unit_price: Number(item.unit_price).toFixed(2),
-        tax: {
-          name: `IVA ${item.vat_rate || 23}%`,
-        },
-      })),
+      
+      items: items.map(item => {
+        const vatRate = item.vat_rate || 23;
+        // Send base price (without VAT) so InvoiceXpress adds the correct tax
+        const basePrice = calculateBasePrice(item.unit_price, vatRate);
+        
+        return {
+          name: item.name.trim(),
+          description: item.description?.trim() || item.name.trim(),
+          quantity: item.quantity,
+          unit_price: Number(basePrice).toFixed(4),
+          tax: {
+            name: `IVA ${vatRate}%`,
+            value: vatRate,
+          },
+        };
+      }),
+      
       observations: buildObservations(orderId, observations),
     },
   };
@@ -265,6 +284,7 @@ function buildObservations(orderId?: string, customObservations?: string): strin
     observations.push(customObservations);
   }
   
+  observations.push('Taxa de IVA 23% incluída no preço.');
   observations.push('Thank you for shopping with us!');
   
   return observations.join(' | ');
@@ -277,6 +297,17 @@ function formatApiError(errorData: any): string {
     if (errors.client_email) return 'Client email is invalid';
     if (errors.items) return 'Items are invalid';
     if (errors.tax) return 'VAT rate is not configured. Check your tax settings.';
+    
+    // Handle the exemption code error
+    if (Array.isArray(errors)) {
+      const exemptionError = errors.find((e: any) => 
+        e.error?.includes('razão de isenção') || 
+        e.error?.includes('exemption')
+      );
+      if (exemptionError) {
+        return 'Tax exemption configuration issue. Please contact support.';
+      }
+    }
   }
   
   if (errorData?.message) {
