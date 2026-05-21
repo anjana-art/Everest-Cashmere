@@ -295,7 +295,7 @@ function buildInvoicePayload(
           quantity: item.quantity,
           unit_price: Number(basePrice).toFixed(4),
           tax: {
-            name: `IVA ${vatRate}%`,
+            name:`IVA23`,
             value: vatRate,
           },
         };
