@@ -1,3 +1,4 @@
+// app/api/create-invoice/route.ts - FULL UPDATED PAGE
 import { NextRequest, NextResponse } from 'next/server';
 
 // ============================================
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
 
     const invoicePayload = buildInvoicePayload(client, items, orderId, observations);
     console.log('📦 Invoice payload built successfully');
+    console.log('📦 Payload:', JSON.stringify(invoicePayload, null, 2));
 
     const url = `https://${account}/invoices.json?api_key=${apiKey}`;
     console.log(`🌐 Calling InvoiceXpress API: ${url}`);
@@ -122,6 +124,7 @@ export async function POST(request: NextRequest) {
         number: data.invoice.number,
         sequence_number: data.invoice.sequence_number,
         permalink: data.invoice.permalink,
+        status: data.invoice.status,
       });
     }
 
@@ -133,6 +136,7 @@ export async function POST(request: NextRequest) {
       id: invoiceData.id,
       number: invoiceNumber,
       pdfUrl: pdfUrl,
+      status: invoiceData.status,
     });
 
     const responseData = {
@@ -155,6 +159,7 @@ export async function POST(request: NextRequest) {
       invoiceId: responseData.invoice.id,
       invoiceNumber: responseData.invoice.number,
       pdfUrl: responseData.invoice.pdf_url,
+      status: responseData.invoice.status,
     });
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
@@ -227,17 +232,17 @@ function buildInvoicePayload(
   
   return {
     invoice: {
+      // ✅ CRITICAL FIX: These two fields make it a FINAL invoice, not DRAFT
+      type: "Invoice",      // Makes it a real invoice
+      status: "final",      // Finalizes the invoice (no longer "rascunho"/draft)
+      
       date: formatDateToPortuguese(today),
       due_date: formatDateToPortuguese(dueDate),
-      
-      // ✅ FIX: REMOVED tax_exemption - we want to charge VAT normally
-      // For customers with Portuguese NIF or without valid EU VAT number,
-      // you charge the standard 23% VAT.
       
       client: {
         name: client.name.trim(),
         email: client.email.trim(),
-        fiscal_id: client.vat_number?.trim() || '',
+        fiscal_id: client.vat_number?.trim() || '999999990', // Generic NIF for non-Portuguese
         address: client.address?.trim() || '',
         city: client.city?.trim() || '',
         postal_code: client.postal_code?.trim() || '',
