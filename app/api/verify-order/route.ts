@@ -1,4 +1,4 @@
-// app/api/verify-order/route.ts - ORIGINAL + ADMIN EMAIL ONLY
+// app/api/verify-order/route.ts - ORIGINAL + DEBUG LOGS ONLY
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 import { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
 import { createInvoiceAfterOrder } from '@/lib/invoice';
-import { sendAdminOrderNotification } from '@/lib/admin-email'; // ✅ ONLY ADDED THIS LINE
+import { sendAdminOrderNotification } from '@/lib/admin-email';
 
 export async function POST(request: Request) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -66,13 +66,28 @@ export async function POST(request: Request) {
         console.log('🔵 BACKUP TRIGGERED: Order exists but NO invoice found');
         console.log('🔵 Creating invoice as backup...');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        // ✅ ADDED DEBUG LOGGING
+        console.log('📄 Calling createInvoiceForOrder with:');
+        console.log(`   Order ID: ${existingOrder.id}`);
+        console.log(`   Order Number: ${existingOrder.orderNumber}`);
+        console.log(`   User NIF: ${user.nif || 'Not provided'}`);
+        console.log(`   Items count: ${existingOrder.items.length}`);
+        
+        const invoiceStartTime = Date.now();
         await createInvoiceForOrder(existingOrder, user);
+        const invoiceDuration = Date.now() - invoiceStartTime;
+        
+        console.log(`⏱️ Invoice creation took: ${invoiceDuration}ms`);
         
         // ✅ Refetch to get updated invoice data
         const updatedExistingOrder = await prisma.order.findUnique({
           where: { id: existingOrder.id },
           include: { items: true }
         });
+        
+        console.log(`📄 After invoice creation - Invoice ID: ${updatedExistingOrder.invoiceId || 'STILL NULL'}`);
+        console.log(`📄 After invoice creation - Invoice Number: ${updatedExistingOrder.invoiceNumber || 'STILL NULL'}`);
         
         return NextResponse.json({
           success: true,
@@ -119,6 +134,9 @@ export async function POST(request: Request) {
     console.log(`   ID: ${session.id}`);
     console.log(`   Payment status: ${session.payment_status}`);
     console.log(`   Amount total: ${session.amount_total}`);
+    
+    // ✅ ADDED: Log NIF from session metadata
+    console.log(`📋 Session metadata NIF: ${session.metadata?.nif || 'Not provided'}`);
     
     if (session.payment_status !== 'paid') {
       console.error(`❌ Payment not completed - status: ${session.payment_status}`);
@@ -333,7 +351,19 @@ export async function POST(request: Request) {
     // Create invoice (BACKUP)
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📄 CREATING INVOICE (VERIFY-ORDER BACKUP)');
+    
+    // ✅ ADDED DEBUG LOGGING
+    console.log('📄 Calling createInvoiceForOrder with:');
+    console.log(`   Order ID: ${newOrder.id}`);
+    console.log(`   Order Number: ${orderNumber}`);
+    console.log(`   User NIF: ${user.nif || 'Not provided'}`);
+    console.log(`   Items count: ${orderItems.length}`);
+    
+    const invoiceStartTime = Date.now();
     await createInvoiceForOrder(newOrder, user);
+    const invoiceDuration = Date.now() - invoiceStartTime;
+    
+    console.log(`⏱️ Invoice creation took: ${invoiceDuration}ms`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     // ✅ SEND ADMIN EMAIL NOTIFICATION (ONLY ADDED THIS BLOCK)
@@ -368,6 +398,11 @@ export async function POST(request: Request) {
       where: { id: newOrder.id },
       include: { items: true }
     });
+    
+    // ✅ ADDED: Log final invoice status
+    console.log(`📄 Final order - Invoice ID: ${finalOrder.invoiceId || 'NULL'}`);
+    console.log(`📄 Final order - Invoice Number: ${finalOrder.invoiceNumber || 'NULL'}`);
+    console.log(`📄 Final order - Invoice URL: ${finalOrder.invoiceUrl || 'NULL'}`);
     
     // Clear user's cart
     try {
