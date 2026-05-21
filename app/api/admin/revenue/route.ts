@@ -1,6 +1,7 @@
 // app/api/admin/revenue/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { OrderStatus } from "@prisma/client"; // ✅ Import the enum
 
 export async function GET(request: NextRequest) {
   console.log('=== REVENUE API CALLED ===');
@@ -15,10 +16,10 @@ export async function GET(request: NextRequest) {
     // Business start date: April 8, 2026
     const BUSINESS_START_DATE = new Date(2026, 3, 8); // Month is 0-indexed, so 3 = April
     
-    // Base filter for paid orders after business start date
+    // ✅ FIXED: Use OrderStatus enum instead of strings
     const baseFilter = {
       status: {
-        in: ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+        in: [OrderStatus.PAID, OrderStatus.PROCESSING, OrderStatus.SHIPPED, OrderStatus.DELIVERED]
       },
       paidAt: {
         gte: BUSINESS_START_DATE,

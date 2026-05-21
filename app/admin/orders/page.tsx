@@ -1,9 +1,9 @@
 // app/admin/orders/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { 
   ShoppingBag, 
   Search, 
@@ -18,12 +18,10 @@ import {
   Loader2,
   RefreshCw,
   Mail,
-  MapPin,
   Calendar,
-  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Order {
   id: string;
@@ -71,13 +69,15 @@ const STATUS_COLORS: Record<string, string> = {
   REFUNDED: 'bg-gray-100 text-gray-800',
 };
 
-const STATUS_ICONS: Record<string, JSX.Element> = {
+// ✅ FIXED: Changed JSX.Element to React.ReactNode
+const STATUS_ICONS: Record<string, React.ReactNode> = {
   PENDING: <Clock className="h-4 w-4" />,
   PAID: <CheckCircle className="h-4 w-4" />,
   PROCESSING: <Package className="h-4 w-4" />,
   SHIPPED: <Truck className="h-4 w-4" />,
   DELIVERED: <CheckCircle className="h-4 w-4" />,
   CANCELLED: <XCircle className="h-4 w-4" />,
+  REFUNDED: <XCircle className="h-4 w-4" />,
 };
 
 export default function AdminOrdersPage() {
@@ -259,10 +259,14 @@ export default function AdminOrdersPage() {
                   </thead>
                   <tbody>
                     {orders.map((order) => (
-                      <tr key={order.id} className="border-b border-amber-100 hover:bg-amber-50/30 transition-colors cursor-pointer" onClick={() => {
-                        setSelectedOrder(order);
-                        setShowOrderModal(true);
-                      }}>
+                      <tr 
+                        key={order.id} 
+                        className="border-b border-amber-100 hover:bg-amber-50/30 transition-colors cursor-pointer" 
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowOrderModal(true);
+                        }}
+                      >
                         <td className="py-4 px-6 font-mono text-sm">{order.orderNumber}</td>
                         <td className="py-4 px-6">
                           <div>
