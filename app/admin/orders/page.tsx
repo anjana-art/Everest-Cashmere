@@ -1,4 +1,4 @@
-// app/admin/orders/page.tsx
+// app/admin/orders/page.tsx - ADD NIF ONLY
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Mail,
   Calendar,
+  FileText,  // ✅ ADD THIS IMPORT
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +32,7 @@ interface Order {
     name: string;
     email: string;
   };
+  nif: string | null;  // ✅ ADD NIF FIELD
   total: number;
   subtotal: number;
   tax: number;
@@ -69,7 +71,6 @@ const STATUS_COLORS: Record<string, string> = {
   REFUNDED: 'bg-gray-100 text-gray-800',
 };
 
-// ✅ FIXED: Changed JSX.Element to React.ReactNode
 const STATUS_ICONS: Record<string, React.ReactNode> = {
   PENDING: <Clock className="h-4 w-4" />,
   PAID: <CheckCircle className="h-4 w-4" />,
@@ -95,7 +96,6 @@ export default function AdminOrdersPage() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  // Fetch orders
   const fetchOrders = async () => {
     setLoading(true);
     try {
@@ -126,13 +126,11 @@ export default function AdminOrdersPage() {
     fetchOrders();
   }, [pagination.page, statusFilter, search]);
 
-  // Handle search with debounce
   const handleSearch = (value: string) => {
     setSearch(value);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  // Update order status
   const updateOrderStatus = async (orderId: string, status: string) => {
     setUpdatingStatus(true);
     try {
@@ -173,7 +171,6 @@ export default function AdminOrdersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 py-8">
       <div className="container mx-auto px-4">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -189,7 +186,6 @@ export default function AdminOrdersPage() {
           </div>
         </div>
 
-        {/* Filters */}
         <Card className="mb-6 bg-white/90 backdrop-blur-sm border-amber-100/50 shadow-xl">
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-4">
@@ -231,7 +227,6 @@ export default function AdminOrdersPage() {
           </CardContent>
         </Card>
 
-        {/* Orders Table */}
         <Card className="bg-white/90 backdrop-blur-sm border-amber-100/50 shadow-xl overflow-hidden">
           <CardContent className="p-0">
             {loading ? (
@@ -250,6 +245,7 @@ export default function AdminOrdersPage() {
                     <tr>
                       <th className="text-left py-4 px-6 font-serif font-semibold text-red-900">Order #</th>
                       <th className="text-left py-4 px-6 font-serif font-semibold text-red-900">Customer</th>
+                      <th className="text-left py-4 px-6 font-serif font-semibold text-red-900">NIF</th>
                       <th className="text-left py-4 px-6 font-serif font-semibold text-red-900">Date</th>
                       <th className="text-center py-4 px-6 font-serif font-semibold text-red-900">Items</th>
                       <th className="text-right py-4 px-6 font-serif font-semibold text-red-900">Total</th>
@@ -273,6 +269,16 @@ export default function AdminOrdersPage() {
                             <p className="font-medium text-red-900">{order.customer.name}</p>
                             <p className="text-xs text-gray-500">{order.customer.email}</p>
                           </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          {order.nif ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-mono">
+                              <FileText className="h-3 w-3" />
+                              {order.nif}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">—</span>
+                          )}
                         </td>
                         <td className="py-4 px-6 text-sm">{formatDate(order.createdAt)}</td>
                         <td className="py-4 px-6 text-center">{order.itemsCount}</td>
@@ -304,7 +310,6 @@ export default function AdminOrdersPage() {
               </div>
             )}
 
-            {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4 border-t border-amber-100">
                 <div className="text-sm text-gray-500">
@@ -339,7 +344,7 @@ export default function AdminOrdersPage() {
         </Card>
       </div>
 
-      {/* Order Details Modal */}
+      {/* Order Details Modal - Add NIF display */}
       {showOrderModal && selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -359,7 +364,7 @@ export default function AdminOrdersPage() {
             </div>
             
             <div className="p-6 space-y-6">
-              {/* Order Status */}
+              {/* Order Status and NIF */}
               <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-lg">
                 <div>
                   <p className="text-sm text-gray-500">Order Status</p>
@@ -368,7 +373,13 @@ export default function AdminOrdersPage() {
                     {selectedOrder.status}
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-4">
+                  {selectedOrder.nif && (
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500">NIF / VAT Number</p>
+                      <p className="font-mono font-semibold text-red-900 mt-1">{selectedOrder.nif}</p>
+                    </div>
+                  )}
                   <select
                     value={selectedOrder.status}
                     onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
@@ -386,7 +397,7 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
-              {/* Customer Info */}
+              {/* Customer Info with NIF */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2 text-red-900 mb-2">
@@ -395,6 +406,12 @@ export default function AdminOrdersPage() {
                   </div>
                   <p className="font-medium">{selectedOrder.customer.name}</p>
                   <p className="text-sm text-gray-600">{selectedOrder.customer.email}</p>
+                  {selectedOrder.nif && (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <p className="text-xs text-gray-500">NIF / VAT Number</p>
+                      <p className="font-mono text-sm font-semibold text-red-900">{selectedOrder.nif}</p>
+                    </div>
+                  )}
                 </div>
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2 text-red-900 mb-2">
@@ -456,6 +473,11 @@ export default function AdminOrdersPage() {
                     <span>Total:</span>
                     <span className="text-amber-700">{formatCurrency(selectedOrder.total)}</span>
                   </div>
+                  {selectedOrder.nif && (
+                    <div className="text-right text-xs text-gray-500 mt-2">
+                      <p>NIF: {selectedOrder.nif}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

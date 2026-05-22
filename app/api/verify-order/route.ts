@@ -216,7 +216,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    
+
+
+
     // Calculate totals
     const subtotal = session.amount_subtotal ? session.amount_subtotal / 100 : 0;
     const total = session.amount_total ? session.amount_total / 100 : 0;
@@ -259,6 +261,9 @@ export async function POST(request: Request) {
           } : {}
         })
       : Prisma.DbNull;
+
+      const nif = session.metadata?.nif || null;  // Get NIF from session metadata
+      console.log(`💳 Saving NIF to order: ${nif || 'No NIF provided'}`);
     
     // Create order in database
     const newOrder = await prisma.order.create({
@@ -274,6 +279,8 @@ export async function POST(request: Request) {
         status: 'PAID',
         trackingStatus: 'ORDER_RECEIVED',
         paymentMethod: 'card',
+        nif: nif, 
+        vatNumber: nif,  
         items: {
           create: orderItems
         },

@@ -1,4 +1,4 @@
-// app/api/admin/orders/route.ts
+// app/api/admin/orders/route.ts - ADD NIF ONLY
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const skip = (page - 1) * limit;
 
-    // Build where clause
     let where: any = {};
     
     if (status) {
@@ -28,10 +27,8 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Get total count
     const total = await prisma.order.count({ where });
 
-    // Fetch orders with user and items
     const orders = await prisma.order.findMany({
       where,
       include: {
@@ -61,7 +58,6 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    // Format orders for frontend
     const formattedOrders = orders.map(order => ({
       id: order.id,
       orderNumber: order.orderNumber || `ORD-${order.id.substring(0, 8).toUpperCase()}`,
@@ -70,6 +66,7 @@ export async function GET(request: NextRequest) {
         name: order.user.name || order.user.email,
         email: order.user.email,
       },
+      nif: order.nif || null,  // ✅ ONLY ADDED THIS LINE
       total: Number(order.total),
       subtotal: Number(order.subtotal),
       tax: Number(order.tax),
@@ -114,7 +111,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Update order status (Admin only)
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
@@ -134,7 +130,6 @@ export async function PATCH(request: NextRequest) {
     if (trackingNumber) updateData.trackingNumber = trackingNumber;
     if (carrier) updateData.carrier = carrier;
     
-    // Update timestamps based on status
     if (status === 'PAID' && !updateData.paidAt) updateData.paidAt = new Date();
     if (status === 'PROCESSING' && !updateData.preparingAt) updateData.preparingAt = new Date();
     if (status === 'SHIPPED' && !updateData.shippedAt) updateData.shippedAt = new Date();
