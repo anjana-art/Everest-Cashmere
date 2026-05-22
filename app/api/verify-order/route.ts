@@ -300,6 +300,8 @@ export async function POST(request: Request) {
     console.log(`   Order Number: ${orderNumber}`);
     console.log(`   User ID: ${user.id}`);
     console.log(`   Total: $${total}`);
+    console.log(`   NIF Saved: ${newOrder.nif || 'Not provided'}`);
+
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
     // Stock update

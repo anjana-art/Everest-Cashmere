@@ -1,4 +1,5 @@
-// app/checkout/page.tsx - With stock validation ONLY (no breaking changes)
+// app/checkout/page.tsx - With NIF input field added (original functionality preserved)
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -14,13 +15,12 @@ export default function CheckoutPage() {
   const { items, removeItem, addItem, getTotalPrice, getTotalQuantity } = useCartStore();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-  const [userNif, setUserNif] = useState("");
+  const [userNif, setUserNif] = useState(""); // Keep for potential future use
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [validatingStock, setValidatingStock] = useState(false);
   const [stockIssues, setStockIssues] = useState<{ itemId: string; message: string }[]>([]);
-   const [showNifModal, setShowNifModal] = useState(false); // ✅ For collecting NIF
-  const [tempNif, setTempNif] = useState(""); // ✅ Temporary NIF input
+  const [customerNif, setCustomerNif] = useState(""); // ✅ ADDED: NIF state
 
   // Check authentication status
   const checkAuth = () => {
@@ -31,6 +31,7 @@ export default function CheckoutPage() {
         const user = JSON.parse(userStr);
         setIsAuthenticated(true);
         setUserEmail(user.email || "");
+        setUserNif(user.nif || "");
         return true;
       } catch (e) {
         console.error("Error parsing user data:", e);
@@ -122,12 +123,16 @@ export default function CheckoutPage() {
     try {
       console.log("Sending items to checkout API:", items.length);
       
+      // ✅ UPDATED: Include NIF in the request body
       const response = await fetch('/api/checkout/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ 
+          items,
+          customerNif: customerNif, // ✅ Send NIF to API
+        }),
       });
       
       const data = await response.json();
@@ -289,7 +294,6 @@ export default function CheckoutPage() {
             
             <ul className="space-y-4">
               {items.map((item) => {
-                // Check if this specific item has a stock issue
                 const hasIssue = stockIssues.some(
                   issue => issue.itemId === `${item.id}-${item.color}-${item.size}`
                 );
@@ -338,14 +342,12 @@ export default function CheckoutPage() {
                           </div>
                         </div>
                         
-                        {/* Stock Warning */}
                         {hasIssue && (
                           <p className="text-xs text-red-600 mt-1">
                             ⚠️ Stock issue - please remove or reduce quantity
                           </p>
                         )}
                         
-                        {/* Quantity Controls - KEEP ORIGINAL FUNCTIONALITY */}
                         <div className="flex items-center justify-between mt-3">
                           <div className="flex items-center gap-2">
                             <Button
@@ -417,6 +419,25 @@ export default function CheckoutPage() {
             </CardContent>
           </Card>
           
+          {/* ✅ ADDED: NIF Input Field */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 border border-amber-100">
+            <label htmlFor="nif" className="block text-sm font-medium text-red-900 mb-1">
+              NIF / VAT Number <span className="text-xs text-gray-400">(optional)</span>
+            </label>
+            <input
+              type="text"
+              id="nif"
+              name="nif"
+              value={customerNif}
+              onChange={(e) => setCustomerNif(e.target.value.replace(/\D/g, '').slice(0, 9))}
+              placeholder="123456789"
+              className="w-full px-3 py-2 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white/50"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Required for Portuguese customers who need a fiscal invoice
+            </p>
+          </div>
+          
           {isAuthenticated ? (
             <Button 
               type="button"
@@ -477,7 +498,6 @@ export default function CheckoutPage() {
             <p>Your payment is secured with Stripe.</p>
           </div>
           
-          {/* Alternative for non-authenticated users */}
           {!isAuthenticated && (
             <div className="p-4 bg-amber-50/80 backdrop-blur-sm rounded-lg border border-amber-200">
               <h3 className="font-serif font-medium text-red-900 mb-2">Guest Checkout</h3>

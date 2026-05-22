@@ -1,4 +1,4 @@
-// app/api/checkout/create/route.ts - FIXED (removed validation parameter)
+// app/api/checkout/create/route.ts - WITH PRE-FILLED NIF IN STRIPE
 
 import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
@@ -184,7 +184,6 @@ export async function POST(request: Request) {
     
     console.log('Creating checkout with metadata:', metadata);
     
-    // ✅ FIXED: Removed 'validation' from custom_fields
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
@@ -201,7 +200,7 @@ export async function POST(request: Request) {
         enabled: true,
       },
       
-      // ✅ CUSTOM FIELDS - WITHOUT 'validation' parameter
+      // ✅ CUSTOM FIELDS - WITH PRE-FILLED NIF
       custom_fields: [
         {
           key: 'nif',
@@ -211,6 +210,9 @@ export async function POST(request: Request) {
           },
           type: 'text',
           optional: true,
+          text: {
+            default_value: customerNif || '',  // ✅ Pre-fills the NIF field
+          },
         },
         {
           key: 'company_name',

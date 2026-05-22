@@ -1,4 +1,4 @@
-// app/checkout/checkout-action.ts
+// app/checkout/checkout-action.ts - Add custom_fields with default_value
 "use server";
 
 import { stripe } from "@/lib/stripe";
@@ -23,6 +23,11 @@ export const checkoutAction = async (formData: FormData): Promise<void> => {
     const items: CartItem[] = JSON.parse(itemsJson);
     if (items.length === 0) redirect('/cart');
 
+    // Get NIF from form data
+    const customerNif = formData.get("nif") as string || '';
+    
+    console.log('📋 Checkout Action - NIF received:', customerNif || 'Not provided');
+
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3001');
 
@@ -45,22 +50,38 @@ export const checkoutAction = async (formData: FormData): Promise<void> => {
       currency: "eur",
       customer_email: user.email,
 
-      // ✅ LAYER 2: Portugal-only restriction
+      // ✅ CUSTOM FIELD with pre-filled NIF from checkout page
+      custom_fields: [
+        {
+          key: 'nif',
+          label: {
+            type: 'custom',
+            custom: 'NIF / VAT Number (for invoice)',
+          },
+          type: 'text',
+          optional: true,
+          text: {
+            default_value: customerNif || '',  // ✅ Pre-fills the NIF
+          },
+        },
+      ],
+
+      metadata: {
+        userId: user.id,
+        userEmail: user.email,
+        nif: customerNif,
+      },
+
       shipping_address_collection: {
         allowed_countries: ["PT"],
       },
+      
       billing_address_collection: "required",
 
       phone_number_collection: {
         enabled: true,
       },
 
-      metadata: {
-        userId: user.id,
-        userEmail: user.email,
-      },
-
-      // Professional Portuguese/English custom text shown on Stripe checkout page
       custom_text: {
         shipping_address: {
           message: "🇵🇹 Este serviço está disponível apenas em Portugal. / This service is available in Portugal only.",
@@ -81,21 +102,9 @@ export const checkoutAction = async (formData: FormData): Promise<void> => {
     redirect(session.url);
 
   } catch (error: any) {
-    // Don't intercept Next.js redirect — it throws internally
     if (error?.digest?.startsWith('NEXT_REDIRECT')) throw error;
 
-    console.error("Checkout error:", {
-      message: error.message,
-      userId: (() => {
-        try {
-          const c = cookies();
-          // @ts-ignore
-          const u = c.get?.('user')?.value;
-          return u ? JSON.parse(u).id : 'unknown';
-        } catch { return 'unknown'; }
-      })(),
-    });
-
+    console.error("Checkout error:", error);
     redirect(`/checkout?error=${encodeURIComponent(error.message || 'Checkout failed')}`);
   }
 };
