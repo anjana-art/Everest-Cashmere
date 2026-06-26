@@ -60,7 +60,7 @@ export default function FoundersStory() {
             <span className="relative z-10 block mt-2">
               After moving to Portugal in 2016, I discovered a deep appreciation for European 
               sophistication while carrying the rich heritage of Nepalese artistry. This fusion 
-              became the foundation of HIM-KASH.
+              became the foundation of Himkash.
             </span>
           </p>
 
@@ -92,13 +92,14 @@ export default function FoundersStory() {
             </div>
            <p className="font-semibold text-amber-700 mb-3 text-lg relative z-10"> Solo Project</p>
           <p className="mb-4 relative z-10">
-            Himkash is my dream, born from a deep desire to share Nepal's rich textile heritage with Europe. I'm grateful to have
-             my husband, Dipak Shrestha,
-             leading our digital strategy, and my brother, Keshav Bhatta, managing manufacturing in Nepal as my business advisor.
+            Himkash is my dream, born from a deep desire to share Nepal's rich textile heritage with Europe. The most fascinating thing
+             about a Himkash piece is the careful steps taken throughout the process—like hand-spinning,
+             hand-knitting using traditional techniques, natural dyeing, linking, mending, and careful inspection. 
+              
           </p>
           <p className="relative z-10">
-            Their support allows me to pour my heart into every piece — ensuring each garment reflects my values: ethical sourcing, 
-            artisanal integrity, and timeless elegance. This is my story, my purpose, and my promise to you.
+            With the support of my family—my husband, Dipak Shrestha, leading our digital strategy, and my brother, Keshav Bhatta, managing manufacturing in Nepal as my business advisor—I ensure that each garment reflects my deepest
+             values of ethical sourcing, artisanal integrity, and timeless elegance; this is my story, my purpose, and my promise to you.
           </p>
           </div>
 

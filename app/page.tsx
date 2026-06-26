@@ -94,14 +94,13 @@ export default async function Home() {
                 <div className="w-20 h-[2px] bg-amber-400"></div>
                 
                 <p className="text-lg text-gray-100 leading-relaxed">
-                  Discover timeless elegance crafted from pure cashmere and fine wool. 
-                  Each piece is thoughtfully handmade and hand-spun, rooted in Nepalese 
-                  craftsmanship and refined for a conscious European lifestyle.
+                 Discover timeless elegance across three unique choices: pure cashmere, fine merino wool, or our balanced 50/50 blend. Every single
+                  piece is thoughtfully handmade and hand-spun, bridging authentic Nepalese craftsmanship with a conscious European lifestyle.
                 </p>
                 
                 <p className="text-lg text-gray-100 leading-relaxed">
                   From the quiet strength of the mountains to your wardrobe, 
-                  HIM-KASH represents sustainable luxury — honoring local artisans, 
+                  Himkash represents sustainable luxury — honoring local artisans, 
                   respecting the environment, and offering enduring comfort with style.
                 </p>
                 
@@ -135,32 +134,48 @@ export default async function Home() {
       {/* BRAND VALUES STRIP - Clean white with subtle border */}
       <section className="py-16 px-6 bg-white border-b border-amber-100/50 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
-          <p className="text-xs tracking-[4px] uppercase text-amber-600 mb-4">Our Philosophy</p>
-          <h2 className="text-3xl md:text-4xl font-light text-neutral-800 mb-6">
-            Born in the Himalayas,<br className="hidden md:block" /> refined for modern living
+          <p className="text-xs tracking-[4px] uppercase text-amber-600 mb-4"></p>
+          <h2 className="text-3xl md:text-4xl font-light text-red-900 mb-6">
+            Born in the Himalayas,<br className="hidden md:block" /> refined for conscious living
           </h2>
           <p className="text-neutral-500 text-lg leading-relaxed max-w-2xl mx-auto mb-12">
             Every Himkash piece begins high in the mountains, where master artisans 
             hand-spin the finest cashmere using techniques passed down through generations. 
             We believe luxury should be conscious — kind to the people who create it, 
-            and enduring enough to last a lifetime.
+            and enduring enough to last long.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: "", title: "Nepalese Craftsmanship", desc: "Each piece is handmade by skilled artisans in Nepal, preserving century-old traditions." },
-              { icon: "🌿", title: "Sustainably Made", desc: "Pure cashmere and fine wool, sourced responsibly with respect for nature and community." },
-              { icon: "✨", title: "Timeless Quality", desc: "Designed to outlast trends — pieces you'll wear and love for years to come." }
-            ].map((item, i) => (
-              <div key={i} className="flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-2xl">
-                  {item.icon}
-                </div>
-                <h3 className="font-medium text-neutral-800">{item.title}</h3>
-                <p className="text-neutral-500 text-sm leading-relaxed">{item.desc}</p>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { 
+              icon: "🧶", 
+              title: "Nepalese Craftsmanship", 
+              desc: "Each step is carried out entirely by hand by skilled Nepalese artisans — with no modern machines, every piece you choose directly supports these local artisans and keeps century-old traditions alive." 
+            },
+            { 
+              icon: "🌿", 
+              title: "Sustainably Made", 
+              desc: "Pure cashmere and fine wool, using natural dyeing to support the ecosystem. Made for long-lasting fashion rather than fast, mass production." 
+            },
+            { 
+              icon: "✨", 
+              title: "Timeless Quality", 
+              desc: "Designed to outlast trends — pieces you'll wear and love for years to come. Whether you choose our pure, finest 12–19 µm cashmere, our high-quality pure merino wool, or our unique 50/50 blend, our traditional hand-crafted methods ensure unmatched softness, durability, and premium quality across every collection." 
+            }
+          ].map((item, i) => (
+            <div key={i} className="flex flex-col items-center text-center gap-4 p-6 rounded-2xl bg-amber-50 border border-amber-100/50 shadow-sm">
+              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl text-red-900 shadow-inner">
+                {item.icon}
               </div>
-            ))}
-          </div>
+              <h3 className="font-semibold text-lg text-red-900 tracking-wide uppercase font-serif">
+                {item.title}
+              </h3>
+              <p className="text-neutral-700 text-sm leading-relaxed max-w-xs">
+                {item.desc}
+              </p>
+            </div>
+          ))}
+        </div>
         </div>
       </section>
 
@@ -171,7 +186,7 @@ export default async function Home() {
             <h2 className="text-3xl md:text-4xl font-light tracking-wide text-red-900">
               Launching 
               <span className="block text-amber-600 font-medium">
-                June 1st, 2026
+                July 10 , 2026
               </span>
             </h2>
             <div className="w-16 h-[2px] bg-amber-600 mx-auto md:mx-0"></div>
@@ -199,7 +214,7 @@ export default async function Home() {
             <div className="relative w-80 h-80 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-amber-100">
               {/* ✅ OPTIMIZED: Priority image with proper sizing */}
               <Image
-                src="/founder_image_1.webp"
+                src="/founder_image_13.webp"
                 alt="Anjana Bhatta - Founder of HIM-KASH"
                 fill
                 className="object-cover"

@@ -4,7 +4,7 @@ import Image from 'next/image'; // ✅ ADDED: Import Next.js Image
 import { ProductCard } from './product-card';
 
 // ✅ ADDED: Static images for better performance
-const cashmereBackground = "/cashmere-hero-bg.webp"; // Create this image or use existing
+const cashmereBackground = "/cashmere_stacked.webp"; // Create this image or use existing
 
 export default function CashmerePage({ products, currentGender, material }: any) {
   return (
@@ -14,7 +14,7 @@ export default function CashmerePage({ products, currentGender, material }: any)
         {/* ✅ OPTIMIZED: Hero background image with proper Next.js Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/image3.webp"
+            src="/cashmere_stacked.webp"
             alt="Luxury Cashmere"
             fill
             className="object-cover"
