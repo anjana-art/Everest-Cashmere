@@ -120,19 +120,19 @@ function DefaultClothingPage({ currentGender }: { currentGender: string | null }
           href={`/clothing/cashmere${currentGender ? `?gender=${currentGender}` : ''}`}
           title="Cashmere"
           description="Ultra-soft, luxurious, and warm"
-          image="/cashmere-preview.jpg"
+          image="/cashmere_stacked.webp"
         />
         <MaterialCard 
           href={`/clothing/cashmere-marino-wool${currentGender ? `?gender=${currentGender}` : ''}`}
           title="Cashmere + Marino Wool"
           description="The perfect blend of softness and durability"
-          image="/cashmere-marino-preview.jpg"
+          image="/5_cashmere_bg_sweater.webp"
         />
         <MaterialCard 
           href={`/clothing/marino-wool${currentGender ? `?gender=${currentGender}` : ''}`}
           title="Marino Wool"
           description="Sustainable, breathable, and eco-friendly"
-          image="/marino-preview.jpg"
+          image="/himkash_favicon.webp"
         />
       </div>
     </div>

@@ -186,7 +186,7 @@ export default async function Home() {
             <h2 className="text-3xl md:text-4xl font-light tracking-wide text-red-900">
               Launching 
               <span className="block text-amber-600 font-medium">
-                July 10 , 2026
+                July 20, 2026
               </span>
             </h2>
             <div className="w-16 h-[2px] bg-amber-600 mx-auto md:mx-0"></div>
@@ -214,7 +214,7 @@ export default async function Home() {
             <div className="relative w-80 h-80 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-amber-100">
               {/* ✅ OPTIMIZED: Priority image with proper sizing */}
               <Image
-                src="/founder_image_13.webp"
+                src="/Anjana_proff_image.webp"
                 alt="Anjana Bhatta - Founder of HIM-KASH"
                 fill
                 className="object-cover"
@@ -254,7 +254,7 @@ export default async function Home() {
       {/* Women's Collection - NO Coming Soon badge */}
       <NavigationLink href="/clothing/women" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
         <Image
-          src="/ladies_beige_lay_flat_cashmere_sweater.webp"
+          src="/ladies_beige_cashmere_sweater_model.webp"
           alt="Women's Collection"
           fill
           className="object-contain transition-transform duration-300 group-hover:scale-105"
@@ -273,7 +273,7 @@ export default async function Home() {
       {/* Men's Collection - NO Coming Soon badge */}
       <NavigationLink href="/clothing/men" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
         <Image
-          src="/indigo_cashmere_sweater.webp"
+          src="/indigo_folded_sweater.webp"
           alt="Men's Collection"
           fill
           className="object-contain transition-transform duration-300 group-hover:scale-105"

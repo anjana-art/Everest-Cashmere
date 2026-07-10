@@ -20,7 +20,7 @@ export default function FoundersStory() {
       <div className="mb-12 flex justify-center">
         <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden shadow-xl border-4 border-amber-200">
           <Image
-            src="/founder_image_13.webp"
+            src="/Anjana_proff_image.webp"
             alt="Anjana Bhatta - Founder of HIM-KASH"
             fill
             className="object-cover"
