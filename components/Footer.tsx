@@ -175,7 +175,7 @@ export default function Footer() {
           
           {/* TRADEMARK NOTICE */}
           <p className="text-amber-200/50 text-xs">
-            HIMKASH™ - Trademark application pending with INPI
+            HIMKASH™ - Trademark application pending with  INPI
           </p>
           
           <p>
