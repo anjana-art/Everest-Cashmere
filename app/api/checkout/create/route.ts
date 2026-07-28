@@ -211,7 +211,7 @@ export async function POST(request: Request) {
           type: 'text',
           optional: true,
           text: {
-            default_value: customerNif || '',  // ✅ Pre-fills the NIF field
+            default_value: customerNif || undefined,  // ✅ Pre-fills the NIF field
           },
         },
         {
