@@ -1,20 +1,30 @@
-// app/page.tsx - OPTIMIZED VERSION with Navigation Spinner
-
+// app/page.tsx - REFACTORED HIGH-LUXURY LANDING PAGE
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Carousel } from "@/components/carousel";
 import { prisma } from "@/lib/prisma";
-import FoundersStory from "@/components/foundersStory";
-import SignupForm from "@/components/signup-form";
-import ShareButtons from '@/components/ShareButtons';
+import ShareButtons from "@/components/ShareButtons";
 import type { Metadata } from "next";
 import { SimpleImageGrid } from "@/components/simple-image-grid";
-import { NavigationLink } from  '@/components/navigation-link'; 
+import { NavigationLink } from "@/components/navigation-link";
 
 export const metadata: Metadata = {
-  title: "Pure Cashmere | Kashmere & Wool | Nepalese Luxury | Finest Quality | Elegance + Softness | Timeless | Finest Fiber",
-  description: "From Mountains -For LIFETIME || Browse our Collection of Handmade Cashmere sweaters and Fine Marino wool pieces. Every HIM-KASH piece is hand-spum by nepalese artisans using generational old techniques",
+  title: "Himkash | Handcrafted Himalayan Cashmere & Fine Wool",
+  description:
+    "Ethically hand-spun by master artisans in Nepal, bridging timeless Himalayan heritage with modern European elegance. Discover 100% pure cashmere and merino wool.",
+  openGraph: {
+    title: "Himkash | Handcrafted Himalayan Cashmere",
+    description: "Ethically hand-spun luxury cashmere from Nepal, designed for Europe.",
+    url: "https://www.himkash.com",
+    siteName: "Himkash",
+    images: [
+      {
+        url: "https://www.himkash.com/Anjana_proff_image.webp",
+        width: 800,
+        height: 800,
+        alt: "Anjana Bhatta - Founder of Himkash",
+      },
+    ],
+  },
 };
 
 interface Product {
@@ -30,14 +40,13 @@ interface Product {
   };
 }
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0; // Disable caching
+export const revalidate = 300; //Caches for 5 minutes, then refreshes seamlessly
 
 export default async function Home() {
   const dbProducts = await prisma.product.findMany({
     where: { isActive: true },
     take: 6,
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     select: {
       id: true,
       stripeId: true,
@@ -51,16 +60,16 @@ export default async function Home() {
     },
   });
 
-  const formattedProducts: Product[] = dbProducts.map(product => {
+  const formattedProducts: Product[] = dbProducts.map((product) => {
     let metadata: { category?: string; [key: string]: any } = {};
-    if (product.metadata && typeof product.metadata === 'object' && product.metadata !== null) {
+    if (product.metadata && typeof product.metadata === "object" && product.metadata !== null) {
       metadata = product.metadata as { category?: string; [key: string]: any };
     } else if (product.category) {
       metadata = { category: product.category };
     }
     return {
       id: product.id,
-      stripeId: product.stripeId || '',
+      stripeId: product.stripeId || "",
       name: product.name,
       description: product.description,
       price: Number(product.price),
@@ -70,267 +79,273 @@ export default async function Home() {
   });
 
   return (
-    <div className="bg-[#FDFBF7]">
+    <div className="bg-[#FAF8F5] text-stone-800 selection:bg-amber-100 selection:text-amber-900 font-sans antialiased">
       
-      {/* SECTION 1: Hero Section - FULL WIDTH with Image Grid */}
-      <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Full width image grid - takes priority */}
-        <div className="absolute inset-0 z-0">
+      {/* 1. HERO SECTION */}
+      <section className="relative w-full min-h-[90vh] md:min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Grid Background */}
+        <div className="absolute inset-0 z-0 opacity-80 scale-105 transition-transform duration-1000">
           <SimpleImageGrid />
         </div>
         
-        {/* Overlay content - subtle gradient for text readability */}
-        <div className="relative z-10 w-full bg-gradient-to-r from-black/60 via-black/30 to-transparent">
-          <div className="max-w-7xl mx-auto px-4 sm:px-16 py-20 md:py-32">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
-              
-              {/* Left side - Text Content with transparent background */}
-              <div className="flex flex-col justify-center space-y-6 text-white backdrop-blur-sm bg-black/20 rounded-2xl p-6 md:p-8">
-                <h1 className="text-5xl md:text-7xl font-mono tracking-tight text-amber-300">
-                  Welcome to <span className="text-white">Himkash</span>
-                </h1>
-                <p className="text-xl text-amber-200 italic">- Himalayan Cashmere</p>
-                
-                <div className="w-20 h-[2px] bg-amber-400"></div>
-                
-                <p className="text-lg text-gray-100 leading-relaxed">
-                 Discover timeless elegance across three unique choices: pure cashmere, fine merino wool, or our balanced 50/50 blend. Every single
-                  piece is thoughtfully handmade and hand-spun, bridging authentic Nepalese craftsmanship with a conscious European lifestyle.
-                </p>
-                
-                <p className="text-lg text-gray-100 leading-relaxed">
-                  From the quiet strength of the mountains to your wardrobe, 
-                  Himkash represents sustainable luxury — honoring local artisans, 
-                  respecting the environment, and offering enduring comfort with style.
-                </p>
-                
-                <div className="flex flex-wrap gap-4 pt-4">
-                  {/* ✅ OPTIMIZED: NavigationLink with spinner */}
-                  <NavigationLink 
-                    href="/clothing" 
-                    className="text-lg inline-flex items-center justify-center rounded-full px-8 py-6 text-white bg-amber-600 hover:bg-amber-700 border-none transform transition-all duration-300 hover:-translate-y-0.5 shadow-xl"
-                  >
-                    Browse all Products
-                  </NavigationLink>
-                  
-                  <NavigationLink 
-                    href="/about" 
-                    variant="outline"
-                    className="text-lg rounded-full px-8 py-6 border-white text-black hover:bg-white/10"
-                  >
-                    Learn More
-                  </NavigationLink>
-                </div>
-              </div>
-              
-              {/* Right side - Empty to let image show through */}
-              <div className="hidden md:block"></div>
-              
+        {/* Subtle Dark Overlay */}
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+
+        <div className="relative z-20 w-full max-w-7xl mx-auto px-6 lg:px-12 py-24 md:py-36">
+          <div className="max-w-2xl space-y-8">
+            <span className="inline-block text-xs uppercase tracking-[0.3em] font-medium text-amber-300/90 border-b border-amber-300/40 pb-1">
+              Sustainable Luxury · Handcrafted in Nepal
+            </span>
+
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif text-white leading-[1.1] tracking-tight">
+              Himalayan Heritage. <br />
+              <span className="italic font-light text-amber-200/90">European Elegance.</span>
+            </h1>
+
+            <p className="text-base sm:text-lg text-stone-200 leading-relaxed font-light max-w-xl">
+              Discover timeless warmth in pure cashmere, fine merino wool, and our signature 50/50 blend. Each piece is hand-spun by Nepalese artisans using generational techniques.
+            </p>
+
+            <div className="flex flex-wrap gap-4 pt-4">
+              <NavigationLink
+                href="/clothing"
+                className="px-8 py-4 rounded-full text-sm font-medium tracking-wide bg-amber-600 text-white hover:bg-amber-500 transition-all shadow-lg hover:shadow-amber-900/20 hover:-translate-y-0.5"
+              >
+                Explore Collection
+              </NavigationLink>
+
+              <NavigationLink
+                href="/founders-story"
+                variant="outline"
+                className="px-8 py-4 rounded-full text-sm font-medium tracking-wide border border-white/30 text-white hover:bg-white hover:text-stone-900 transition-all backdrop-blur-sm"
+              >
+                Our Story
+              </NavigationLink>
             </div>
           </div>
         </div>
       </section>
 
-      {/* BRAND VALUES STRIP - Clean white with subtle border */}
-      <section className="py-16 px-6 bg-white border-b border-amber-100/50 relative z-10">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-xs tracking-[4px] uppercase text-amber-600 mb-4"></p>
-          <h2 className="text-3xl md:text-4xl font-light text-red-900 mb-6">
-            Born in the Himalayas,<br className="hidden md:block" /> refined for conscious living
+      {/* 2. VALUE PROPOSITION BAR */}
+      <section className="bg-white border-y border-stone-200/60 py-12 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+          <div className="flex items-start space-x-4">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
+              🧶
+            </div>
+            <div>
+              <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">Authentic Handloom</h3>
+              <p className="text-stone-500 text-sm leading-relaxed">
+                Hand-spun without mass machinery. Direct support to Nepalese artisan communities.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-4">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
+              🌿
+            </div>
+            <div>
+              <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">100% Sustainable Fibers</h3>
+              <p className="text-stone-500 text-sm leading-relaxed">
+                Ethically harvested cashmere & fine wool with natural low-impact dyes.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-4">
+            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
+              ✨
+            </div>
+            <div>
+              <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">12–19 Micron Fineness</h3>
+              <p className="text-stone-500 text-sm leading-relaxed">
+                Exceptionably soft fibers selected for enduring comfort and year-round durability.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. CATEGORY COLLECTIONS */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+          <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-medium">Curated Wardrobe</span>
+          <h2 className="text-3xl md:text-5xl font-serif text-stone-900">Explore Collections</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Women */}
+          <NavigationLink
+            href="/clothing/women"
+            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+          >
+            <Image
+              src="/ladies_beige_cashmere_sweater_model.webp"
+              alt="Women's Cashmere Collection"
+              fill
+              className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Handcrafted</span>
+              <h3 className="text-2xl font-serif">Women's Collection</h3>
+            </div>
+          </NavigationLink>
+
+          {/* Men */}
+          <NavigationLink
+            href="/clothing/men"
+            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+          >
+            <Image
+              src="/indigo_folded_sweater.webp"
+              alt="Men's Wool Collection"
+              fill
+              className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Timeless</span>
+              <h3 className="text-2xl font-serif">Men's Collection</h3>
+            </div>
+          </NavigationLink>
+
+          {/* Unisex */}
+          <NavigationLink
+            href="/clothing/unisex"
+            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+          >
+            <Image
+              src="/himkash_logo_ragister.webp"
+              alt="Unisex Artisanal Collection"
+              fill
+              className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+            <div className="absolute top-6 right-6 z-10">
+              <span className="bg-white/90 backdrop-blur-md text-stone-900 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide shadow-sm">
+                Coming Soon
+              </span>
+            </div>
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Versatile</span>
+              <h3 className="text-2xl font-serif">Unisex Collection</h3>
+            </div>
+          </NavigationLink>
+        </div>
+      </section>
+
+      {/* 4. FOUNDER'S STORY FEATURE */}
+      <section className="bg-white py-24 border-y border-stone-200/60">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16 items-center">
+            
+            <div className="md:col-span-5 relative">
+              <div className="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto rounded-full overflow-hidden shadow-2xl border-8 border-[#FAF8F5]">
+                <Image
+                  src="/Anjana_proff_image.webp"
+                  alt="Anjana Bhatta - Founder of Himkash"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 256px, 320px"
+                  priority
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-7 space-y-6">
+              <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-medium">The Visionary</span>
+              <h2 className="text-3xl sm:text-4xl font-serif text-stone-900">
+                Created by Anjana Bhatta
+              </h2>
+              
+              <blockquote className="text-lg text-stone-600 font-serif italic border-l-2 border-amber-500 pl-4 py-1">
+                "Himkash was born from a vision to bridge two worlds—the timeless craftsmanship of Nepal and the conscious lifestyle of Europe."
+              </blockquote>
+
+              <p className="text-stone-500 text-base leading-relaxed font-light">
+                After moving to Portugal in 2016, I carried with me the rich heritage of Nepalese artistry. Together with my family, every garment is thoughtfully curated from high-altitude ethical sourcing to generational hand-spinning.
+              </p>
+
+              <div>
+                <NavigationLink
+                  href="/founders-story"
+                  className="inline-flex items-center text-sm uppercase tracking-widest font-medium text-stone-900 border-b border-stone-900 pb-1 hover:text-amber-700 hover:border-amber-700 transition-colors"
+                >
+                  Read Founder's Full Journey →
+                </NavigationLink>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 5. VIP LAUNCH / NEWSLETTER */}
+      <section className="py-24 px-6 bg-[#FAF8F5]">
+        <div className="max-w-4xl mx-auto text-center space-y-8 bg-white p-12 sm:p-16 rounded-3xl border border-stone-200/80 shadow-sm">
+          <span className="text-xs uppercase tracking-[0.3em] text-amber-700 font-medium">Exclusive Access</span>
+          <h2 className="text-3xl sm:text-5xl font-serif text-stone-900">
+            Official Launch: <span className="italic text-amber-800">July 2026</span>
           </h2>
-          <p className="text-neutral-500 text-lg leading-relaxed max-w-2xl mx-auto mb-12">
-            Every Himkash piece begins high in the mountains, where master artisans 
-            hand-spin the finest cashmere using techniques passed down through generations. 
-            We believe luxury should be conscious — kind to the people who create it, 
-            and enduring enough to last long.
+          <p className="text-stone-500 text-base max-w-lg mx-auto font-light leading-relaxed">
+            Be the first to know when our new seasonal drops arrive. Join our circle for private collection releases and artisan stories.
           </p>
 
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            { 
-              icon: "🧶", 
-              title: "Nepalese Craftsmanship", 
-              desc: "Each step is carried out entirely by hand by skilled Nepalese artisans — with no modern machines, every piece you choose directly supports these local artisans and keeps century-old traditions alive." 
-            },
-            { 
-              icon: "🌿", 
-              title: "Sustainably Made", 
-              desc: "Pure cashmere and fine wool, using natural dyeing to support the ecosystem. Made for long-lasting fashion rather than fast, mass production." 
-            },
-            { 
-              icon: "✨", 
-              title: "Timeless Quality", 
-              desc: "Designed to outlast trends — pieces you'll wear and love for years to come. Whether you choose our pure, finest 12–19 µm cashmere, our high-quality pure merino wool, or our unique 50/50 blend, our traditional hand-crafted methods ensure unmatched softness, durability, and premium quality across every collection." 
-            }
-          ].map((item, i) => (
-            <div key={i} className="flex flex-col items-center text-center gap-4 p-6 rounded-2xl bg-amber-50 border border-amber-100/50 shadow-sm">
-              <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-2xl text-red-900 shadow-inner">
-                {item.icon}
-              </div>
-              <h3 className="font-semibold text-lg text-red-900 tracking-wide uppercase font-serif">
-                {item.title}
-              </h3>
-              <p className="text-neutral-700 text-sm leading-relaxed max-w-xs">
-                {item.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-        </div>
-      </section>
-
-      {/* SECTION 2: Launch Information - Warm amber gradient */}
-      <section className="py-20 px-6 bg-gradient-to-r from-amber-50/50 to-red-50/50 relative z-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="space-y-6 text-center md:text-left">
-            <h2 className="text-3xl md:text-4xl font-light tracking-wide text-red-900">
-              Launching 
-              <span className="block text-amber-600 font-medium">
-                July 20, 2026
-              </span>
-            </h2>
-            <div className="w-16 h-[2px] bg-amber-600 mx-auto md:mx-0"></div>
-            <p className="text-neutral-700 text-lg leading-relaxed max-w-xl mx-auto md:mx-0">
-              Be among the first to experience 
-              <span className="text-red-900 font-medium"> Himkash</span> —
-              timeless Nepalese craftsmanship reimagined for Europe.
-            </p>
-            <div className="pt-6 flex justify-center md:justify-start">
-              <NavigationLink 
-                href="/signup" 
-                className="px-8 py-3 cursor-pointer bg-red-800 text-white rounded-full tracking-wide hover:bg-amber-700 transition-all duration-300 shadow-md hover:shadow-lg"
-              >
-                Sign Up to Join the Launch List
-              </NavigationLink>
-            </div>
+          <div className="pt-2 flex justify-center">
+            <NavigationLink
+              href="/signup"
+              className="px-10 py-4 bg-stone-900 text-white hover:bg-amber-800 rounded-full text-sm tracking-widest uppercase transition-all shadow-lg hover:shadow-stone-900/20"
+            >
+              Join the VIP Launch List
+            </NavigationLink>
           </div>
         </div>
       </section>
 
-      {/* SECTION 3: Founder's Story - Cream background */}
-      <section className="py-20 px-6 bg-[#FDFBF7] relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="relative w-80 h-80 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-amber-100">
-              {/* ✅ OPTIMIZED: Priority image with proper sizing */}
-              <Image
-                src="/Anjana_proff_image.webp"
-                alt="Anjana Bhatta - Founder of HIM-KASH"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 320px, 320px"
-                priority={true}
-              />
-            </div>
-            
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-red-900">Founder's Story</h2>
-              <p className="text-lg text-amber-600 font-medium">Anjana Bhatta</p>
-              <p className="text-neutral-700 leading-relaxed italic">
-                "From learning a new language and culture to building a business from the ground up, 
-                this journey has been one of continuous growth, resilience, and purpose."
-              </p>
-              <p className="text-neutral-700 leading-relaxed">
-                Himkash was born from a vision to bridge two worlds—the timeless craftsmanship of Nepal 
-                and the conscious, quality-driven lifestyle of Europe.
-              </p>
-              <NavigationLink 
-                href="/founders-story" 
-                className="inline-flex items-center text-amber-600 font-medium group"
-              >
-                Read full story 
-                <span className="ml-2 group-hover:translate-x-2 transition-transform">→</span>
-              </NavigationLink>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    {/* SECTION 4: Category Collection Grid */}
-<section className="py-16 bg-white relative z-10">
-  <div className="container mx-auto px-4 max-w-6xl">
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-10 lg:gap-16">
-      
-      {/* Women's Collection - NO Coming Soon badge */}
-      <NavigationLink href="/clothing/women" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
-        <Image
-          src="/ladies_beige_cashmere_sweater_model.webp"
-          alt="Women's Collection"
-          fill
-          className="object-contain transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          priority={true}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-        <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
-          <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
-            Women's Collection
-          </h3>
-        </div>
-        {/* ✅ Coming Soon badge REMOVED for Women */}
-      </NavigationLink>
-
-      {/* Men's Collection - NO Coming Soon badge */}
-      <NavigationLink href="/clothing/men" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
-        <Image
-          src="/indigo_folded_sweater.webp"
-          alt="Men's Collection"
-          fill
-          className="object-contain transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          priority={true}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-        <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
-          <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
-            Men's Collection
-          </h3>
-        </div>
-        {/* ✅ Coming Soon badge REMOVED for Men */}
-      </NavigationLink>
-
-      {/* Unisex Collection - KEEP Coming Soon badge */}
-      <NavigationLink href="/clothing/unisex" className="group relative block overflow-hidden rounded-xl aspect-[4/3] shadow-md hover:shadow-xl transition-all duration-300 bg-amber-50/30">
-        <Image
-          src="/himkash_logo_ragister.webp"
-          alt="Unisex Collection"
-          fill
-          className="object-contain transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent"></div>
-        <div className="absolute bottom-3 left-3 md:bottom-5 md:left-5 z-10">
-          <h3 className="text-white text-2xl md:text-4xl font-light tracking-wide drop-shadow-lg font-serif italic">
-            Uni-Sex Collection
-          </h3>
-        </div>
-        {/* ✅ Coming Soon badge KEPT for Unisex */}
-        <div className="absolute top-3 right-3 md:top-5 md:right-5 z-10">
-          <span className="bg-amber-500/90 backdrop-blur-sm text-white px-3 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-medium shadow-lg border border-white/20">
-            Coming Soon
-          </span>
-        </div>
-      </NavigationLink>
-    </div>
-  </div>
-</section>
-
-      {/* Share Section */}
-      <section className="relative bg-gradient-to-r from-red-800/5 to-amber-800/5 py-16 z-10">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm mb-3 text-neutral-500">Share with friends:</p>
+      {/* 6. SOCIAL SHARE STRIP */}
+      <section className="py-12 border-t border-stone-200/60 bg-white">
+        <div className="max-w-7xl mx-auto px-6 text-center space-y-4">
+          <p className="text-xs uppercase tracking-widest text-stone-400 font-medium">Share Himkash</p>
           <div className="flex justify-center">
-            <ShareButtons 
-              title="Check out HIM-KASH - Luxury Cashmere"
-              description="Discover timeless Himalayan craftsmanship"
-              hashtag="#HIMKASH #LuxuryCashmere"
-              iconSize={44}
+            <ShareButtons
+              title="Himkash - Handcrafted Himalayan Luxury Cashmere"
+              description="Discover pure cashmere and fine wool pieces ethically hand-spun in Nepal."
+              hashtag="#Himkash #SustainableLuxury #HandcraftedCashmere"
+              iconSize={40}
               round={true}
-              className="justify-center"
+              className="justify-center gap-3"
             />
           </div>
         </div>
       </section>
+
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Brand",
+            "name": "Himkash",
+            "url": "https://www.himkash.com",
+            "logo": "https://www.himkash.com/himkash_logo_ragister.webp",
+            "description": "Handcrafted Himalayan Cashmere & Fine Merino Wool ethically made in Nepal.",
+            "foundingDate": "2026",
+            "founder": {
+              "@type": "Person",
+              "name": "Anjana Bhatta"
+            }
+          }),
+        }}
+      />
+
     </div>
   );
 }
