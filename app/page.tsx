@@ -6,6 +6,8 @@ import ShareButtons from "@/components/ShareButtons";
 import type { Metadata } from "next";
 import { SimpleImageGrid } from "@/components/simple-image-grid";
 import { NavigationLink } from "@/components/navigation-link";
+import { FeaturedModelSpotlight } from "@/components/featured-model-spotlight";
+
 
 export const metadata: Metadata = {
   title: "Himkash | Handcrafted Himalayan Cashmere & Fine Wool",
@@ -126,6 +128,9 @@ export default async function Home() {
         </div>
       </section>
 
+        {/* 🟢 FEATURED MODEL SPOTLIGHT COMPONENT */}
+      <FeaturedModelSpotlight imageSrc="/feature model pic.webp" />
+
       {/* 2. VALUE PROPOSITION BAR */}
       <section className="bg-white border-y border-stone-200/60 py-12 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
@@ -181,7 +186,7 @@ export default async function Home() {
             className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
-              src="/ladies_beige_cashmere_sweater_model.webp"
+              src="/pink folded sweater.webp"
               alt="Women's Cashmere Collection"
               fill
               className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
@@ -201,7 +206,7 @@ export default async function Home() {
             className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
-              src="/indigo_folded_sweater.webp"
+              src="/royal_blue polo folded.webp"
               alt="Men's Wool Collection"
               fill
               className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
@@ -221,7 +226,7 @@ export default async function Home() {
             className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
-              src="/himkash_logo_ragister.webp"
+              src="/blue_brunello_folded.webp"
               alt="Unisex Artisanal Collection"
               fill
               className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
@@ -230,7 +235,7 @@ export default async function Home() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
             <div className="absolute top-6 right-6 z-10">
               <span className="bg-white/90 backdrop-blur-md text-stone-900 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide shadow-sm">
-                Coming Soon
+                New Arrival      
               </span>
             </div>
             <div className="absolute bottom-8 left-8 right-8 text-white">
@@ -303,7 +308,7 @@ export default async function Home() {
               href="/signup"
               className="px-10 py-4 bg-stone-900 text-white hover:bg-amber-800 rounded-full text-sm tracking-widest uppercase transition-all shadow-lg hover:shadow-stone-900/20"
             >
-              Join the VIP Launch List
+              Join the VIP Launch Year List
             </NavigationLink>
           </div>
         </div>

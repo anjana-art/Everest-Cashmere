@@ -5,10 +5,10 @@ import Image from "next/image";
 
 // Update these paths to match your actual image locations
 const imagesList = [
-  { src: "/5_cashmere_bg_sweater.webp", alt: "Product 1" },
-  { src: "/pink folded sweater.webp", alt: "Product 2" },
-  { src: "/indigo_cashmere_sweater.webp", alt: "Product 3" },
-  { src: "/new_arrival.webp", alt: "Product 4" },
+  { src: "/ladies toupe folded.webp", alt: "Product 1" },
+  { src: "/polo yellow fold.webp", alt: "Product 2" },
+  { src: "/polo light blue zoom.webp", alt: "Product 3" },
+  { src: "/toupe_brunello_zoom.webp", alt: "Product 4" },
 ];
 
 export const SimpleImageGrid = () => {
