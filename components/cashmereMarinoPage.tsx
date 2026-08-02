@@ -65,7 +65,7 @@ export default function CashmereMarinoPage({ products, currentGender, material }
 
 function ProductCard({ product }: { product: any }) {
   return (
-    <Link href={`/product/${product.id}`} className="group">
+    <Link href={`/products/${product.id}`} className="group">
       <div className="aspect-square overflow-hidden rounded-lg bg-gray-100 mb-3">
         {product.images?.[0] && (
           <img
