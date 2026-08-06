@@ -295,9 +295,8 @@ export default async function Home() {
       {/* 5. VIP LAUNCH / NEWSLETTER */}
       <section className="py-24 px-6 bg-[#FAF8F5]">
         <div className="max-w-4xl mx-auto text-center space-y-8 bg-white p-12 sm:p-16 rounded-3xl border border-stone-200/80 shadow-sm">
-          <span className="text-xs uppercase tracking-[0.3em] text-amber-700 font-medium">Exclusive Access</span>
           <h2 className="text-3xl sm:text-5xl font-serif text-stone-900">
-            Official Launch: <span className="italic text-amber-800">July 2026</span>
+            Handcrafted in Nepal <span className="italic text-amber-800">Now available in Portugal</span>
           </h2>
           <p className="text-stone-500 text-base max-w-lg mx-auto font-light leading-relaxed">
             Be the first to know when our new seasonal drops arrive. Join our circle for private collection releases and artisan stories.
@@ -306,9 +305,9 @@ export default async function Home() {
           <div className="pt-2 flex justify-center">
             <NavigationLink
               href="/signup"
-              className="px-10 py-4 bg-stone-900 text-white hover:bg-amber-800 rounded-full text-sm tracking-widest uppercase transition-all shadow-lg hover:shadow-stone-900/20"
+              className="px-10 py-4 bg-red-900 text-white hover:bg-amber-800 rounded-full text-sm tracking-widest uppercase transition-all shadow-lg hover:shadow-stone-900/20"
             >
-              Join the VIP Launch Year List
+              Join for new Updates
             </NavigationLink>
           </div>
         </div>
