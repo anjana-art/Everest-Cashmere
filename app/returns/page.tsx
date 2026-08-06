@@ -45,7 +45,7 @@ export default function ReturnsPage() {
           <section>
             <h2 className="text-xl font-semibold text-red-900 mb-3">3. Model Withdrawal Form</h2>
             <div className="bg-gray-50 p-4 rounded border border-gray-200 font-mono text-sm">
-              <p className="font-bold">To: [Your Name], himkash.info@gmail.com, +351 920 817 350</p>
+              <p className="font-bold">To: Anjana Bhatta, himkash.info@gmail.com, +351 920 817 350</p>
               <p className="mt-2">I hereby give notice that I withdraw from my contract of sale of the following goods:</p>
               <p className="mt-2">- Ordered on: _______________</p>
               <p className="mt-2">- Received on: _______________</p>
@@ -87,7 +87,7 @@ export default function ReturnsPage() {
               tracked shipping service, as we cannot be responsible for items lost in transit.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              Return address: [Your Return Address - to be provided]
+              For Further information contact to costumer service.
             </p>
           </section>
 
@@ -95,16 +95,14 @@ export default function ReturnsPage() {
             <h2 className="text-xl font-semibold text-red-900 mb-3">6. Refunds</h2>
             <p className="text-gray-700 leading-relaxed mb-3">
               If you withdraw from this contract, we will reimburse all payments received from you, including delivery 
-              costs (except for any supplementary costs arising from your choice of a delivery method other than the 
-              cheapest standard delivery method we offer).
+              costs.
             </p>
             <p className="text-gray-700 leading-relaxed mb-3">
               We will make the refund using the same payment method you used for the original transaction, unless you 
               expressly agree otherwise. You will not incur any fees as a result of the refund.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              <strong>We may withhold the refund until we have received the goods back, or until you have supplied 
-              evidence of having sent back the goods, whichever is earliest.</strong>
+              <strong>We may withhold the refund until we have received the goods back and carefully inspected.</strong>
             </p>
           </section>
 

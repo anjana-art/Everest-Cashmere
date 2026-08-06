@@ -1,4 +1,4 @@
-// app/api/admin/products/[id]/route.ts - COMPLETE REPLACEMENT WITH FIXED PATCH & ERROR HANDLING
+// app/api/admin/products/[id]/route.ts - COMPLETE REPLACEMENT WITH DEBUG LOGS FOR sizeGuide
 
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -136,6 +136,7 @@ export async function GET(
 
     console.log('✅ Product found:', product.name);
     console.log('✅ Variants count:', product.variants?.length || 0);
+    console.log('✅ sizeGuide value:', product.sizeGuide || 'null');
     
     return NextResponse.json(product);
   } catch (error) {
@@ -187,6 +188,11 @@ export async function PATCH(
     
     console.log('📥 Received update body keys:', Object.keys(body));
     
+    // --- DEBUG: Log sizeGuide specifically ---
+    console.log('🔍 [DEBUG] sizeGuide from client:', body.sizeGuide);
+    console.log('🔍 [DEBUG] sizeGuide type:', typeof body.sizeGuide);
+    console.log('🔍 [DEBUG] sizeGuide value:', body.sizeGuide === undefined ? 'undefined' : body.sizeGuide === null ? 'null' : body.sizeGuide || 'empty string');
+    
     // Check for base64 images in request - FIXED: Added :string type to img parameter
     if (body.images && Array.isArray(body.images)) {
       const hasBase64 = body.images.some((img: string) => typeof img === 'string' && img.startsWith('data:image/'));
@@ -230,12 +236,25 @@ export async function PATCH(
       );
     }
 
+    console.log('📦 Existing product sizeGuide:', existingProduct.sizeGuide || 'null');
+
     // Update product basic info
     const updateFields: any = {};
     
     if (body.name !== undefined) updateFields.name = body.name;
     if (body.description !== undefined) updateFields.description = body.description;
     if (body.price !== undefined) updateFields.price = parseFloat(body.price);
+    
+    // --- DEBUG: Handle sizeGuide with explicit logging ---
+    if (body.sizeGuide !== undefined) {
+      // If sizeGuide is empty string, treat as null
+      const sizeGuideValue = body.sizeGuide === '' ? null : body.sizeGuide;
+      updateFields.sizeGuide = sizeGuideValue;
+      console.log('✅ [DEBUG] Setting sizeGuide to:', sizeGuideValue);
+      console.log('✅ [DEBUG] sizeGuide type being saved:', typeof sizeGuideValue);
+    } else {
+      console.log('⚠️ [DEBUG] sizeGuide not provided in request body');
+    }
     
     // Handle images - validate and filter
     if (body.images !== undefined) {
@@ -258,6 +277,10 @@ export async function PATCH(
     if (body.defaultSize !== undefined) updateFields.defaultSize = body.defaultSize;
     if (body.isActive !== undefined) updateFields.isActive = body.isActive;
 
+    // --- DEBUG: Log final updateFields ---
+    console.log('📦 [DEBUG] Final updateFields:', JSON.stringify(updateFields, null, 2));
+    console.log('📦 [DEBUG] sizeGuide in updateFields:', updateFields.sizeGuide);
+
     // Update the product
     const product = await prisma.product.update({
       where: { id: productId },
@@ -265,6 +288,7 @@ export async function PATCH(
     });
 
     console.log('✅ Product basic info updated:', product.name);
+    console.log('✅ [DEBUG] Product sizeGuide after update:', product.sizeGuide || 'null');
 
     // IMPORTANT: Update variant stocks from variantStocks object
     if (body.variantStocks && typeof body.variantStocks === 'object') {
@@ -369,6 +393,8 @@ export async function PATCH(
         }
       }
     });
+
+    console.log('📤 [DEBUG] Returning product with sizeGuide:', updatedProduct?.sizeGuide || 'null');
 
     return NextResponse.json({
       success: true,

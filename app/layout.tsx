@@ -20,10 +20,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.himkash.com"),
   title: {
-    default: "Himkash | Handmade Himalayan Cashmere & Fine Wool",
+    default: "Himkash | Himalayan Cashmere & Fine Wool | Handcrafted in Nepal, Now available in Portugal",
     template: "%s | HIMKASH",
   },
-  description: "Discover pure cashmere and fine wool pieces, handmade in Nepal. HIM-KASH brings sustainable Himalayan luxury to a conscious European lifestyle.",
+  description: "Discover Pure Cashmere and fine Merino wool pieces, Handcrafted in Nepal. Himkash brings sustainable Himalayan Luxury to a conscious European lifestyle.",
   // ... rest of your metadata
 };
 

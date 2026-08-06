@@ -1,4 +1,4 @@
-// components/product-detail.tsx - Full page with stock limits fixed
+// components/product-detail.tsx - Fixed size guide with debug
 
 "use client";
 
@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Button } from "./ui/button";
 import { useCartStore } from "@/store/cart-store";
 import { useState, useEffect } from "react";
-import { HeartIcon, ShoppingBagIcon, PlusIcon, TruckIcon, ShieldCheckIcon, ArrowPathIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { HeartIcon, ShoppingBagIcon, PlusIcon, TruckIcon, ShieldCheckIcon, ArrowPathIcon, SparklesIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import { SimilarProducts } from "./similar-products";
@@ -26,6 +26,7 @@ interface Product {
   description: string | null;
   price: number;
   images: string[];
+  sizeGuide?: string | null;
   metadata?: {
     category?: string;
     [key: string]: any;
@@ -70,6 +71,10 @@ export const ProductDetail = ({ product }: Props) => {
   const [sizeStockMap, setSizeStockMap] = useState<Record<string, number>>({});
   
   const [mainImage, setMainImage] = useState<string>(product.images?.[0] || '');
+  
+  // NEW: Lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   
   const dbColors = product.availableColors || [];
   const dbSizes = product.availableSizes || [];
@@ -388,6 +393,42 @@ export const ProductDetail = ({ product }: Props) => {
     return `€${price.toFixed(2).replace('.', ',')}`;
   };
 
+  // NEW: Lightbox navigation functions
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    document.body.style.overflow = 'unset';
+  };
+
+  const prevImage = () => {
+    setLightboxIndex((prev) => 
+      prev === 0 ? (product.images?.length || 1) - 1 : prev - 1
+    );
+  };
+
+  const nextImage = () => {
+    setLightboxIndex((prev) => 
+      prev === (product.images?.length || 1) - 1 ? 0 : prev + 1
+    );
+  };
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!lightboxOpen) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') prevImage();
+      if (e.key === 'ArrowRight') nextImage();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen]);
+
   if (!product || !product.id || !product.stripeId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 py-8">
@@ -420,7 +461,12 @@ export const ProductDetail = ({ product }: Props) => {
       return map[product.accessoriesType] || product.accessoriesType;
     }
     return null;
-  };  
+  };
+
+  // Debug: Log sizeGuide to console
+  console.log('🔍 [DEBUG] Product sizeGuide from props:', product.sizeGuide);
+  console.log('🔍 [DEBUG] Product sizeGuide type:', typeof product.sizeGuide);
+  console.log('🔍 [DEBUG] Product sizeGuide length:', product.sizeGuide?.length);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 py-12">
@@ -430,16 +476,29 @@ export const ProductDetail = ({ product }: Props) => {
             {/* Left Column - Product Images with Gallery */}
             <div className="bg-gradient-to-br from-amber-50/50 to-rose-50/50 p-8 lg:p-10">
               <div className="space-y-4">
-                {/* Main Image */}
-                <div className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-inner border border-amber-100">
+                {/* Main Image - NOW CLICKABLE */}
+                <div 
+                  className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-inner border border-amber-100 cursor-zoom-in group"
+                  onClick={() => openLightbox(0)}
+                >
                   {mainImage ? (
-                    <Image
-                      src={mainImage}
-                      alt={product.name}
-                      fill
-                      className="object-contain transition-transform duration-700 hover:scale-110"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
+                    <>
+                      <Image
+                        src={mainImage}
+                        alt={product.name}
+                        fill
+                        className="object-contain transition-transform duration-700 hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                      />
+                      {/* Zoom icon overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-amber-700">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                          </svg>
+                        </div>
+                      </div>
+                    </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-amber-50">
                       <span className="text-amber-300 font-light">Luxury image coming soon</span>
@@ -447,7 +506,10 @@ export const ProductDetail = ({ product }: Props) => {
                   )}
                   
                   <button
-                    onClick={handleAddToWishlist}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToWishlist();
+                    }}
                     disabled={loadingWishlist || !selectedVariant}
                     className="absolute top-4 right-4 p-3.5 bg-white/95 backdrop-blur-sm rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 z-10 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-200/50 group"
                     aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
@@ -492,6 +554,202 @@ export const ProductDetail = ({ product }: Props) => {
                     </div>
                   ))}
                 </div>
+
+                {/* Share button */}
+                <div className="flex items-center justify-between pt-2">
+                  <ProductShare product={product} />
+                </div>
+
+                {/* Success Message */}
+                {showSuccessMessage && (
+                  <div className="fixed bottom-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-in slide-in-from-right duration-300">
+                    ✅ Added {quantity} item{quantity > 1 ? 's' : ''} to cart!
+                  </div>
+                )}
+
+                {/* Care Instructions */}
+                <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+                  <button 
+                    onClick={() => setShowCareDetails(!showCareDetails)}
+                    className="flex items-start gap-3 w-full text-left"
+                  >
+                    <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                          Care Instructions for Nepalese Cashmere
+                        </h4>
+                        <span className="text-amber-600 text-xl">
+                          {showCareDetails ? '−' : '+'}
+                        </span>
+                      </div>
+                      
+                      {!showCareDetails && (
+                        <p className="text-sm text-red-700 font-light mt-1">
+                          Hand wash cold, lay flat to dry, store folded. Click for full details →
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                  
+                  {showCareDetails && (
+                    <div className="mt-4 space-y-3 text-sm pl-8">
+                      <div>
+                        <p className="font-medium text-red-800">🧼 Washing Instructions</p>
+                        <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">🌀 Drying Method</p>
+                        <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
+                        <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
+                        <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
+                        <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">❌ What to Avoid</p>
+                        <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
+                      </div>
+                      
+                      <div className="pt-2">
+                        <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
+                          🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Size Chart Section - FIXED with debug */}
+                <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+                  <button 
+                    onClick={() => setShowSizeChart(!showSizeChart)}
+                    className="flex items-start gap-3 w-full text-left"
+                  >
+                    <div className="flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                          Size Guide
+                        </h4>
+                        <span className="text-amber-600 text-xl">
+                          {showSizeChart ? '−' : '+'}
+                        </span>
+                      </div>
+                      
+                      {!showSizeChart && (
+                        <p className="text-sm text-red-700 font-light mt-1">
+                          {product.sizeGuide && product.sizeGuide.trim() !== '' 
+                            ? 'Click to view size guide →' 
+                            : 'No size guide available for this product'}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                  
+                  {/* Show the image when sizeGuide exists */}
+                  {showSizeChart && product.sizeGuide && product.sizeGuide.trim() !== '' && (
+                    <div className="mt-4 pt-2">
+                      <div className="relative w-full overflow-hidden rounded-lg">
+                        <Image
+                          src={product.sizeGuide}
+                          alt="Size guide"
+                          width={800}
+                          height={600}
+                          className="w-full h-auto object-contain"
+                          sizes="(max-width: 768px) 100vw, 800px"
+                          onError={(e) => {
+                            console.error('❌ [DEBUG] Image failed to load:', product.sizeGuide);
+                            e.currentTarget.style.display = 'none';
+                            // Show error message
+                            const parent = e.currentTarget.parentElement?.parentElement;
+                            if (parent) {
+                              const errorMsg = document.createElement('p');
+                              errorMsg.className = 'text-red-600 text-sm text-center p-4';
+                              errorMsg.textContent = 'Failed to load size guide image';
+                              parent.appendChild(errorMsg);
+                            }
+                          }}
+                          onLoad={() => {
+                            console.log('✅ [DEBUG] Image loaded successfully:', product.sizeGuide);
+                          }}
+                        />
+                      </div>
+                      <div className="mt-3 text-xs text-center text-red-700 font-light">
+                        <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {showSizeChart && (!product.sizeGuide || product.sizeGuide.trim() === '') && (
+                    <div className="mt-4 p-4 text-center text-red-600 text-sm">
+                      No size guide available for this product
+                    </div>
+                  )}
+                </div>
+
+                {/* Shipping & Returns */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
+                  <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+                    <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <p className="font-serif text-sm text-red-900">Complimentry and Fast Shipping</p>
+                      <p className="text-xs text-red-700 font-light">within 5-6 business days</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+                    <ArrowPathIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <p className="font-serif text-sm text-red-900">Easy Returns</p>
+                      <p className="text-xs text-red-700 font-light">14-day policy</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+                    <ShieldCheckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <p className="font-serif text-sm text-red-900">Secure Payment</p>
+                      <p className="text-xs text-red-700 font-light">100% secure</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metadata */}
+                {product.metadata && Object.keys(product.metadata).length > 0 && (
+                  <div className="pt-4 border-t border-amber-100">
+                    <h3 className="font-serif text-lg text-red-900 mb-4 tracking-wide">
+                      Details
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.entries(product.metadata).map(([key, value]) => (
+                        <div key={key} className="text-sm p-3 bg-amber-50/50 rounded-lg">
+                          <span className="font-serif text-red-800 capitalize block mb-1">
+                            {key.replace('_', ' ')}
+                          </span>
+                          <span className="text-amber-700 font-light">
+                            {String(value)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -511,10 +769,57 @@ export const ProductDetail = ({ product }: Props) => {
               </div>
 
               {product.description && (
-                <div className="prose max-w-none">
-                  <p className="text-red-800 leading-relaxed font-light italic">
-                    {product.description}
-                  </p>
+                <div className="mt-8 space-y-5 text-stone-700">
+                  {product.description
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .map((line, index) => {
+                      const isHeading = [
+                        "Product details",
+                        "Fit and styling",
+                        "Care",
+                      ].includes(line);
+
+                      const isBullet = line.startsWith("•");
+
+                      if (isHeading) {
+                        return (
+                          <h3
+                            key={index}
+                            className="pt-4 text-sm font-semibold uppercase tracking-[0.18em] text-stone-900"
+                          >
+                            {line}
+                          </h3>
+                        );
+                      }
+
+                      if (isBullet) {
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-start gap-3 border-b border-stone-200/70 pb-3 text-sm leading-6"
+                          >
+                            <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-red-800" />
+
+                            <span>{line.replace(/^•\s*/, "")}</span>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <p
+                          key={index}
+                          className={
+                            index === 0
+                              ? "font-serif text-xl leading-8 text-stone-900"
+                              : "text-[15px] font-light leading-7"
+                          }
+                        >
+                          {line}
+                        </p>
+                      );
+                    })}
                 </div>
               )}
 
@@ -685,132 +990,6 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* Share button */}
-              <div className="flex items-center justify-between pt-2">
-                <ProductShare product={product} />
-              </div>
-
-              {/* Success Message */}
-              {showSuccessMessage && (
-                <div className="fixed bottom-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-in slide-in-from-right duration-300">
-                  ✅ Added {quantity} item{quantity > 1 ? 's' : ''} to cart!
-                </div>
-              )}
-
-              {/* Care Instructions */}
-              <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                <button 
-                  onClick={() => setShowCareDetails(!showCareDetails)}
-                  className="flex items-start gap-3 w-full text-left"
-                >
-                  <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                        Care Instructions for Nepalese Cashmere
-                      </h4>
-                      <span className="text-amber-600 text-xl">
-                        {showCareDetails ? '−' : '+'}
-                      </span>
-                    </div>
-                    
-                    {!showCareDetails && (
-                      <p className="text-sm text-red-700 font-light mt-1">
-                        Hand wash cold, lay flat to dry, store folded. Click for full details →
-                      </p>
-                    )}
-                  </div>
-                </button>
-                
-                {showCareDetails && (
-                  <div className="mt-4 space-y-3 text-sm pl-8">
-                    <div>
-                      <p className="font-medium text-red-800">🧼 Washing Instructions</p>
-                      <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
-                    </div>
-                    
-                    <div>
-                      <p className="font-medium text-red-800">🌀 Drying Method</p>
-                      <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
-                    </div>
-                    
-                    <div>
-                      <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
-                      <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
-                    </div>
-                    
-                    <div>
-                      <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
-                      <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
-                    </div>
-                    
-                    <div>
-                      <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
-                      <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
-                    </div>
-                    
-                    <div>
-                      <p className="font-medium text-red-800">❌ What to Avoid</p>
-                      <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
-                    </div>
-                    
-                    <div className="pt-2">
-                      <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
-                        🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Size Chart Section */}
-              <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                <button 
-                  onClick={() => setShowSizeChart(!showSizeChart)}
-                  className="flex items-start gap-3 w-full text-left"
-                >
-                  <div className="flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                        Size Guide
-                      </h4>
-                      <span className="text-amber-600 text-xl">
-                        {showSizeChart ? '−' : '+'}
-                      </span>
-                    </div>
-                    
-                    {!showSizeChart && (
-                      <p className="text-sm text-red-700 font-light mt-1">
-                        Click to view our size measurements guide →
-                      </p>
-                    )}
-                  </div>
-                </button>
-                
-                {showSizeChart && (
-                  <div className="mt-4 pt-2">
-                    <div className="relative w-full overflow-hidden rounded-lg">
-                      <Image
-                        src="/size_chart_himkash_fr_castelo.webp"
-                        alt="Size chart for cashmere sweaters - measurements in cm and inches"
-                        width={800}
-                        height={600}
-                        className="w-full h-auto object-contain"
-                        sizes="(max-width: 768px) 100vw, 800px"
-                      />
-                    </div>
-                    <div className="mt-3 text-xs text-center text-red-700 font-light">
-                      <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* Action Buttons - Fixed with proper stock limits */}
               <div className="space-y-4 pt-4">
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -869,56 +1048,109 @@ export const ProductDetail = ({ product }: Props) => {
                   </div>
                 )}
               </div>
-
-              {/* Shipping & Returns */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
-                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                  <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <p className="font-serif text-sm text-red-900">Free Shipping</p>
-                    <p className="text-xs text-red-700 font-light">Orders over €100</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                  <ArrowPathIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <p className="font-serif text-sm text-red-900">Easy Returns</p>
-                    <p className="text-xs text-red-700 font-light">14-day policy</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                  <ShieldCheckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <p className="font-serif text-sm text-red-900">Secure Payment</p>
-                    <p className="text-xs text-red-700 font-light">100% secure</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Metadata */}
-              {product.metadata && Object.keys(product.metadata).length > 0 && (
-                <div className="pt-4 border-t border-amber-100">
-                  <h3 className="font-serif text-lg text-red-900 mb-4 tracking-wide">
-                    Details
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(product.metadata).map(([key, value]) => (
-                      <div key={key} className="text-sm p-3 bg-amber-50/50 rounded-lg">
-                        <span className="font-serif text-red-800 capitalize block mb-1">
-                          {key.replace('_', ' ')}
-                        </span>
-                        <span className="text-amber-700 font-light">
-                          {String(value)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* NEW: Lightbox/Modal for full-screen image viewing */}
+      {lightboxOpen && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center"
+          onClick={closeLightbox}
+        >
+          {/* Close button */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 z-10 text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
+            aria-label="Close image viewer"
+          >
+            <XMarkIcon className="w-10 h-10" />
+          </button>
+
+          {/* Image counter */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-sm font-light bg-black/50 px-4 py-2 rounded-full">
+            {lightboxIndex + 1} / {product.images?.length || 1}
+          </div>
+
+          {/* Main image */}
+          <div 
+            className="relative w-full h-full max-w-7xl max-h-[90vh] mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {product.images && product.images[lightboxIndex] ? (
+              <Image
+                src={product.images[lightboxIndex]}
+                alt={`${product.name} - View ${lightboxIndex + 1}`}
+                fill
+                className="object-contain"
+                sizes="100vw"
+                priority
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white/50">
+                <span>Image not available</span>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation buttons - only show if more than 1 image */}
+          {product.images && product.images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors p-3 rounded-full hover:bg-white/10 bg-black/30 backdrop-blur-sm"
+                aria-label="Previous image"
+              >
+                <ChevronLeftIcon className="w-8 h-8" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextImage();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors p-3 rounded-full hover:bg-white/10 bg-black/30 backdrop-blur-sm"
+                aria-label="Next image"
+              >
+                <ChevronRightIcon className="w-8 h-8" />
+              </button>
+
+              {/* Thumbnail strip at bottom */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 max-w-[80vw] overflow-x-auto px-4 pb-2">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightboxIndex(index);
+                    }}
+                    className={`relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                      index === lightboxIndex 
+                        ? 'border-amber-400 scale-110 shadow-lg shadow-amber-400/30' 
+                        : 'border-white/30 hover:border-white/60'
+                    }`}
+                  >
+                    <Image
+                      src={image}
+                      alt={`Thumbnail ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Hint text */}
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 text-white/30 text-xs font-light hidden sm:block">
+            Click outside image to close • Use arrow keys to navigate
+          </div>
+        </div>
+      )}
 
       <SimilarProducts 
         currentProductId={product.id}

@@ -220,6 +220,7 @@ model Product {
   description String?
   price       Decimal     @db.Decimal(10, 2)
   images      String[]
+  sizeGuide   String? 
   category    ProductCategory?
   
   clothingType    ClothingType?

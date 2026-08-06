@@ -1,4 +1,5 @@
-// app/products/[id]/page.tsx
+// app/products/[id]/page.tsx - ADD sizeGuide to the query
+
 import { ProductDetail } from "@/components/product-detail";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -112,6 +113,7 @@ export default async function ProductPage({
       description: true,
       price: true,
       images: true,
+      sizeGuide: true, // ⭐ ADD THIS LINE - FIXES THE ISSUE
       category: true,
       clothingType: true,
       availableColors: true,
@@ -142,6 +144,7 @@ export default async function ProductPage({
         description: product.description,
         price: Number(product.price),
         images: product.images || [],
+        sizeGuide: product.sizeGuide || null, // ⭐ PASS THE sizeGuide TO THE COMPONENT
         category: product.category,
         clothingType: product.clothingType,
         availableColors: product.availableColors || [],

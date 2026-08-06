@@ -6,9 +6,12 @@ import MinimalImageUpload from '@/components/admin/MinimalImageUpload';
 import { 
   CheckCircleIcon,
   XMarkIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import Image from 'next/image';
+
 
 const COLORS = [
   { value: 'baby-pink', name: 'Baby Pink', hex: '#F8C8DC' },
@@ -46,12 +49,15 @@ export default function EditProductPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [uploadingSizeGuide, setUploadingSizeGuide] = useState(false);
+
   
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     images: [] as string[],
+    sizeGuide: '', 
     category: '',
     clothingType: '',
     gender: '',
@@ -76,6 +82,55 @@ export default function EditProductPage() {
     }
   }, [productId]);
 
+  
+ // app/admin/products/edit/[id]/page.tsx - Fix upload function
+
+const uploadSizeGuide = async (file: File) => {
+  try {
+    setUploadingSizeGuide(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    console.log('📤 Uploading size guide...');
+
+    const response = await fetch('/api/admin/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to upload size guide');
+    }
+
+    const data = await response.json();
+    console.log('✅ Size guide uploaded, URL:', data.url);
+    
+    // --- FIX: Make sure we're setting the URL correctly ---
+    setFormData(prev => ({ 
+      ...prev, 
+      sizeGuide: data.url 
+    }));
+    
+    setSuccess('Size guide uploaded successfully!');
+    setTimeout(() => setSuccess(''), 3000);
+  } catch (err: any) {
+    console.error('❌ Error uploading size guide:', err);
+    setError(err.message);
+    setTimeout(() => setError(''), 5000);
+  } finally {
+    setUploadingSizeGuide(false);
+  }
+};
+  // Remove size guide
+  const removeSizeGuide = () => {
+    console.log('🗑️ [DEBUG] Removing size guide');
+    setFormData(prev => ({ ...prev, sizeGuide: '' }));
+    console.log('✅ [DEBUG] formData.sizeGuide set to empty string');
+  };
+
+
+
   const fetchProduct = async () => {
     try {
       setLoading(true);
@@ -93,12 +148,14 @@ export default function EditProductPage() {
       const product = await response.json();
       
       console.log('✅ Product loaded, images:', product.images);
+      console.log('✅ [DEBUG] Product sizeGuide from API:', product.sizeGuide || 'null');
 
       setFormData({
         name: product.name || '',
         description: product.description || '',
         price: product.price ? product.price.toString() : '0',
         images: product.images && Array.isArray(product.images) ? product.images : [],
+        sizeGuide: product.sizeGuide || '', 
         category: product.category || '',
         clothingType: product.clothingType || '',
         gender: product.gender || '',
@@ -110,6 +167,8 @@ export default function EditProductPage() {
         stock: product.stock ? product.stock.toString() : '0',
         isActive: product.isActive !== undefined ? product.isActive : true,
       });
+      
+      console.log('✅ [DEBUG] formData.sizeGuide set to:', product.sizeGuide || 'empty');
       
       // Store original images for comparison
       setOriginalImages(product.images && Array.isArray(product.images) ? product.images : []);
@@ -178,6 +237,12 @@ export default function EditProductPage() {
     setError('');
     setSuccess('');
 
+    // --- DEBUG: Log formData before submit ---
+    console.log('📤 [DEBUG] ===== SUBMITTING FORM =====');
+    console.log('📤 [DEBUG] formData.sizeGuide value:', formData.sizeGuide);
+    console.log('📤 [DEBUG] formData.sizeGuide type:', typeof formData.sizeGuide);
+    console.log('📤 [DEBUG] formData.sizeGuide:', formData.sizeGuide === '' ? 'empty string' : formData.sizeGuide || 'null');
+
     if (!formData.name || !formData.price || formData.images.length === 0) {
       setError('Please fill in all required fields: Name, Price, and at least one image');
       setSaving(false);
@@ -201,6 +266,7 @@ export default function EditProductPage() {
         price: parseFloat(formData.price),
         // Only send images if they were modified OR if it's a valid URL
         ...(imagesModified && { images: formData.images }),
+        sizeGuide: formData.sizeGuide || null, // Make sure it's null if empty
         category: formData.category || null,
         clothingType: formData.clothingType || null,
         gender: formData.gender || null,
@@ -214,6 +280,16 @@ export default function EditProductPage() {
         variantStocks: variantStocks,
       };
 
+      // --- DEBUG: Log what's being sent ---
+      console.log('📤 [DEBUG] productData.sizeGuide being sent:', productData.sizeGuide);
+      console.log('📤 [DEBUG] productData.sizeGuide type:', typeof productData.sizeGuide);
+      console.log('📤 [DEBUG] Full productData keys:', Object.keys(productData));
+      console.log('📤 [DEBUG] Full productData (truncated):', {
+        ...productData,
+        images: productData.images?.map(img => img.substring(0, 50) + '...'),
+        variantStocks: Object.keys(productData.variantStocks).length + ' variants'
+      });
+
       // Calculate approximate request size
       const requestSize = JSON.stringify(productData).length;
       console.log(`📦 Request size: ${(requestSize / 1024 / 1024).toFixed(2)} MB`);
@@ -225,11 +301,6 @@ export default function EditProductPage() {
         return;
       }
 
-      console.log('📤 Updating product with data (images are URLs):', {
-        ...productData,
-        images: productData.images?.map(img => img.substring(0, 50) + '...')
-      });
-
       const response = await fetch(`/api/admin/products/${productId}`, {
         method: 'PATCH',
         headers: {
@@ -239,6 +310,11 @@ export default function EditProductPage() {
       });
 
       const data = await response.json();
+
+      // --- DEBUG: Log response ---
+      console.log('📥 [DEBUG] Response status:', response.status);
+      console.log('📥 [DEBUG] Response data:', data);
+      console.log('📥 [DEBUG] Response product sizeGuide:', data.product?.sizeGuide || 'null');
 
       if (!response.ok) {
         // Handle specific error cases
@@ -522,6 +598,58 @@ export default function EditProductPage() {
             {formData.images.some(img => img.length > 1000) && (
               <p className="text-amber-600 mt-2">⚠️ Warning: Some images appear to be base64 encoded. Please re-upload them as files.</p>
             )}
+          </div>
+        </div>
+
+        
+        {/* NEW: Size Guide Upload */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Size Guide Image</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Upload a size guide image for this product (optional)
+          </p>
+          
+          {formData.sizeGuide ? (
+            <div className="relative w-48 h-48 rounded-lg overflow-hidden border border-gray-200">
+              <Image
+                src={formData.sizeGuide}
+                alt="Size guide"
+                fill
+                className="object-contain"
+              />
+              <button
+                type="button"
+                onClick={removeSizeGuide}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadSizeGuide(file);
+                }}
+                disabled={uploadingSizeGuide}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
+              />
+              {uploadingSizeGuide && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                  Uploading...
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="mt-4 text-sm text-gray-500">
+            <p>✓ Recommended size: 1200px width</p>
+            <p>✓ Supported formats: JPG, PNG, WEBP</p>
+            <p>✓ Max file size: 5MB</p>
           </div>
         </div>
 

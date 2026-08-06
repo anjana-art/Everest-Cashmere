@@ -11,8 +11,8 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-red-900 mb-3">1. General Information</h2>
             <p className="text-gray-700 leading-relaxed">
-              This website is operated by [Your Name], acting as a sole proprietor ("Empresário em Nome Individual"), 
-              with NIF: [Your NIF]. Throughout the site, the terms "we", "us" and "our" refer to this online store. 
+              This website is operated by Anjana Bhatta, acting as a sole proprietor ("Empresário em Nome Individual"), 
+              with NIF: 290131146. Throughout the site, the terms "we", "us" and "our" refer to this online store. 
               By using this site, you agree to be bound by the following terms and conditions.
             </p>
           </section>
@@ -46,7 +46,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-red-900 mb-3">4. Payment</h2>
             <p className="text-gray-700 leading-relaxed">
-              We accept the following payment methods: [list your payment methods - e.g., Credit Card, MB Way, PayPal]. 
+              We accept the following payment methods: Debit Card, Credit Card . 
               All payments are processed through secure payment gateways. We do not store your payment information.
             </p>
           </section>

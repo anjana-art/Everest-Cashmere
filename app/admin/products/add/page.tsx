@@ -6,8 +6,12 @@ import { useRouter } from 'next/navigation';
 import MinimalImageUpload from '@/components/admin/MinimalImageUpload';
 import { 
   CheckCircleIcon,
-  XMarkIcon
+  XMarkIcon, 
+   TrashIcon
+
 } from '@heroicons/react/24/outline';
+
+import Image from 'next/image';
 
 const COLORS = [
   { value: 'baby-pink', name: 'Baby Pink', hex: '#F8C8DC' },
@@ -35,12 +39,15 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [uploadingSizeGuide, setUploadingSizeGuide] = useState(false);
+
   
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     images: [] as string[],
+    sizeGuide: '',
     category: '',
     clothingType: '',
     gender: '',
@@ -52,6 +59,39 @@ export default function AddProductPage() {
     stock: '0',
     isActive: true,
   });
+
+    // NEW: Upload size guide to Cloudinary
+  const uploadSizeGuide = async (file: File) => {
+    try {
+      setUploadingSizeGuide(true);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload size guide');
+      }
+
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, sizeGuide: data.url }));
+      alert('Size guide uploaded successfully!');
+    } catch (err: any) {
+      console.error('Error uploading size guide:', err);
+      setError(err.message);
+    } finally {
+      setUploadingSizeGuide(false);
+    }
+  };
+
+  // NEW: Remove size guide
+  const removeSizeGuide = () => {
+    setFormData(prev => ({ ...prev, sizeGuide: '' }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +112,7 @@ export default function AddProductPage() {
         description: formData.description,
         price: parseFloat(formData.price),
         images: formData.images,
+        sizeGuide: formData.sizeGuide || null, // ⭐ ADD THIS LINE
         category: formData.category || null,
         clothingType: formData.clothingType || null,
         gender: formData.gender || null,
@@ -323,6 +364,58 @@ export default function AddProductPage() {
             <p>✓ Supported formats: JPG, PNG, WEBP</p>
           </div>
         </div>
+
+        {/* NEW: Size Guide Upload */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Size Guide Image</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Upload a size guide image for this product (optional)
+          </p>
+          
+          {formData.sizeGuide ? (
+            <div className="relative w-48 h-48 rounded-lg overflow-hidden border border-gray-200">
+              <Image
+                src={formData.sizeGuide}
+                alt="Size guide"
+                fill
+                className="object-contain"
+              />
+              <button
+                type="button"
+                onClick={removeSizeGuide}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadSizeGuide(file);
+                }}
+                disabled={uploadingSizeGuide}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
+              />
+              {uploadingSizeGuide && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
+                  Uploading...
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="mt-4 text-sm text-gray-500">
+            <p>✓ Recommended size: 1200px width</p>
+            <p>✓ Supported formats: JPG, PNG, WEBP</p>
+            <p>✓ Max file size: 5MB</p>
+          </div>
+        </div>
+
 
         {/* Colors */}
         <div className="bg-white rounded-xl shadow p-6">

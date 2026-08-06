@@ -405,6 +405,7 @@ export async function POST(request: NextRequest) {
         description: (body.description || '').trim(),
         price: price,
         images: images.map((img: string) => img.trim()),
+        sizeGuide: body.sizeGuide || null, // NEW
         category: body.category || null,
         clothingType: body.clothingType || null,
         gender: body.gender || null,
