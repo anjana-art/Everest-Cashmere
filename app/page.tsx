@@ -129,7 +129,7 @@ export default async function Home() {
       </section>
 
         {/* 🟢 FEATURED MODEL SPOTLIGHT COMPONENT */}
-      <FeaturedModelSpotlight imageSrc="/feature model pic.webp" />
+      <FeaturedModelSpotlight imageSrc="/edited featured model.webp" />
 
       {/* 2. VALUE PROPOSITION BAR */}
       <section className="bg-white border-y border-stone-200/60 py-12 px-6">
