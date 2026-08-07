@@ -768,62 +768,7 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               </div>
 
-              {product.description && (
-                <div className="mt-8 space-y-5 text-stone-700">
-                  {product.description
-                    .split("\n")
-                    .map((line) => line.trim())
-                    .filter(Boolean)
-                    .map((line, index) => {
-                      const isHeading = [
-                        "Product details",
-                        "Fit and styling",
-                        "Care",
-                      ].includes(line);
-
-                      const isBullet = line.startsWith("•");
-
-                      if (isHeading) {
-                        return (
-                          <h3
-                            key={index}
-                            className="pt-4 text-sm font-semibold uppercase tracking-[0.18em] text-stone-900"
-                          >
-                            {line}
-                          </h3>
-                        );
-                      }
-
-                      if (isBullet) {
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-start gap-3 border-b border-stone-200/70 pb-3 text-sm leading-6"
-                          >
-                            <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-red-800" />
-
-                            <span>{line.replace(/^•\s*/, "")}</span>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <p
-                          key={index}
-                          className={
-                            index === 0
-                              ? "font-serif text-xl leading-8 text-stone-900"
-                              : "text-[15px] font-light leading-7"
-                          }
-                        >
-                          {line}
-                        </p>
-                      );
-                    })}
-                </div>
-              )}
-
-              {/* Color Selection */}
+              {/* MOVED UP: Color Selection */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-serif text-lg text-red-900 tracking-wide">
@@ -866,7 +811,7 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               </div>
 
-              {/* Size Selection */}
+              {/* MOVED UP: Size Selection */}
               {product.category !== 'HOME_DECORE' && dbSizes.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -933,7 +878,7 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* Quantity Selection - Fixed with remaining stock */}
+              {/* MOVED UP: Quantity Selection */}
               {selectedSize && currentStock > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -990,7 +935,7 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* Action Buttons - Fixed with proper stock limits */}
+              {/* MOVED UP: Action Buttons */}
               <div className="space-y-4 pt-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
@@ -1048,6 +993,62 @@ export const ProductDetail = ({ product }: Props) => {
                   </div>
                 )}
               </div>
+
+              {/* MOVED DOWN: Description (previously before color/size/buttons) */}
+              {product.description && (
+                <div className="mt-8 space-y-5 text-stone-700">
+                  {product.description
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .map((line, index) => {
+                      const isHeading = [
+                        "Product details",
+                        "Fit and styling",
+                        "Care",
+                      ].includes(line);
+
+                      const isBullet = line.startsWith("•");
+
+                      if (isHeading) {
+                        return (
+                          <h3
+                            key={index}
+                            className="pt-4 text-sm font-semibold uppercase tracking-[0.18em] text-stone-900"
+                          >
+                            {line}
+                          </h3>
+                        );
+                      }
+
+                      if (isBullet) {
+                        return (
+                          <div
+                            key={index}
+                            className="flex items-start gap-3 border-b border-stone-200/70 pb-3 text-sm leading-6"
+                          >
+                            <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-red-800" />
+
+                            <span>{line.replace(/^•\s*/, "")}</span>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <p
+                          key={index}
+                          className={
+                            index === 0
+                              ? "font-serif text-xl leading-8 text-stone-900"
+                              : "text-[15px] font-light leading-7"
+                          }
+                        >
+                          {line}
+                        </p>
+                      );
+                    })}
+                </div>
+              )}
             </div>
           </div>
         </div>
