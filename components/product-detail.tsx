@@ -567,146 +567,150 @@ export const ProductDetail = ({ product }: Props) => {
                   </div>
                 )}
 
-                {/* Care Instructions */}
-                <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                  <button 
-                    onClick={() => setShowCareDetails(!showCareDetails)}
-                    className="flex items-start gap-3 w-full text-left"
-                  >
-                    <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                          Care Instructions for Nepalese Cashmere
-                        </h4>
-                        <span className="text-amber-600 text-xl">
-                          {showCareDetails ? '−' : '+'}
-                        </span>
+                {/* Care Instructions - Only visible on desktop in this position */}
+                <div className="hidden lg:block">
+                  <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+                    <button 
+                      onClick={() => setShowCareDetails(!showCareDetails)}
+                      className="flex items-start gap-3 w-full text-left"
+                    >
+                      <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                            Care Instructions for Nepalese Cashmere
+                          </h4>
+                          <span className="text-amber-600 text-xl">
+                            {showCareDetails ? '−' : '+'}
+                          </span>
+                        </div>
+                        
+                        {!showCareDetails && (
+                          <p className="text-sm text-red-700 font-light mt-1">
+                            Hand wash cold, lay flat to dry, store folded. Click for full details →
+                          </p>
+                        )}
                       </div>
-                      
-                      {!showCareDetails && (
-                        <p className="text-sm text-red-700 font-light mt-1">
-                          Hand wash cold, lay flat to dry, store folded. Click for full details →
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                  
-                  {showCareDetails && (
-                    <div className="mt-4 space-y-3 text-sm pl-8">
-                      <div>
-                        <p className="font-medium text-red-800">🧼 Washing Instructions</p>
-                        <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
+                    </button>
+                    
+                    {showCareDetails && (
+                      <div className="mt-4 space-y-3 text-sm pl-8">
+                        <div>
+                          <p className="font-medium text-red-800">🧼 Washing Instructions</p>
+                          <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
+                        </div>
+                        
+                        <div>
+                          <p className="font-medium text-red-800">🌀 Drying Method</p>
+                          <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
+                        </div>
+                        
+                        <div>
+                          <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
+                          <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
+                        </div>
+                        
+                        <div>
+                          <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
+                          <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
+                        </div>
+                        
+                        <div>
+                          <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
+                          <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
+                        </div>
+                        
+                        <div>
+                          <p className="font-medium text-red-800">❌ What to Avoid</p>
+                          <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
+                        </div>
+                        
+                        <div className="pt-2">
+                          <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
+                            🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
+                          </p>
+                        </div>
                       </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">🌀 Drying Method</p>
-                        <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
-                        <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
-                        <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
-                        <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">❌ What to Avoid</p>
-                        <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
-                      </div>
-                      
-                      <div className="pt-2">
-                        <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
-                          🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                {/* Size Chart Section - FIXED with debug */}
-                <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                  <button 
-                    onClick={() => setShowSizeChart(!showSizeChart)}
-                    className="flex items-start gap-3 w-full text-left"
-                  >
-                    <div className="flex-shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                          Size Guide
-                        </h4>
-                        <span className="text-amber-600 text-xl">
-                          {showSizeChart ? '−' : '+'}
-                        </span>
+                {/* Size Chart Section - FIXED with debug - Only visible on desktop */}
+                <div className="hidden lg:block">
+                  <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+                    <button 
+                      onClick={() => setShowSizeChart(!showSizeChart)}
+                      className="flex items-start gap-3 w-full text-left"
+                    >
+                      <div className="flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                        </svg>
                       </div>
-                      
-                      {!showSizeChart && (
-                        <p className="text-sm text-red-700 font-light mt-1">
-                          {product.sizeGuide && product.sizeGuide.trim() !== '' 
-                            ? 'Click to view size guide →' 
-                            : 'No size guide available for this product'}
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                  
-                  {/* Show the image when sizeGuide exists */}
-                  {showSizeChart && product.sizeGuide && product.sizeGuide.trim() !== '' && (
-                    <div className="mt-4 pt-2">
-                      <div className="relative w-full overflow-hidden rounded-lg">
-                        <Image
-                          src={product.sizeGuide}
-                          alt="Size guide"
-                          width={800}
-                          height={600}
-                          className="w-full h-auto object-contain"
-                          sizes="(max-width: 768px) 100vw, 800px"
-                          onError={(e) => {
-                            console.error('❌ [DEBUG] Image failed to load:', product.sizeGuide);
-                            e.currentTarget.style.display = 'none';
-                            // Show error message
-                            const parent = e.currentTarget.parentElement?.parentElement;
-                            if (parent) {
-                              const errorMsg = document.createElement('p');
-                              errorMsg.className = 'text-red-600 text-sm text-center p-4';
-                              errorMsg.textContent = 'Failed to load size guide image';
-                              parent.appendChild(errorMsg);
-                            }
-                          }}
-                          onLoad={() => {
-                            console.log('✅ [DEBUG] Image loaded successfully:', product.sizeGuide);
-                          }}
-                        />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                            Size Guide
+                          </h4>
+                          <span className="text-amber-600 text-xl">
+                            {showSizeChart ? '−' : '+'}
+                          </span>
+                        </div>
+                        
+                        {!showSizeChart && (
+                          <p className="text-sm text-red-700 font-light mt-1">
+                            {product.sizeGuide && product.sizeGuide.trim() !== '' 
+                              ? 'Click to view size guide →' 
+                              : 'No size guide available for this product'}
+                          </p>
+                        )}
                       </div>
-                      <div className="mt-3 text-xs text-center text-red-700 font-light">
-                        <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
+                    </button>
+                    
+                    {/* Show the image when sizeGuide exists */}
+                    {showSizeChart && product.sizeGuide && product.sizeGuide.trim() !== '' && (
+                      <div className="mt-4 pt-2">
+                        <div className="relative w-full overflow-hidden rounded-lg">
+                          <Image
+                            src={product.sizeGuide}
+                            alt="Size guide"
+                            width={800}
+                            height={600}
+                            className="w-full h-auto object-contain"
+                            sizes="(max-width: 768px) 100vw, 800px"
+                            onError={(e) => {
+                              console.error('❌ [DEBUG] Image failed to load:', product.sizeGuide);
+                              e.currentTarget.style.display = 'none';
+                              // Show error message
+                              const parent = e.currentTarget.parentElement?.parentElement;
+                              if (parent) {
+                                const errorMsg = document.createElement('p');
+                                errorMsg.className = 'text-red-600 text-sm text-center p-4';
+                                errorMsg.textContent = 'Failed to load size guide image';
+                                parent.appendChild(errorMsg);
+                              }
+                            }}
+                            onLoad={() => {
+                              console.log('✅ [DEBUG] Image loaded successfully:', product.sizeGuide);
+                            }}
+                          />
+                        </div>
+                        <div className="mt-3 text-xs text-center text-red-700 font-light">
+                          <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {showSizeChart && (!product.sizeGuide || product.sizeGuide.trim() === '') && (
-                    <div className="mt-4 p-4 text-center text-red-600 text-sm">
-                      No size guide available for this product
-                    </div>
-                  )}
+                    )}
+                    
+                    {showSizeChart && (!product.sizeGuide || product.sizeGuide.trim() === '') && (
+                      <div className="mt-4 p-4 text-center text-red-600 text-sm">
+                        No size guide available for this product
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Shipping & Returns */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
+                {/* Shipping & Returns - Only visible on desktop */}
+                <div className="hidden lg:grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
                   <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
                     <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
                     <div>
@@ -730,9 +734,9 @@ export const ProductDetail = ({ product }: Props) => {
                   </div>
                 </div>
 
-                {/* Metadata */}
+                {/* Metadata - Only visible on desktop */}
                 {product.metadata && Object.keys(product.metadata).length > 0 && (
-                  <div className="pt-4 border-t border-amber-100">
+                  <div className="hidden lg:block pt-4 border-t border-amber-100">
                     <h3 className="font-serif text-lg text-red-900 mb-4 tracking-wide">
                       Details
                     </h3>
@@ -994,7 +998,7 @@ export const ProductDetail = ({ product }: Props) => {
                 )}
               </div>
 
-              {/* MOVED DOWN: Description (previously before color/size/buttons) */}
+              {/* MOVED DOWN: Description */}
               {product.description && (
                 <div className="mt-8 space-y-5 text-stone-700">
                   {product.description
@@ -1047,6 +1051,194 @@ export const ProductDetail = ({ product }: Props) => {
                         </p>
                       );
                     })}
+                </div>
+              )}
+
+              {/* MOBILE: Care Instructions - Only visible on mobile */}
+              <div className="lg:hidden">
+                <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+                  <button 
+                    onClick={() => setShowCareDetails(!showCareDetails)}
+                    className="flex items-start gap-3 w-full text-left"
+                  >
+                    <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                          Care Instructions for Nepalese Cashmere
+                        </h4>
+                        <span className="text-amber-600 text-xl">
+                          {showCareDetails ? '−' : '+'}
+                        </span>
+                      </div>
+                      
+                      {!showCareDetails && (
+                        <p className="text-sm text-red-700 font-light mt-1">
+                          Hand wash cold, lay flat to dry, store folded. Click for full details →
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                  
+                  {showCareDetails && (
+                    <div className="mt-4 space-y-3 text-sm pl-8">
+                      <div>
+                        <p className="font-medium text-red-800">🧼 Washing Instructions</p>
+                        <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">🌀 Drying Method</p>
+                        <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
+                        <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
+                        <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
+                        <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-red-800">❌ What to Avoid</p>
+                        <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
+                      </div>
+                      
+                      <div className="pt-2">
+                        <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
+                          🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* MOBILE: Size Chart Section - Only visible on mobile */}
+              <div className="lg:hidden">
+                <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+                  <button 
+                    onClick={() => setShowSizeChart(!showSizeChart)}
+                    className="flex items-start gap-3 w-full text-left"
+                  >
+                    <div className="flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                          Size Guide
+                        </h4>
+                        <span className="text-amber-600 text-xl">
+                          {showSizeChart ? '−' : '+'}
+                        </span>
+                      </div>
+                      
+                      {!showSizeChart && (
+                        <p className="text-sm text-red-700 font-light mt-1">
+                          {product.sizeGuide && product.sizeGuide.trim() !== '' 
+                            ? 'Click to view size guide →' 
+                            : 'No size guide available for this product'}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                  
+                  {/* Show the image when sizeGuide exists */}
+                  {showSizeChart && product.sizeGuide && product.sizeGuide.trim() !== '' && (
+                    <div className="mt-4 pt-2">
+                      <div className="relative w-full overflow-hidden rounded-lg">
+                        <Image
+                          src={product.sizeGuide}
+                          alt="Size guide"
+                          width={800}
+                          height={600}
+                          className="w-full h-auto object-contain"
+                          sizes="(max-width: 768px) 100vw, 800px"
+                          onError={(e) => {
+                            console.error('❌ [DEBUG] Image failed to load:', product.sizeGuide);
+                            e.currentTarget.style.display = 'none';
+                            // Show error message
+                            const parent = e.currentTarget.parentElement?.parentElement;
+                            if (parent) {
+                              const errorMsg = document.createElement('p');
+                              errorMsg.className = 'text-red-600 text-sm text-center p-4';
+                              errorMsg.textContent = 'Failed to load size guide image';
+                              parent.appendChild(errorMsg);
+                            }
+                          }}
+                          onLoad={() => {
+                            console.log('✅ [DEBUG] Image loaded successfully:', product.sizeGuide);
+                          }}
+                        />
+                      </div>
+                      <div className="mt-3 text-xs text-center text-red-700 font-light">
+                        <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {showSizeChart && (!product.sizeGuide || product.sizeGuide.trim() === '') && (
+                    <div className="mt-4 p-4 text-center text-red-600 text-sm">
+                      No size guide available for this product
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* MOBILE: Shipping & Returns */}
+              <div className="lg:hidden grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
+                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+                  <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="font-serif text-sm text-red-900">Complimentry and Fast Shipping</p>
+                    <p className="text-xs text-red-700 font-light">within 5-6 business days</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+                  <ArrowPathIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="font-serif text-sm text-red-900">Easy Returns</p>
+                    <p className="text-xs text-red-700 font-light">14-day policy</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+                  <ShieldCheckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="font-serif text-sm text-red-900">Secure Payment</p>
+                    <p className="text-xs text-red-700 font-light">100% secure</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* MOBILE: Metadata */}
+              {product.metadata && Object.keys(product.metadata).length > 0 && (
+                <div className="lg:hidden pt-4 border-t border-amber-100">
+                  <h3 className="font-serif text-lg text-red-900 mb-4 tracking-wide">
+                    Details
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(product.metadata).map(([key, value]) => (
+                      <div key={key} className="text-sm p-3 bg-amber-50/50 rounded-lg">
+                        <span className="font-serif text-red-800 capitalize block mb-1">
+                          {key.replace('_', ' ')}
+                        </span>
+                        <span className="text-amber-700 font-light">
+                          {String(value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
