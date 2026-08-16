@@ -11,8 +11,8 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-red-900 mb-3">1. Data Controller</h2>
             <p className="text-gray-700 leading-relaxed">
-              [Your Name] (Sole Proprietor)<br />
-              NIF: [Your NIF]<br />
+              Anjana Bhatta(Sole Proprietor)<br />
+              NIF: 290131146<br />
               Email: himkash.info@gmail.com<br />
               Phone: +351 920 817 350
             </p>
