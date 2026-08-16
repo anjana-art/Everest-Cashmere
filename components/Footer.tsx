@@ -19,10 +19,9 @@ export default function Footer() {
           
           {/* Column 1: Business Info */}
           <div>
-            <h3 className="text-amber-200 font-semibold mb-3 text-lg">About Us</h3>
+           <h3 className="text-amber-200 font-semibold mb-3 text-lg">About Us</h3>
             <p className="text-amber-200/80 text-sm leading-relaxed">
-              Himkash Cashmere & Marino wool clothing Brand<br /> Online base<br/>
-              Quality & Luxury fashion delivered to your door
+             <Link href='/about' className="text-amber-200/80 hover:text-amber-100 transition" >About Himkash </Link> <br/> Handcrafted Himalayan Cashmere & Merino wool.<br/> Crafted in Nepal, Curated in Portugal<br /> Online base<br/>
             </p>
           </div>
 
