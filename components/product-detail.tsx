@@ -11,6 +11,8 @@ import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import { SimilarProducts } from "./similar-products";
 import { ProductShare } from './ProductShare';
+import { ProductReviews } from "./ProductReviews";
+import { StartupWelcomeBanner } from "./StartupWelcomeBanner";
 
 interface ProductVariant {
   id: string;
@@ -709,6 +711,11 @@ export const ProductDetail = ({ product }: Props) => {
                   </div>
                 </div>
 
+                {/* ✅ MOVED: Product Reviews - Now on left side after care and size guide */}
+                <div className="mt-6">
+                  <ProductReviews productId={product.id} />
+                </div>
+
                 {/* Shipping & Returns - Only visible on desktop */}
                 <div className="hidden lg:grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
                   <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
@@ -1344,6 +1351,10 @@ export const ProductDetail = ({ product }: Props) => {
           </div>
         </div>
       )}
+      {/* ✅ Startup Banner - Above Reviews or Similar Products */}
+            <div className="container mx-auto px-4 py-8 max-w-5xl">
+              <StartupWelcomeBanner />
+            </div>
 
       <SimilarProducts 
         currentProductId={product.id}

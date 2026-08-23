@@ -2,6 +2,7 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { StartupWelcomeBanner } from '@/components/StartupWelcomeBanner';
 
 export const metadata: Metadata = {
   title: 'All Clothing | HIM-KASH',
@@ -65,6 +66,10 @@ export default async function ClothingPage() {
           </div>
         ))}
       </div>
+      {/* ✅ Startup Banner - Above Reviews or Similar Products */}
+            <div className="container mx-auto px-4 py-8 max-w-5xl">
+              <StartupWelcomeBanner />
+            </div>
     </div>
   );
 }

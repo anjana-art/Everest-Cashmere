@@ -47,6 +47,7 @@ model User {
   orders      Order[]
   cart        Cart?
   wishlist    Wishlist?
+  customerExperiences CustomerExperience[]
   
   // Billing address
   billingAddressId String?  @unique 
@@ -448,6 +449,7 @@ model Rating {
   
   rating      Int      @default(5)
   review      String?
+  images      String[] @default([])
   
   helpfulVotes Int     @default(0)
   verifiedPurchase Boolean @default(false)
@@ -460,6 +462,12 @@ model Rating {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+   // ✅ ADD THESE INDEXES for better performance
+  @@index([productId, status])     // For product page queries
+  @@index([userId, createdAt])     // For user review history
+  @@index([status, createdAt])     // For admin pending reviews
+  @@index([productId, rating])     // For sorting by rating
+
   @@unique([productId, userId])
   @@map("ratings")
 }
@@ -471,6 +479,25 @@ enum ReviewStatus {
   REPORTED
 }
 
+// ==================== CUSTOMER EXPERIENCE (Non-Product Feedback) ====================
+model CustomerExperience {
+  id          String   @id @default(cuid())
+  userId      String   // Required - authenticated user
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId     String?  // Optional - link to specific order
+  
+  content     String   @db.Text  // The experience text
+  status      ReviewStatus @default(PENDING)  // PENDING, APPROVED, REJECTED
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([orderId])
+  @@index([status, createdAt])     // For admin pending experiences
+
+  @@map("customer_experiences")
+}
 
 model BlockedAttempt {
   id          String   @id @default(cuid())

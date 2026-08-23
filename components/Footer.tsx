@@ -174,7 +174,7 @@ export default function Footer() {
           
           {/* TRADEMARK NOTICE */}
           <p className="text-amber-200/50 text-xs">
-                    HIMKASH® — Registered Trademark · INPI Portugal          </p>
+                    Himkash® — Registered Trademark · INPI Portugal          </p>
           
           <p>
             In case of a dispute, the consumer may resort to an Alternative Dispute Resolution entity.

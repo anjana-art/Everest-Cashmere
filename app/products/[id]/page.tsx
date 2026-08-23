@@ -4,6 +4,7 @@ import { ProductDetail } from "@/components/product-detail";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
+import { ProductReviews } from "@/components/ProductReviews";
 
 export async function generateMetadata({
   params,
@@ -113,7 +114,7 @@ export default async function ProductPage({
       description: true,
       price: true,
       images: true,
-      sizeGuide: true, // ⭐ ADD THIS LINE - FIXES THE ISSUE
+      sizeGuide: true,
       category: true,
       clothingType: true,
       availableColors: true,
@@ -136,23 +137,27 @@ export default async function ProductPage({
       : { category: product.category };
 
   return (
-    <ProductDetail
-      product={{
-        id: product.id,
-        stripeId: product.stripeId || product.id,
-        name: product.name,
-        description: product.description,
-        price: Number(product.price),
-        images: product.images || [],
-        sizeGuide: product.sizeGuide || null, // ⭐ PASS THE sizeGuide TO THE COMPONENT
-        category: product.category,
-        clothingType: product.clothingType,
-        availableColors: product.availableColors || [],
-        availableSizes: product.availableSizes || [],
-        defaultColor: product.defaultColor,
-        defaultSize: product.defaultSize,
-        metadata: metadata,
-      }}
-    />
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-red-50">
+      <ProductDetail
+        product={{
+          id: product.id,
+          stripeId: product.stripeId || product.id,
+          name: product.name,
+          description: product.description,
+          price: Number(product.price),
+          images: product.images || [],
+          sizeGuide: product.sizeGuide || null,
+          category: product.category,
+          clothingType: product.clothingType,
+          availableColors: product.availableColors || [],
+          availableSizes: product.availableSizes || [],
+          defaultColor: product.defaultColor,
+          defaultSize: product.defaultSize,
+          metadata: metadata,
+        }}
+      />
+
+     
+    </div>
   );
 }

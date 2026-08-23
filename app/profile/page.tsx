@@ -1,14 +1,16 @@
-// app/profile/page.tsx - Fixed Version
+// app/profile/page.tsx - Updated with Review Functionality
 'use client';
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from 'next/link';
 import { Navbar } from "@/components/navbar";
 import { 
   UserCircleIcon, EnvelopeIcon, PhoneIcon, 
   HomeIcon, GlobeAltIcon, BuildingOfficeIcon,
   LinkIcon, PencilIcon, CheckIcon, XMarkIcon,
-  MapPinIcon, BriefcaseIcon
+  MapPinIcon, BriefcaseIcon, StarIcon, ChatBubbleLeftRightIcon,
+  ShoppingBagIcon
 } from "@heroicons/react/24/outline";
 
 // Country data for dropdown
@@ -32,6 +34,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [eligibleCount, setEligibleCount] = useState(0);
   const router = useRouter();
 
   // Form state for UserProfile
@@ -62,6 +65,7 @@ export default function ProfilePage() {
       const userData = JSON.parse(storedUser);
       setUser(userData);
       fetchUserProfile(userData.id);
+      fetchEligibleCount(userData.id);
     } catch (err) {
       console.error("Error loading user:", err);
       router.push('/login');
@@ -99,6 +103,24 @@ export default function ProfilePage() {
     }
   };
 
+  // ✅ Fetch eligible products count for review badge
+  const fetchEligibleCount = async (userId: string) => {
+    try {
+      const response = await fetch('/api/reviews/eligible', {
+        credentials: 'include',
+        headers: {
+          'x-user-id': userId,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setEligibleCount(data.eligible?.length || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching eligible count:", error);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -107,7 +129,6 @@ export default function ProfilePage() {
     }));
   };
 
-  // FIXED: Remove the userId parameter since onClick provides MouseEvent
   const handleSaveProfile = async () => {
     setError("");
     setSuccess("");
@@ -131,7 +152,6 @@ export default function ProfilePage() {
         throw new Error(data.error || "Failed to update profile");
       }
 
-      // Update local state
       setUserProfile(data.userProfile);
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
@@ -190,8 +210,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-    
-      
       <main className="flex-1 bg-gradient-to-br from-amber-50 to-blue-50 py-8 px-4">
         <div className="container mx-auto max-w-4xl">
           {/* Header */}
@@ -237,7 +255,7 @@ export default function ProfilePage() {
                       <span>Cancel</span>
                     </button>
                     <button
-                      onClick={handleSaveProfile} // FIXED: No parameter needed
+                      onClick={handleSaveProfile}
                       disabled={isSaving}
                       className="flex items-center space-x-1 bg-red-950 text-white px-4 py-2 rounded-lg hover:bg-amber-700 disabled:opacity-50"
                     >
@@ -264,6 +282,49 @@ export default function ProfilePage() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* ✅ Quick Actions Row - NEW */}
+            <div className="px-6 py-4 bg-amber-50/50 border-b border-amber-100">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Actions</h3>
+              <div className="flex flex-wrap gap-3">
+                {/* Orders */}
+                <Link
+                  href="/orders"
+                  className="flex items-center space-x-2 px-4 py-2 bg-white border border-amber-200 rounded-lg hover:shadow-md transition group"
+                >
+                  <ShoppingBagIcon className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-medium text-gray-700">My Orders</span>
+                </Link>
+
+                {/* ✅ Write a Review - With Badge */}
+                <Link
+                  href="/profile/my-reviews"
+                  className="flex items-center space-x-2 px-4 py-2 bg-white border border-amber-200 rounded-lg hover:shadow-md transition group relative"
+                >
+                  <StarIcon className="h-5 w-5 text-amber-600" />
+                  <span className="text-sm font-medium text-gray-700">Write a Review</span>
+                  {eligibleCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {eligibleCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* ✅ Share Experience */}
+                <Link
+                  href="/profile/my-experience"
+                  className="flex items-center space-x-2 px-4 py-2 bg-white border border-amber-200 rounded-lg hover:shadow-md transition group"
+                >
+                  <ChatBubbleLeftRightIcon className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium text-gray-700">Share Experience</span>
+                </Link>
+              </div>
+              {eligibleCount > 0 && (
+                <p className="text-xs text-amber-600 mt-2">
+                  You have {eligibleCount} product{eligibleCount > 1 ? 's' : ''} ready to review!
+                </p>
+              )}
             </div>
 
             {/* Profile Form */}

@@ -1,4 +1,4 @@
-// app/page.tsx - REFACTORED HIGH-LUXURY LANDING PAGE
+// app/page.tsx - REFACTORED HIGH-LUXURY LANDING PAGE WITH REVIEW SECTION
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,10 @@ import type { Metadata } from "next";
 import { SimpleImageGrid } from "@/components/simple-image-grid";
 import { NavigationLink } from "@/components/navigation-link";
 import { FeaturedModelSpotlight } from "@/components/featured-model-spotlight";
+import { ProductReviews } from "@/components/ProductReviews";
+import { BrandExperience } from "@/components/BrandExperience";
+import { VerifiedCustomerTestimonialsCarousel } from "@/components/VerifiedCustomerTestimonialsCarousel";
+import { StartupWelcomeBanner } from "@/components/StartupWelcomeBanner";
 
 
 export const metadata: Metadata = {
@@ -80,6 +84,9 @@ export default async function Home() {
     };
   });
 
+  // Get first product for review section
+  const firstProduct = formattedProducts[0];
+
   return (
     <div className="bg-[#FAF8F5] text-stone-800 selection:bg-amber-100 selection:text-amber-900 font-sans antialiased">
       
@@ -128,8 +135,15 @@ export default async function Home() {
         </div>
       </section>
 
-        {/* 🟢 FEATURED MODEL SPOTLIGHT COMPONENT */}
+      
+
+      {/* 🟢 FEATURED MODEL SPOTLIGHT COMPONENT */}
       <FeaturedModelSpotlight imageSrc="/edited featured model.webp" />
+
+      {/* ✅ Startup Banner - Above Reviews or Similar Products */}
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <StartupWelcomeBanner />
+      </div>
 
       {/* 2. VALUE PROPOSITION BAR */}
       <section className="bg-white border-y border-stone-200/60 py-12 px-6">
@@ -246,6 +260,20 @@ export default async function Home() {
         </div>
       </section>
 
+       {/* 5.1 Verified Customer Testimonials */}
+           <VerifiedCustomerTestimonialsCarousel />
+
+
+
+      {/* Share Your Experience - Brand Experience */}
+<section className="py-24 px-6">
+  <div className="max-w-7xl mx-auto">
+    <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-amber-100/50 p-8 lg:p-10">
+      <BrandExperience />
+    </div>
+  </div>
+</section>
+
       {/* 4. FOUNDER'S STORY FEATURE */}
       <section className="bg-white py-24 border-y border-stone-200/60">
         <div className="max-w-6xl mx-auto px-6">
@@ -292,7 +320,10 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 5. VIP LAUNCH / NEWSLETTER */}
+     
+
+
+      {/* 6. VIP LAUNCH / NEWSLETTER */}
       <section className="py-24 px-6 bg-[#FAF8F5]">
         <div className="max-w-4xl mx-auto text-center space-y-8 bg-white p-12 sm:p-16 rounded-3xl border border-stone-200/80 shadow-sm">
           <h2 className="text-3xl sm:text-5xl font-serif text-stone-900">
@@ -313,7 +344,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 6. SOCIAL SHARE STRIP */}
+      {/* 7. SOCIAL SHARE STRIP */}
       <section className="py-12 border-t border-stone-200/60 bg-white">
         <div className="max-w-7xl mx-auto px-6 text-center space-y-4">
           <p className="text-xs uppercase tracking-widest text-stone-400 font-medium">Share Himkash</p>
@@ -329,7 +360,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
 
       <script
         type="application/ld+json"
