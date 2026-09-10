@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "About Himkash | Our Mission & Story",
@@ -12,37 +13,37 @@ const values = [
     icon: "✦",
     title: "Pure Origin",
     description:
-      "Our cashmere originates from the high plateaus of Mongolia — home to some of the world's finest fibres. Each strand begins with the soft undercoat of Hircus goats, selected for exceptional fineness before continuing its journey to Nepal, where skilled craftsmanship transforms fibre into something made to be lived in.",
+      "Fine fibres, chosen at their source for softness, warmth, and natural lightness.",
   },
   {
     icon: "✦",
     title: "Nepalese Mastery",
     description:
-      "In Nepal, skilled makers transform natural fibres through techniques shaped by generations of textile craftsmanship. From spinning and knitting to finishing by hand, each process is approached with care, patience, and close attention to detail. Every piece carries the presence of the people who made it.",
+      "Spun, knitted, and finished in Nepal by skilled hands shaped by generations of craft.",
   },
   {
     icon: "✦",
     title: "Radical Transparency",
     description:
-      "We believe you should understand what you are wearing. We share the composition, origin, craftsmanship, care, and purpose behind our pieces as clearly as possible. As Himkash grows, so will the record of the hands, materials, and processes behind each collection.",
+      "Clear composition, honest origins, and the story behind every piece.",
   },
   {
     icon: "✦",
     title: "Slow Fashion",
     description:
-      "We design beyond seasons and beyond trends. Our pieces are made to return to your wardrobe year after year, with care guidance that helps preserve their softness, shape, and character. Buy less. Wear more. Keep longer.",
+      "Fewer, better pieces designed to be worn often and kept for years.",
   },
   {
     icon: "✦",
     title: "Comfort Through the Seasons",
     description:
-      "Luxury should not belong to one season. From pure cashmere for colder days to featherlight cashmere–merino knits made for layering, we choose fibres and constructions for how they feel throughout the year. Some pieces warm you in winter; others are light enough for a cool Portuguese summer evening.",
+      "Winter warmth and featherlight layers for cool European evenings.",
   },
   {
     icon: "✦",
     title: "Artisan Economy",
     description:
-      "Behind every piece is a person. We work with Nepalese makers and artisan communities, supporting skilled work while helping preserve generations of textile craftsmanship. When you choose Himkash, you help keep that craft in motion.",
+      "Every choice supports skilled makers and keeps Nepalese textile knowledge in motion.",
   },
 ];
 
@@ -51,26 +52,26 @@ const materials = [
     season: "Autumn — Winter",
     name: "Pure Cashmere",
     description:
-      "The purest expression of Himkash. Exceptionally soft, naturally insulating, and remarkably light for the warmth it provides. Our pure cashmere pieces are created for colder days, quiet layering, and the kind of comfort that becomes more personal with every wear.",
+      "Exceptional softness. Natural warmth. Remarkably little weight.",
   },
   {
     season: "All Year — Layering",
     name: "Cashmere & Merino 50/50",
     description:
-      "A considered balance of softness, breathability, and resilience. By combining cashmere with fine merino wool, we create pieces that feel luxurious without unnecessary weight. In our lighter openwork knits, the result is almost featherlike — ideal over a shirt or dress, for a cool Portuguese summer evening, between seasons, or layered beneath a coat in winter.",
+      "A featherlight balance of softness, breathability, and resilience.",
   },
   {
     season: "Transitional Seasons",
     name: "Fine Merino Wool",
     description:
-      "Naturally breathable, soft, and resilient, fine merino wool brings structure and versatility to knitwear. It helps maintain comfort as temperatures change, making it especially suited to layering and to pieces designed to move easily between seasons.",
+      "Breathable comfort and refined structure as the seasons change.",
   },
 ];
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-amber-50">
-      {/* Hero */}
+      {/* Hero — large weaving image with descriptive caption below */}
       <section className="relative overflow-hidden border-b border-stone-200">
         <div className="absolute inset-0 opacity-5">
           <div
@@ -87,33 +88,73 @@ export default function AboutPage() {
           />
         </div>
 
-        <div className="relative max-w-5xl mx-auto px-6 py-28 md:py-40">
-          <p
-            className="text-xs uppercase tracking-[0.4em] text-amber-700 mb-8"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            Est. Europe · Crafted in Nepal
-          </p>
+        <div className="relative max-w-6xl mx-auto px-6 py-24 md:py-32">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+            {/* Left — welcome text */}
+            <div>
+              <p
+                className="text-xs uppercase tracking-[0.4em] text-amber-700 mb-8"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
+                Est. Europe · Crafted in Nepal
+              </p>
 
-          <h1
-            className="text-5xl md:text-7xl font-light text-stone-800 leading-[1.05] mb-10"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            Luxury rooted
-            <br />
-            <em className="italic text-amber-800">in tradition.</em>
-          </h1>
+              <h1
+                className="text-5xl md:text-6xl lg:text-7xl font-light text-stone-800 leading-[1.05] mb-10"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
+                Luxury rooted
+                <br />
+                <em className="italic text-amber-800">in tradition.</em>
+              </h1>
 
-          <p
-            className="text-lg md:text-xl text-stone-600 max-w-2xl leading-relaxed font-light"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            Himkash was born from a conviction: that the finest things in life
-            should be made with care, worn with intention, and understood
-            completely. We bridge Nepalese artisan mastery with a conscious
-            European way of living.
-          </p>
+              <p
+                className="text-lg md:text-xl text-stone-600 max-w-xl leading-relaxed font-light"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
+                Himkash was born from a conviction: that the finest things in
+                life should be made with care, worn with intention, and
+                understood completely. We bridge Nepalese artisan mastery with
+                a conscious European way of living.
+              </p>
+            </div>
+
+            {/* Right — large weaving image with caption */}
+            <div>
+              <div className="relative aspect-[4/3] w-full overflow-hidden group animate-[fadeUp_1s_ease-out]">
+                <Image
+                  src="/himkash-traditional-weaving-process-nepal.webp"
+                  alt="Traditional Nepalese handloom machine used for weaving cashmere shawls"
+                  fill
+                  className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.05]"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-900/30 via-transparent to-transparent" />
+              </div>
+
+              {/* Descriptive caption below the image */}
+              <p
+                className="mt-5 text-sm text-stone-500 font-light leading-relaxed italic"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
+                A traditional Nepalese handloom — the wooden frame on which
+                skilled artisans weave pure cashmere yarn into shawls and
+                knitwear. Each pass of the shuttle is guided by hand, a
+                technique passed down through generations of Himalayan
+                craftsmanship.
+              </p>
+            </div>
+          </div>
         </div>
+
+        {/* keyframe for soft fade-up on load */}
+        <style>{`
+          @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(24px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
       </section>
 
       {/* Mission Statement */}
@@ -136,7 +177,7 @@ export default function AboutPage() {
         <div className="mt-10 w-16 h-px bg-amber-700 mx-auto" />
       </section>
 
-      {/* The Journey */}
+      {/* The Journey — with two images side by side */}
       <section className="bg-stone-800 text-amber-50">
         <div className="max-w-5xl mx-auto px-6 py-24 md:py-32">
           <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -188,227 +229,236 @@ export default function AboutPage() {
               </p>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Values Grid */}
-      <section className="max-w-5xl mx-auto px-6 py-24">
-        <div className="text-center mb-16">
-          <p
-            className="text-xs uppercase tracking-[0.4em] text-amber-700 mb-4"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            What We Stand For
-          </p>
-
-          <h2
-            className="text-4xl font-light text-stone-800"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            Six pillars of Himkash
-          </h2>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-stone-200">
-          {values.map((value) => (
-            <div
-              key={value.title}
-              className="bg-amber-50 p-8 hover:bg-amber-100 transition-colors duration-300"
-            >
-              <span className="text-amber-700 text-lg mb-4 block">
-                {value.icon}
-              </span>
-
-              <h3
-                className="text-lg font-normal text-stone-800 mb-3"
-                style={{ fontFamily: "Georgia, serif" }}
-              >
-                {value.title}
-              </h3>
-
+          {/* Two images side by side — workshop craftsmanship + garment finishing */}
+          <div className="mt-16 md:mt-20 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            {/* Workshop craftsmanship */}
+            <div className="relative aspect-[4/3] overflow-hidden group animate-[fadeUp_1s_ease-out]">
+              <Image
+                src="/himkash-nepal-workshop-craftsmanship.webp"
+                alt="Himkash artisan workshop in Nepal — careful craftsmanship"
+                fill
+                className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <p
-                className="text-stone-500 text-sm leading-relaxed font-light"
+                className="absolute bottom-4 left-4 text-[10px] uppercase tracking-[0.3em] text-amber-100 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{ fontFamily: "Georgia, serif" }}
               >
-                {value.description}
+                Inside the workshop · Nepal
               </p>
             </div>
-          ))}
+
+            {/* Garment finishing */}
+            <div className="relative aspect-[4/3] overflow-hidden group animate-[fadeUp_1s_ease-out_0.15s_both]">
+              <Image
+                src="/himkash-nepal-garment-finishing-workshop.webp"
+                alt="Himkash garment finishing workshop in Nepal — hand-finished details"
+                fill
+                className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.06]"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <p
+                className="absolute bottom-4 left-4 text-[10px] uppercase tracking-[0.3em] text-amber-100 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
+                Garment finishing · Nepal
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Materials */}
-      <section className="border-t border-stone-200 bg-stone-50">
-        <div className="max-w-5xl mx-auto px-6 py-24">
-          <div className="text-center mb-16">
+      {/* Six Pillars — concise, visual, and easy to scan */}
+      <section className="relative overflow-hidden bg-[#f8f1e5] px-6 py-20 md:py-28">
+        <div className="pillar-orb absolute -right-24 top-8 h-72 w-72 rounded-full bg-amber-300/20 blur-3xl" />
+        <div className="relative mx-auto max-w-6xl">
+          <div className="mx-auto mb-14 max-w-3xl text-center reveal-copy">
             <p
-              className="text-xs uppercase tracking-[0.4em] text-amber-700 mb-4"
+              className="mb-4 text-xs uppercase tracking-[0.4em] text-amber-700"
               style={{ fontFamily: "Georgia, serif" }}
             >
-              Our Materials
+              What We Stand For
             </p>
-
             <h2
-              className="text-4xl font-light text-stone-800"
+              className="text-4xl font-light text-stone-800 md:text-5xl"
               style={{ fontFamily: "Georgia, serif" }}
             >
-              Natural fibres, made for changing seasons
+              Six promises. <em className="text-amber-800">One standard.</em>
             </h2>
-
-            <p
-              className="mt-6 max-w-2xl mx-auto text-stone-500 font-light leading-relaxed"
-              style={{ fontFamily: "Georgia, serif" }}
-            >
-              Different fibres serve different moments. Some surround you with
-              warmth, while others are chosen for breathability, lightness, and
-              effortless layering. Our aim is not to dress one season, but to
-              create pieces that remain useful as the year changes around you.
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-stone-500 md:text-base">
+              Everything we make begins with origin, intention, and respect for
+              the hands behind it.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {materials.map((mat) => (
-              <div
-                key={mat.name}
-                className="border border-stone-200 bg-white p-8"
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {values.map((value, index) => (
+              <article
+                key={value.title}
+                className="pillar-card group relative overflow-hidden border border-stone-300/70 bg-amber-50/70 p-7 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1 hover:border-amber-700/40 hover:bg-white hover:shadow-[0_24px_60px_-36px_rgba(120,53,15,0.65)]"
+                style={{ animationDelay: `${index * 90}ms` }}
               >
-                <p
-                  className="text-xs uppercase tracking-[0.3em] text-amber-600 mb-4"
-                  style={{ fontFamily: "Georgia, serif" }}
-                >
-                  {mat.season}
-                </p>
-
+                <span className="absolute right-5 top-3 font-serif text-5xl font-light text-amber-900/[0.06] transition-colors duration-500 group-hover:text-amber-900/[0.1]">
+                  0{index + 1}
+                </span>
+                <span className="mb-5 block text-lg text-amber-700 transition-transform duration-500 group-hover:rotate-45">
+                  {value.icon}
+                </span>
                 <h3
-                  className="text-2xl font-light text-stone-800 mb-4"
+                  className="mb-3 text-xl font-normal text-stone-800"
                   style={{ fontFamily: "Georgia, serif" }}
                 >
-                  {mat.name}
+                  {value.title}
                 </h3>
-
-                <div className="w-8 h-px bg-amber-700 mb-4" />
-
-                <p
-                  className="text-stone-500 text-sm leading-relaxed font-light"
-                  style={{ fontFamily: "Georgia, serif" }}
-                >
-                  {mat.description}
+                <p className="max-w-xs text-sm font-light leading-6 text-stone-500">
+                  {value.description}
                 </p>
-              </div>
+                <div className="mt-6 h-px w-8 bg-amber-700 transition-all duration-500 group-hover:w-16" />
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Year-Round Dressing */}
-      <section className="max-w-5xl mx-auto px-6 py-24">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div>
-            <p
-              className="text-xs uppercase tracking-[0.4em] text-amber-700 mb-6"
-              style={{ fontFamily: "Georgia, serif" }}
-            >
-              Made To Live With You
-            </p>
-
-            <h2
-              className="text-4xl font-light text-stone-800 leading-tight mb-6"
-              style={{ fontFamily: "Georgia, serif" }}
-            >
-              From winter warmth
-              <br />
-              <em className="italic">to summer evenings.</em>
-            </h2>
+      {/* Materials — one editorial story instead of long repeated sections */}
+      <section className="overflow-hidden bg-stone-900 text-amber-50">
+        <div className="mx-auto grid max-w-7xl lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative min-h-[460px] overflow-hidden lg:min-h-[720px]">
+            <Image
+              src="/pink-yarn.webp"
+              alt="Pink cashmere yarn prepared in a Nepalese workshop"
+              fill
+              className="material-image object-cover"
+              sizes="(max-width: 1024px) 100vw, 55vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-900/5 to-transparent" />
+            <div className="absolute bottom-8 left-8 right-8 md:bottom-12 md:left-12">
+              <p className="text-xs uppercase tracking-[0.38em] text-amber-200">
+                Touched by many hands. Rushed by none.
+              </p>
+            </div>
           </div>
 
-          <div
-            className="space-y-6 text-stone-500 leading-relaxed font-light"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            <p>
-              In Portugal, even warm days can give way to a cool evening breeze.
-              This is where our lighter cashmere–merino pieces come into their
-              own — soft enough to feel special, breathable enough to layer
-              lightly, and refined enough to remain part of the outfit rather
-              than simply something thrown over it.
-            </p>
+          <div className="flex flex-col justify-center px-6 py-16 md:px-12 lg:px-16 lg:py-20">
+            <div className="reveal-copy">
+              <p className="mb-5 text-xs uppercase tracking-[0.4em] text-amber-400">
+                Our Materials
+              </p>
+              <h2
+                className="max-w-lg text-4xl font-light leading-tight md:text-5xl"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
+                Softness with a
+                <em className="block text-amber-300">reason to remain.</em>
+              </h2>
+              <p className="mt-6 max-w-lg font-light leading-7 text-stone-300">
+                Pure warmth for winter. Featherlight breathability for the
+                seasons between. Each fibre is chosen for how beautifully it
+                lives with you.
+              </p>
+            </div>
 
-            <p>
-              An openwork cardigan can sit over a dress on a summer evening,
-              return with a blouse in autumn, and become an additional layer
-              beneath a coat in winter. We believe luxury becomes more
-              meaningful when a piece earns its place in your wardrobe
-              throughout the year.
-            </p>
+            <div className="mt-10 divide-y divide-stone-700 border-y border-stone-700">
+              {materials.map((mat, index) => (
+                <div
+                  key={mat.name}
+                  className="material-row group grid gap-2 py-6 sm:grid-cols-[1fr_1.15fr] sm:items-center"
+                  style={{ animationDelay: `${300 + index * 120}ms` }}
+                >
+                  <div>
+                    <p className="mb-2 text-[10px] uppercase tracking-[0.28em] text-amber-400">
+                      {mat.season}
+                    </p>
+                    <h3
+                      className="text-xl font-light text-amber-50 transition-colors group-hover:text-amber-300"
+                      style={{ fontFamily: "Georgia, serif" }}
+                    >
+                      {mat.name}
+                    </h3>
+                  </div>
+                  <p className="text-sm font-light leading-6 text-stone-400">
+                    {mat.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Care Promise */}
-      <section className="bg-amber-800 text-amber-50">
-        <div className="max-w-4xl mx-auto px-6 py-20 text-center">
-          <p
-            className="text-xs uppercase tracking-[0.4em] text-amber-300 mb-6"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            Our Care Promise
+      {/* Closing statement and CTA */}
+      <section className="relative overflow-hidden bg-amber-50 px-6 py-24 text-center md:py-32">
+        <div className="absolute left-1/2 top-0 h-px w-24 -translate-x-1/2 bg-amber-700" />
+        <div className="relative mx-auto max-w-4xl reveal-copy">
+          <p className="mb-6 text-xs uppercase tracking-[0.4em] text-amber-700">
+            Made to be worn · Made to be kept
           </p>
-
           <h2
-            className="text-3xl md:text-4xl font-light mb-8"
+            className="text-4xl font-light leading-tight text-stone-800 md:text-6xl"
             style={{ fontFamily: "Georgia, serif" }}
           >
-            Made to be worn. Made to be kept.
+            Not just something you wear.
+            <em className="mt-2 block text-amber-800">Something you keep.</em>
           </h2>
-
-          <p
-            className="text-amber-100 text-lg font-light leading-relaxed max-w-2xl mx-auto mb-10"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            A beautiful natural-fibre piece should live with you for years, not
-            seasons. Every Himkash piece comes with guidance for washing,
-            storing, layering, and wearing it well. From pure cashmere through
-            winter to featherlight cashmere–merino on a cool summer evening, we
-            want you to understand not only what you own, but how to enjoy it
-            fully.
+          <p className="mx-auto mt-7 max-w-xl font-light leading-7 text-stone-500">
+            Handcrafted in Nepal. Chosen in Portugal. Designed to move through
+            seasons—and stay in your story for years.
           </p>
 
-          <Link
-            href="/founders-story"
-            className="inline-block border border-amber-300 text-amber-100 px-10 py-4 text-sm uppercase tracking-[0.3em] hover:bg-amber-700 transition-colors duration-300"
-            style={{ fontFamily: "Georgia, serif" }}
-          >
-            Read the Founder's Story
-          </Link>
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link
+              href="/products"
+              className="group inline-flex min-w-56 items-center justify-center gap-3 bg-stone-800 px-9 py-4 text-xs uppercase tracking-[0.28em] text-amber-50 transition-all duration-300 hover:-translate-y-0.5 hover:bg-amber-800 hover:shadow-xl"
+            >
+              Shop the Collection
+              <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+            </Link>
+            <Link
+              href="/founders-story"
+              className="inline-flex min-w-56 items-center justify-center border border-stone-400 px-9 py-4 text-xs uppercase tracking-[0.28em] text-stone-700 transition-all duration-300 hover:border-amber-800 hover:bg-white hover:text-amber-800"
+            >
+              Meet the Founder
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="max-w-5xl mx-auto px-6 py-24 text-center">
-        <h2
-          className="text-4xl font-light text-stone-800 mb-6"
-          style={{ fontFamily: "Georgia, serif" }}
-        >
-          Ready to experience Himkash?
-        </h2>
-
-        <p
-          className="text-stone-500 font-light mb-10 max-w-xl mx-auto leading-relaxed"
-          style={{ fontFamily: "Georgia, serif" }}
-        >
-          Discover pure cashmere and cashmere–merino pieces handcrafted in
-          Nepal — from winter warmth to featherlight layers made for the
-          changing rhythm of European seasons.
-        </p>
-
-        <Link
-          href="/products"
-          className="inline-block bg-stone-800 text-amber-50 px-12 py-4 text-sm uppercase tracking-[0.3em] hover:bg-stone-700 transition-colors duration-300"
-          style={{ fontFamily: "Georgia, serif" }}
-        >
-          Shop the Collection
-        </Link>
-      </section>
+      <style>{`
+        @keyframes editorialReveal {
+          from { opacity: 0; transform: translateY(22px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes softDrift {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(-18px, 18px, 0) scale(1.06); }
+        }
+        @keyframes imageBreathe {
+          from { transform: scale(1.04); }
+          to { transform: scale(1); }
+        }
+        .reveal-copy,
+        .pillar-card,
+        .material-row {
+          opacity: 0;
+          animation: editorialReveal 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .pillar-orb { animation: softDrift 9s ease-in-out infinite; }
+        .material-image { animation: imageBreathe 1800ms ease-out both; }
+        @media (prefers-reduced-motion: reduce) {
+          .reveal-copy,
+          .pillar-card,
+          .material-row,
+          .pillar-orb,
+          .material-image {
+            opacity: 1;
+            animation: none;
+            transform: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }

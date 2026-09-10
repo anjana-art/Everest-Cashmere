@@ -6,7 +6,7 @@ export default function Footer() {
   const socialLinks = {
     facebook: 'https://www.facebook.com/profile.php?id=61563221459507',
     instagram: 'https://www.instagram.com/himkash.official/',    
-    tiktok: 'https://www.tiktok.com/@himkash1',       
+    tiktok: 'https://www.tiktok.com/@himkash_officials',       
     youtube: 'https://www.youtube.com/@Clothing-brand-cashmere',
     linkedin: '#',     // Replace with your LinkedIn URL when ready
   };
