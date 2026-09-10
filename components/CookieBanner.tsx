@@ -15,7 +15,7 @@ export default function CookieBanner() {
   }, []);
 
   const saveConsent = (choice: "all" | "necessary") => {
-    localStorage.setItem("cookie-consent", choice);
+    localStorage.setItem("himkash-cookie-consent-v2", choice);
 
     window.dispatchEvent(
       new CustomEvent("cookie-consent-updated", {

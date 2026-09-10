@@ -22,7 +22,7 @@ export default function MetaPixel() {
 
   useEffect(() => {
     const updateConsent = () => {
-      const consent = localStorage.getItem("cookie-consent");
+      const consent = localStorage.getItem("himkash-cookie-consent-v2");
       setMarketingConsent(consent === "all");
     };
 
