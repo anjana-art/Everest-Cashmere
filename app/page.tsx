@@ -124,7 +124,7 @@ export default async function Home() {
               </NavigationLink>
 
               <NavigationLink
-                href="/founders-story"
+                href="/about"
                 variant="outline"
                 className="px-8 py-4 rounded-full text-sm font-medium tracking-wide border border-white/30 text-white hover:bg-white hover:text-stone-900 transition-all backdrop-blur-sm"
               >
