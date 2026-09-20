@@ -46,7 +46,7 @@ interface Product {
   };
 }
 
-export const revalidate = 300; //Caches for 5 minutes, then refreshes seamlessly
+export const revalidate = 300; // Caches for 5 minutes, then refreshes seamlessly
 
 export default async function Home() {
   const dbProducts = await prisma.product.findMany({
@@ -136,70 +136,70 @@ export default async function Home() {
       </section>
 
        {/* 3. CATEGORY COLLECTIONS */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
+      <section className="py-12 sm:py-20 px-2 sm:px-6 max-w-7xl mx-auto">
 
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-6">
           {/* Women */}
           <NavigationLink
             href="/clothing/women"
-            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+            className="group relative block overflow-hidden rounded-xl sm:rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
               src="/ai_model_pink ladies.webp"
               alt="Women's Cashmere Collection"
               fill
               className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(max-width: 768px) 50vw, 33vw"
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-            <div className="absolute bottom-8 left-8 right-8 text-white">
-              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Handcrafted</span>
-              <h3 className="text-2xl font-serif">Women's Collection</h3>
+            <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 text-white">
+              <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-amber-200 font-light block mb-0.5 sm:mb-1">Handcrafted</span>
+              <h3 className="text-sm sm:text-2xl font-serif leading-tight">Women's Collection</h3>
             </div>
           </NavigationLink>
 
           {/* Men */}
           <NavigationLink
             href="/clothing/men"
-            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+            className="group relative block overflow-hidden rounded-xl sm:rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
               src="/man landing page image.webp"
               alt="Men's Wool Collection"
               fill
               className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(max-width: 768px) 50vw, 33vw"
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-            <div className="absolute bottom-8 left-8 right-8 text-white">
-              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Timeless</span>
-              <h3 className="text-2xl font-serif">Men's Collection</h3>
+            <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 text-white">
+              <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-amber-200 font-light block mb-0.5 sm:mb-1">Timeless</span>
+              <h3 className="text-sm sm:text-2xl font-serif leading-tight">Men's Collection</h3>
             </div>
           </NavigationLink>
 
           {/* Unisex */}
           <NavigationLink
             href="/clothing/unisex"
-            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+            className="group relative block overflow-hidden rounded-xl sm:rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
               src="/unisex landing page image.webp"
               alt="Unisex Artisanal Collection"
               fill
               className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(max-width: 768px) 50vw, 33vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-            <div className="absolute top-6 right-6 z-10">
-              <span className="bg-white/90 backdrop-blur-md text-stone-900 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide shadow-sm">
+            <div className="absolute top-3 right-3 sm:top-6 sm:right-6 z-10">
+              <span className="bg-white/90 backdrop-blur-md text-stone-900 px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium tracking-wide shadow-sm">
                 New Arrival      
               </span>
             </div>
-            <div className="absolute bottom-8 left-8 right-8 text-white">
-              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Versatile</span>
-              <h3 className="text-2xl font-serif">Unisex Collection</h3>
+            <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 text-white">
+              <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-amber-200 font-light block mb-0.5 sm:mb-1">Versatile</span>
+              <h3 className="text-sm sm:text-2xl font-serif leading-tight">Unisex Collection</h3>
             </div>
           </NavigationLink>
 
@@ -208,66 +208,66 @@ export default async function Home() {
              {/* Cashmere*/}
           <NavigationLink
             href="/clothing/cashmere"
-            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+            className="group relative block overflow-hidden rounded-xl sm:rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
               src="/royal_blue polo folded.webp"
               alt="Women's Cashmere Collection"
               fill
               className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(max-width: 768px) 50vw, 33vw"
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-            <div className="absolute bottom-8 left-8 right-8 text-white">
-              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Handcrafted</span>
-              <h3 className="text-2xl font-serif">100% Pure Cashmere Collection</h3>
+            <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 text-white">
+              <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-amber-200 font-light block mb-0.5 sm:mb-1">Handcrafted</span>
+              <h3 className="text-sm sm:text-2xl font-serif leading-tight">100% Pure Cashmere Collection</h3>
             </div>
           </NavigationLink>
 
              {/* Cashmere and Merino 50 50 blend */}
           <NavigationLink
             href="/clothing/cashmere-merino-wool"
-            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+            className="group relative block overflow-hidden rounded-xl sm:rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
               src="/mix half fold.webp"
               alt="Women's Cashmere Collection"
               fill
               className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(max-width: 768px) 50vw, 33vw"
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-            <div className="absolute bottom-8 left-8 right-8 text-white">
-              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Handcrafted</span>
-              <h3 className="text-2xl font-serif">Cashmere & Merino 50/50 blend </h3>
+            <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 text-white">
+              <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-amber-200 font-light block mb-0.5 sm:mb-1">Handcrafted</span>
+              <h3 className="text-sm sm:text-2xl font-serif leading-tight">Cashmere & Merino 50/50 blend</h3>
             </div>
           </NavigationLink>
 
            {/* Merino*/}
           <NavigationLink
             href="/clothing/merino-wool"
-            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+            className="group relative block overflow-hidden rounded-xl sm:rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
               src="/stacked_cashmere.webp"
               alt="Women's Cashmere Collection"
               fill
               className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(max-width: 768px) 50vw, 33vw"
               priority
             />
             
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-             <div className="absolute top-6 right-6 z-10">
-              <span className="bg-white/90 backdrop-blur-md text-stone-900 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide shadow-sm">
+             <div className="absolute top-3 right-3 sm:top-6 sm:right-6 z-10">
+              <span className="bg-white/90 backdrop-blur-md text-stone-900 px-2.5 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium tracking-wide shadow-sm">
                         Launching soon              </span>
             </div>
             
-            <div className="absolute bottom-8 left-8 right-8 text-white">
-              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Handcrafted</span>
-              <h3 className="text-2xl font-serif">Merino Collection</h3>
+            <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 text-white">
+              <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-amber-200 font-light block mb-0.5 sm:mb-1">Handcrafted</span>
+              <h3 className="text-sm sm:text-2xl font-serif leading-tight">Merino Collection</h3>
             </div>
           </NavigationLink>
 
@@ -408,7 +408,6 @@ export default async function Home() {
       </section>
 
      
-
 
      
 

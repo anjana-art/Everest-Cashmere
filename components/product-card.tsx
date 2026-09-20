@@ -362,11 +362,11 @@ export const ProductCard = ({ product, priority = false }: Props) => {
               {formatProductName(product.name)}
             </h3>
             
-            {product.description && (
+          {/*   {product.description && (
               <p className="text-sm text-red-950 mb-3 line-clamp-2 font-light italic">
                 {product.description}
               </p>
-            )}
+            )} */}
             
             <div className="flex items-end justify-between">
               <div>

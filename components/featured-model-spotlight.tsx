@@ -31,7 +31,7 @@ export function FeaturedModelSpotlight({
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-contain object-top filter brightness-95 contrast-105 transition-transform duration-1000 ease-out group-hover:scale-105"
+              className="object-cover object-top filter brightness-95 contrast-105 transition-transform duration-1000 ease-out group-hover:scale-105"
             />
             
             {/* Subtle Gradient & Floating Badge */}
