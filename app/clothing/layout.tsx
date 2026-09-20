@@ -26,8 +26,8 @@ export default async function ClothingLayout({
   
   const counts = {
     CASHMERE: materialCounts.find(m => m.clothingType === 'CASHMERE')?._count || 0,
-    CASHMERE_MARINO_WOOL: materialCounts.find(m => m.clothingType === 'CASHMERE_MARINO_WOOL')?._count || 0,
-    MARINO_WOOL: materialCounts.find(m => m.clothingType === 'MARINO_WOOL')?._count || 0,
+    CASHMERE_MERINO_WOOL: materialCounts.find(m => m.clothingType === 'CASHMERE_MERINO_WOOL')?._count || 0,
+    MERINO_WOOL: materialCounts.find(m => m.clothingType === 'MERINO_WOOL')?._count || 0,
     MEN: genderCounts.find(g => g.gender === 'MEN')?._count || 0,
     WOMEN: genderCounts.find(g => g.gender === 'WOMEN')?._count || 0,
     UNISEX: genderCounts.find(g => g.gender === 'UNISEX')?._count || 0,
@@ -38,8 +38,8 @@ export default async function ClothingLayout({
       <ClothingNav 
         materialCounts={{
           CASHMERE: counts.CASHMERE,
-          CASHMERE_MARINO_WOOL: counts.CASHMERE_MARINO_WOOL,
-          MARINO_WOOL: counts.MARINO_WOOL
+          CASHMERE_MERINO_WOOL: counts.CASHMERE_MERINO_WOOL,
+          MERINO_WOOL: counts.MERINO_WOOL
         }}
         genderCounts={{
           MEN: counts.MEN,

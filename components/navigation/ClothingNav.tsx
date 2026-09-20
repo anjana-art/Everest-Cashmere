@@ -17,8 +17,8 @@ import {
 interface ClothingNavProps {
   materialCounts?: {
     CASHMERE: number;
-    CASHMERE_MARINO_WOOL: number;
-    MARINO_WOOL: number;
+    CASHMERE_MERINO_WOOL: number;
+    MERINO_WOOL: number;
   };
   genderCounts?: {
     MEN: number;
@@ -46,7 +46,7 @@ export default function ClothingNav({ materialCounts, genderCounts }: ClothingNa
     }
     
     // Check if we're on a material page with gender query param: /clothing/cashmere?gender=women
-    const materialMatch = pathname.match(/^\/clothing\/(cashmere|cashmere-marino-wool|marino-wool)/);
+    const materialMatch = pathname.match(/^\/clothing\/(cashmere|cashmere-merino-wool|merino-wool)/);
     if (materialMatch) {
       const genderParam = searchParams.get('gender');
       return {
@@ -170,8 +170,8 @@ export default function ClothingNav({ materialCounts, genderCounts }: ClothingNa
 
   const materials = [
     { value: 'CASHMERE', label: 'Cashmere', slug: 'cashmere', path: '/clothing/cashmere' },
-    { value: 'CASHMERE_MARINO_WOOL', label: 'Cashmere + Marino Wool', slug: 'cashmere-marino-wool', path: '/clothing/cashmere-marino-wool' },
-    { value: 'MARINO_WOOL', label: 'Marino Wool', slug: 'marino-wool', path: '/clothing/marino-wool' },
+    { value: 'CASHMERE_MERINO_WOOL', label: 'Cashmere + Merino Wool', slug: 'cashmere-merino-wool', path: '/clothing/cashmere-merino-wool' },
+    { value: 'MERINO_WOOL', label: 'Merino Wool', slug: 'merino-wool', path: '/clothing/merino-wool' },
   ];
 
   const genders = [

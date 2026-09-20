@@ -216,10 +216,10 @@ export const Navbar = () => {
                   Cashmere
                 </Link>
                 <Link href="/clothing/cashmere-marino-wool" className="block px-4 py-2 pl-6 hover:bg-amber-50 text-sm">
-                  Cashmere + Marino Wool
+                  Cashmere + Merino Wool
                 </Link>
                 <Link href="/clothing/marino-wool" className="block px-4 py-2 pl-6 hover:bg-amber-50 text-sm">
-                  Marino Wool
+                  Merino Wool
                 </Link>
                 <div className="border-t my-1"></div>
                 <div className="px-4 py-1 text-xs text-gray-500 font-medium">Shop by Gender</div>
@@ -503,14 +503,14 @@ export const Navbar = () => {
                                   className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                                   onClick={() => setMobileOpen(false)}
                                 >
-                                   Cashmere + Marino Wool
+                                   Cashmere + Merino Wool
                                 </Link>
                                 <Link 
                                   href="/products?category=CLOTHING&type=MARINO_WOOL" 
                                   className="block py-2 px-4 text-sm text-red-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                                   onClick={() => setMobileOpen(false)}
                                 >
-                                   Marino Wool
+                                   Merino Wool
                                 </Link>
                               </div>
                             )}

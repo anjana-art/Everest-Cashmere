@@ -32,45 +32,26 @@ export default function CashmereMarinoPage({ products, currentGender, material }
               Premium Collection
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-light mb-4 tracking-tight">
-              Cashmere + Marino Wool
+              Cashmere  and  Merino Wool , 50/50 blend 
             </h1>
             <p className="text-lg md:text-xl lg:text-2xl font-light text-white/90 mb-8 max-w-2xl mx-auto">
               The Perfect Blend of Luxury and Performance
             </p>
             <div className="flex flex-wrap justify-center gap-3 md:gap-4">
               <div className="bg-white/15 backdrop-blur-md px-5 py-2.5 rounded-full text-sm md:text-base border border-white/20">
-                ✨ Ultra-soft Cashmere
+                 Ultra-soft 
               </div>
               <div className="bg-white/15 backdrop-blur-md px-5 py-2.5 rounded-full text-sm md:text-base border border-white/20">
-                💪 Durable Marino
+                 Durable 
               </div>
               <div className="bg-white/15 backdrop-blur-md px-5 py-2.5 rounded-full text-sm md:text-base border border-white/20">
-                🌡️ Temperature Regulating
-              </div>
+                       Breathable               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Benefits Section */}
-      <div className="grid md:grid-cols-2 gap-8 mb-12">
-        <div className="bg-amber-50 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold mb-3">Why This Blend?</h3>
-          <p className="text-gray-700 leading-relaxed">
-            Combining the unparalleled softness of cashmere with the durability 
-            and breathability of Marino wool creates the perfect year-round fabric.
-          </p>
-        </div>
-        <div className="bg-amber-50 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold mb-3">Key Benefits</h3>
-          <ul className="space-y-2 text-gray-700">
-            <li>✓ 50% Cashmere / 50% Marino Wool blend</li>
-            <li>✓ Enhanced durability without sacrificing softness</li>
-            <li>✓ Perfect for all seasons</li>
-            <li>✓ Retains shape better than pure cashmere</li>
-          </ul>
-        </div>
-      </div>
+    
 
       {/* Product Grid */}
       <h2 className="text-2xl font-light mb-6">
@@ -78,7 +59,7 @@ export default function CashmereMarinoPage({ products, currentGender, material }
       </h2>
       
       {products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

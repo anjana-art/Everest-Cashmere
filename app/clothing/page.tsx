@@ -5,8 +5,8 @@ import { Metadata } from 'next';
 import { StartupWelcomeBanner } from '@/components/StartupWelcomeBanner';
 
 export const metadata: Metadata = {
-  title: 'All Clothing | HIM-KASH',
-  description: 'Discover our complete collection of handmade cashmere and fine wool clothing.',
+  title: 'All Clothing | Himkash',
+  description: 'Discover our premium collection of handcrafted 100% Pure Cashmere and fine Merino wool clothing.',
 };
 
 export default async function ClothingPage() {
@@ -26,9 +26,8 @@ export default async function ClothingPage() {
   });
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl md:text-4xl font-light mb-4">All Clothing</h1>
-      <p className="text-gray-600 mb-8">{products.length} products</p>
+    <div className="container mx-auto px-2 py-2">
+      <h1 className="text-3xl md:text-4xl font-light mb-4 ">All Clothing</h1>
       
       {/* Quick Material Links */}
       <div className="flex flex-wrap gap-3 mb-8">

@@ -8,6 +8,7 @@ import CashmerePage from '@/components/cashmerePage';
 import MarinoWoolPage from '@/components/marinoWoolPage';
 import CashmereMarinoPage from '@/components/cashmereMarinoPage';
 import DefaultMaterialPage from '@/components/defaultMaterialPage';
+import MaterialCards from '@/components/MaterialCards'
 
 interface Props {
   params: Promise<{ slug: string[] }> | { slug: string[] };
@@ -77,7 +78,7 @@ export default async function ClothingCatchAllPage({ params, searchParams }: Pro
         />
       );
       
-    case 'marino-wool':
+    case 'merino-wool':
       return (
         <MarinoWoolPage 
           products={products} 
@@ -86,7 +87,7 @@ export default async function ClothingCatchAllPage({ params, searchParams }: Pro
         />
       );
       
-    case 'cashmere-marino-wool':
+    case 'cashmere-merino-wool':
       return (
         <CashmereMarinoPage 
           products={products} 
@@ -109,32 +110,16 @@ export default async function ClothingCatchAllPage({ params, searchParams }: Pro
 // Default clothing page (when no material selected)
 function DefaultClothingPage({ currentGender }: { currentGender: string | null }) {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-light mb-4">
-        {currentGender ? `${currentGender}'s ` : ''}Clothing Collection
-      </h1>
-      <p className="text-gray-600">Select a material to explore our collections.</p>
-      
-      <div className="grid md:grid-cols-3 gap-6 mt-8">
-        <MaterialCard 
-          href={`/clothing/cashmere${currentGender ? `?gender=${currentGender}` : ''}`}
-          title="Cashmere"
-          description="Ultra-soft, luxurious, and warm"
-          image="/cashmere_stacked.webp"
-        />
-        <MaterialCard 
-          href={`/clothing/cashmere-marino-wool${currentGender ? `?gender=${currentGender}` : ''}`}
-          title="Cashmere + Marino Wool"
-          description="The perfect blend of softness and durability"
-          image="/5_cashmere_bg_sweater.webp"
-        />
-        <MaterialCard 
-          href={`/clothing/marino-wool${currentGender ? `?gender=${currentGender}` : ''}`}
-          title="Marino Wool"
-          description="Sustainable, breathable, and eco-friendly"
-          image="/himkash_favicon.webp"
-        />
-      </div>
+    <div className="container mx-auto px-2 py-2">
+     
+   <div className="mb-10">
+  <h1 className="text-4xl md:text-5xl font-light tracking-tight">
+    {currentGender ? `${currentGender}'s ` : ''}
+  </h1>
+  <p className="mt-3 text-neutral-500"> 100 % Pure Cashmere. Merino & 50/50  blend</p>
+</div>
+
+          <MaterialCards currentGender={currentGender} />
     </div>
   );
 }

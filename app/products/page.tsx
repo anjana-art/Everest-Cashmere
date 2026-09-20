@@ -48,6 +48,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       description: true,
       price: true,
       images: true,
+      
       metadata: true,
       category: true,
       clothingType: true,

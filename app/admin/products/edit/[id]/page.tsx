@@ -536,8 +536,8 @@ const uploadSizeGuide = async (file: File) => {
                   >
                     <option value="">Select Clothing Type</option>
                     <option value="CASHMERE">Cashmere</option>
-                    <option value="CASHMERE_MARINO_WOOL">Cashmere + Marino Wool</option>
-                    <option value="MARINO_WOOL">Marino Wool</option>
+                    <option value="CASHMERE_MERINO_WOOL">Cashmere + Merino Wool</option>
+                    <option value="MERINO_WOOL">Merino Wool</option>
                   </select>
                 </div>
 

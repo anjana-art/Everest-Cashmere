@@ -195,10 +195,13 @@ enum ProductCategory {
   ACCESSORIES
 }
 
+
+
+
 enum ClothingType {
   CASHMERE
-  CASHMERE_MARINO_WOOL
-  MARINO_WOOL
+  CASHMERE_MERINO_WOOL
+  MERINO_WOOL
 }
 
 enum AccessoriesType {

@@ -11,12 +11,12 @@ interface FeaturedModelSpotlightProps {
 }
 
 export function FeaturedModelSpotlight({
-  imageSrc = "/feature model pic.webp", // Replace with your saved model image path
-  badge = "Artisan Signature Series",
-  title = "The Pure Cream Crewneck",
-  subtitle = "Himalayan Softness. European Elegance.",
-  description = "Hand-spun in small batches by master weavers in Nepal using 100% Grade-A raw cashmere. Styled effortless for modern living with a supple, featherlight feel against the skin.",
-  href = "/clothing/cashmere?gender=women",
+  imageSrc = '/polo light blue fold.webp', // Replace with your saved model image path
+  badge = "New collection",
+  title = "Men’s Sky Blue Pure Cashmere Polo Shirt",
+  subtitle = "",
+  description = "Handmade in Nepal from 100% pure cashmere, this men’s polo shirt is created using traditional techniques passed down through generations. Careful craftsmanship preserves the fibre’s exceptional softness and natural character while supporting lasting comfort, quality, and durability.",
+  href ='/products/cmryz4dih0000l804imbernrt',
 }: FeaturedModelSpotlightProps) {
   return (
     <section className="py-20 px-6 bg-[#FAF8F5]">
@@ -24,14 +24,14 @@ export function FeaturedModelSpotlight({
         <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
           
           {/* Left Column: Featured Model Image */}
-          <div className="lg:col-span-6 relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden bg-stone-100 group">
+          <NavigationLink  href={href} className="lg:col-span-6 relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden bg-stone-100 group">
             <Image
-              src={imageSrc}
-              alt="Model wearing Himkash Handcrafted Pure Cashmere Cream Sweater"
+              src='/polo light blue fold.webp'
+              alt=" Himkash Handcrafted Pure Cashmere sky blue polo tshirt"
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover object-top filter brightness-95 contrast-105 transition-transform duration-1000 ease-out group-hover:scale-105"
+              className="object-contain object-top filter brightness-95 contrast-105 transition-transform duration-1000 ease-out group-hover:scale-105"
             />
             
             {/* Subtle Gradient & Floating Badge */}
@@ -41,7 +41,7 @@ export function FeaturedModelSpotlight({
                 100% Pure Cashmere
               </span>
             </div>
-          </div>
+          </NavigationLink>
 
           {/* Right Column: Luxury Details & Story */}
           <div className="lg:col-span-6 p-8 sm:p-12 lg:p-16 space-y-8">
@@ -63,7 +63,7 @@ export function FeaturedModelSpotlight({
 
             {/* Feature Highlights Grid */}
             <div className="grid grid-cols-2 gap-6 pt-2 border-t border-b border-stone-200/70 py-6">
-              <div>
+             {/*  <div>
                 <span className="block text-2xl font-serif text-stone-900">12.5 µm to 19 µm </span>
                 <span className="text-xs uppercase tracking-wider text-stone-500 font-medium">
                   Ultra-Fine Micron
@@ -74,14 +74,14 @@ export function FeaturedModelSpotlight({
                 <span className="text-xs uppercase tracking-wider text-stone-500 font-medium">
                   Nepalese Artisanal
                 </span>
-              </div>
+              </div> */}
             </div>
 
             {/* Call to Action Actions */}
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <NavigationLink
                 href={href}
-                className="px-8 py-4 rounded-full text-sm uppercase tracking-widest font-medium bg-stone-900 text-white hover:bg-amber-800 transition-all shadow-lg hover:shadow-amber-900/20"
+                className="px-8 py-4 rounded-full text-sm uppercase tracking-widest font-medium bg-red-900 text-white hover:bg-amber-800 transition-all shadow-lg hover:shadow-amber-900/20"
               >
                 Shop This Piece
               </NavigationLink>

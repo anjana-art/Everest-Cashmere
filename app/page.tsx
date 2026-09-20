@@ -135,75 +135,20 @@ export default async function Home() {
         </div>
       </section>
 
-      
+       {/* 3. CATEGORY COLLECTIONS */}
+      <section className="py-20 px-6 max-w-7xl mx-auto">
 
-      {/* 🟢 FEATURED MODEL SPOTLIGHT COMPONENT */}
-      <FeaturedModelSpotlight imageSrc="/edited featured model.webp" />
-
-      {/* ✅ Startup Banner - Above Reviews or Similar Products */}
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <StartupWelcomeBanner />
-      </div>
-
-      {/* 2. VALUE PROPOSITION BAR */}
-      <section className="bg-white border-y border-stone-200/60 py-12 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
-              🧶
-            </div>
-            <div>
-              <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">Authentic Handloom</h3>
-              <p className="text-stone-500 text-sm leading-relaxed">
-                Hand-spun without mass machinery. Direct support to Nepalese artisan communities.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
-              🌿
-            </div>
-            <div>
-              <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">100% Sustainable Fibers</h3>
-              <p className="text-stone-500 text-sm leading-relaxed">
-                Ethically harvested cashmere & fine wool with natural low-impact dyes.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
-              ✨
-            </div>
-            <div>
-              <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">12–19 Micron Fineness</h3>
-              <p className="text-stone-500 text-sm leading-relaxed">
-                Exceptionably soft fibers selected for enduring comfort and year-round durability.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. CATEGORY COLLECTIONS */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-          <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-medium">Curated Wardrobe</span>
-          <h2 className="text-3xl md:text-5xl font-serif text-stone-900">Explore Collections</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
           {/* Women */}
           <NavigationLink
             href="/clothing/women"
             className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
-              src="/pink folded sweater.webp"
+              src="/ai_model_pink ladies.webp"
               alt="Women's Cashmere Collection"
               fill
-              className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 33vw"
               priority
             />
@@ -220,10 +165,10 @@ export default async function Home() {
             className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
-              src="/royal_blue polo folded.webp"
+              src="/man landing page image.webp"
               alt="Men's Wool Collection"
               fill
-              className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 33vw"
               priority
             />
@@ -240,10 +185,10 @@ export default async function Home() {
             className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
           >
             <Image
-              src="/blue_brunello_folded.webp"
+              src="/unisex landing page image.webp"
               alt="Unisex Artisanal Collection"
               fill
-              className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+              className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 33vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
@@ -257,8 +202,152 @@ export default async function Home() {
               <h3 className="text-2xl font-serif">Unisex Collection</h3>
             </div>
           </NavigationLink>
+
+         
+
+             {/* Cashmere*/}
+          <NavigationLink
+            href="/clothing/cashmere"
+            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+          >
+            <Image
+              src="/royal_blue polo folded.webp"
+              alt="Women's Cashmere Collection"
+              fill
+              className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Handcrafted</span>
+              <h3 className="text-2xl font-serif">100% Pure Cashmere Collection</h3>
+            </div>
+          </NavigationLink>
+
+             {/* Cashmere and Merino 50 50 blend */}
+          <NavigationLink
+            href="/clothing/cashmere-merino-wool"
+            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+          >
+            <Image
+              src="/mix half fold.webp"
+              alt="Women's Cashmere Collection"
+              fill
+              className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Handcrafted</span>
+              <h3 className="text-2xl font-serif">Cashmere & Merino 50/50 blend </h3>
+            </div>
+          </NavigationLink>
+
+           {/* Merino*/}
+          <NavigationLink
+            href="/clothing/merino-wool"
+            className="group relative block overflow-hidden rounded-2xl aspect-[3/4] bg-stone-200 shadow-sm hover:shadow-2xl transition-all duration-500"
+          >
+            <Image
+              src="/stacked_cashmere.webp"
+              alt="Women's Cashmere Collection"
+              fill
+              className="object-contain object-center transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              priority
+            />
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+             <div className="absolute top-6 right-6 z-10">
+              <span className="bg-white/90 backdrop-blur-md text-stone-900 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide shadow-sm">
+                        Launching soon              </span>
+            </div>
+            
+            <div className="absolute bottom-8 left-8 right-8 text-white">
+              <span className="text-xs uppercase tracking-widest text-amber-200 font-light block mb-1">Handcrafted</span>
+              <h3 className="text-2xl font-serif">Merino Collection</h3>
+            </div>
+          </NavigationLink>
+
         </div>
       </section>
+
+      {/* 🟢 FEATURED MODEL SPOTLIGHT COMPONENT */}
+      <FeaturedModelSpotlight imageSrc="/edited featured model.webp" />
+
+              {/* 2. VALUE PROPOSITION BAR */}
+              <section className="bg-white border-y border-stone-200/60 py-12 px-6">
+                <div className="max-w-7xl mx-auto grid grid-cols-3 md:grid-cols-3 gap-10 md:gap-8">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
+                      🧶
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">Authentic Handloom</h3>
+                      <p className="text-stone-500 text-sm leading-relaxed">
+                        Hand-spun without mass machinery. Direct support to Nepalese artisan communities.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
+                      🌿
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">100% Sustainable Fibers</h3>
+                      <p className="text-stone-500 text-sm leading-relaxed">
+                        Ethically harvested cashmere & fine wool with natural low-impact dyes.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center text-xl shrink-0 text-amber-800">
+                      ✨
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-medium text-stone-900 text-lg mb-1">12–19 Micron Fineness</h3>
+                      <p className="text-stone-500 text-sm leading-relaxed">
+                        Exceptionably soft fibers selected for enduring comfort and year-round durability.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+
+
+       {/* 6. VIP LAUNCH / NEWSLETTER */}
+      <section className="py-24 px-6 bg-[#FAF8F5]">
+        <div className="max-w-4xl mx-auto text-center space-y-8 bg-white p-12 sm:p-16 rounded-3xl border border-stone-200/80 shadow-sm">
+          <h2 className="text-3xl sm:text-5xl font-serif text-stone-900">
+            Handcrafted in Nepal <span className="italic text-amber-800">Now available in Portugal</span>
+          </h2>
+          <p className="text-stone-500 text-base max-w-lg mx-auto font-light leading-relaxed">
+            Be the first to know when our new seasonal drops arrive. Join our circle for private collection releases and artisan stories.
+          </p>
+
+          <div className="pt-2 flex justify-center">
+            <NavigationLink
+              href="/signup"
+              className="px-10 py-4 bg-red-900 text-white hover:bg-amber-800 rounded-full text-sm tracking-widest uppercase transition-all shadow-lg hover:shadow-stone-900/20"
+            >
+              Join for new Updates
+            </NavigationLink>
+          </div>
+        </div>
+      </section>
+
+      {/* ✅ Startup Banner - Above Reviews or Similar Products */}
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <StartupWelcomeBanner />
+      </div>
+
+    
+     
 
        {/* 5.1 Verified Customer Testimonials */}
            <VerifiedCustomerTestimonialsCarousel />
@@ -293,8 +382,8 @@ export default async function Home() {
             </div>
 
             <div className="md:col-span-7 space-y-6">
-              <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-medium">The Visionary</span>
-              <h2 className="text-3xl sm:text-4xl font-serif text-stone-900">
+{/*               <span className="text-xs uppercase tracking-[0.25em] text-amber-700 font-medium">The Visionary</span>
+ */}              <h2 className="text-3xl sm:text-4xl font-serif text-stone-900">
                 Created by Anjana Bhatta
               </h2>
               
@@ -302,9 +391,7 @@ export default async function Home() {
                 "Himkash was born from a vision to bridge two worlds—the timeless craftsmanship of Nepal and the conscious lifestyle of Europe."
               </blockquote>
 
-              <p className="text-stone-500 text-base leading-relaxed font-light">
-                After moving to Portugal in 2016, I carried with me the rich heritage of Nepalese artistry. Together with my family, every garment is thoughtfully curated from high-altitude ethical sourcing to generational hand-spinning.
-              </p>
+             
 
               <div>
                 <NavigationLink
@@ -323,26 +410,7 @@ export default async function Home() {
      
 
 
-      {/* 6. VIP LAUNCH / NEWSLETTER */}
-      <section className="py-24 px-6 bg-[#FAF8F5]">
-        <div className="max-w-4xl mx-auto text-center space-y-8 bg-white p-12 sm:p-16 rounded-3xl border border-stone-200/80 shadow-sm">
-          <h2 className="text-3xl sm:text-5xl font-serif text-stone-900">
-            Handcrafted in Nepal <span className="italic text-amber-800">Now available in Portugal</span>
-          </h2>
-          <p className="text-stone-500 text-base max-w-lg mx-auto font-light leading-relaxed">
-            Be the first to know when our new seasonal drops arrive. Join our circle for private collection releases and artisan stories.
-          </p>
-
-          <div className="pt-2 flex justify-center">
-            <NavigationLink
-              href="/signup"
-              className="px-10 py-4 bg-red-900 text-white hover:bg-amber-800 rounded-full text-sm tracking-widest uppercase transition-all shadow-lg hover:shadow-stone-900/20"
-            >
-              Join for new Updates
-            </NavigationLink>
-          </div>
-        </div>
-      </section>
+     
 
       {/* 7. SOCIAL SHARE STRIP */}
       <section className="py-12 border-t border-stone-200/60 bg-white">
