@@ -1,4 +1,4 @@
-// components/product-detail.tsx - Fixed size guide with debug
+// components/product-detail.tsx - Mobile layout updated
 
 "use client";
 
@@ -46,7 +46,7 @@ interface Props {
   product: Product;
 }
 
-const COLOR_MAP: Record<string, { name: string, class: string, hex?: string }> = {
+const COLOR_MAP: Record<string, { name: string; class: string; hex?: string }> = {
   'baby-pink': { name: 'Blush Pink', class: 'bg-rose-200 border border-rose-300', hex: '#fbc4c4' },
   'amber-200': { name: 'Champagne', class: 'bg-amber-200 border border-amber-300', hex: '#f7e5c2' },
   'black-300': { name: 'Charcoal', class: 'bg-gray-400 border border-gray-500', hex: '#9ca3af' },
@@ -62,28 +62,28 @@ const COLOR_MAP: Record<string, { name: string, class: string, hex?: string }> =
   'beige': { name: 'Beige', class: 'bg-[#F5F5DC] border border-amber-300', hex: '#F5F5DC' },
   'charcoal': { name: 'Charcoal', class: 'bg-[#36454F] border border-gray-600', hex: '#36454F' },
   'taupe': { name: 'Taupe', class: 'bg-[#483C32] border border-amber-700', hex: '#483C32' },
-  'indigo': { name: 'Indigo', class: 'bg-[#4B0082] border border-purple-800', hex: '#4B0082' },  
+  'indigo': { name: 'Indigo', class: 'bg-[#4B0082] border border-purple-800', hex: '#4B0082' },
 };
 
 export const ProductDetail = ({ product }: Props) => {
   const router = useRouter();
   const { items, addItem, removeItem } = useCartStore();
-  
+
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [sizeStockMap, setSizeStockMap] = useState<Record<string, number>>({});
-  
+
   const [mainImage, setMainImage] = useState<string>(product.images?.[0] || '');
-  
+
   // NEW: Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  
+
   const dbColors = product.availableColors || [];
   const dbSizes = product.availableSizes || [];
-  
+
   const defaultColor = dbColors.length > 0 ? dbColors[0] : "";
   const defaultSize = dbSizes.length > 0 ? dbSizes[0].toLowerCase() : "";
-  
+
   const [selectedColor, setSelectedColor] = useState<string>(defaultColor);
   const [selectedSize, setSelectedSize] = useState<string>(defaultSize);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -94,21 +94,20 @@ export const ProductDetail = ({ product }: Props) => {
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  
-  const cartItem = items.find((item) => 
-    item.id === product?.id && 
-    item.color === selectedColor && 
+  const cartItem = items.find((item) =>
+    item.id === product?.id &&
+    item.color === selectedColor &&
     item.size === selectedSize
   );
-  
+
   const cartQuantity = cartItem ? cartItem.quantity : 0;
-  
+
   // Get current selected size stock
   const currentStock = sizeStockMap[selectedSize] || 0;
-  
+
   // Calculate remaining stock after cart items
   const remainingStock = currentStock - cartQuantity;
-  
+
   // Get current selected variant
   const selectedVariant = variants.find(v => v.color === selectedColor && v.size === selectedSize);
 
@@ -129,10 +128,10 @@ export const ProductDetail = ({ product }: Props) => {
           stockMap[v.size] = v.stock;
         });
       setSizeStockMap(stockMap);
-      
+
       // Reset quantity when color/size changes
       setQuantity(1);
-      
+
       // Auto-select first available size if current size is out of stock
       const firstAvailableSize = Object.entries(stockMap).find(([_, stock]) => stock > 0)?.[0];
       if (selectedSize && stockMap[selectedSize] === 0 && firstAvailableSize) {
@@ -166,14 +165,14 @@ export const ProductDetail = ({ product }: Props) => {
         console.error('Error parsing user from localStorage:', error);
       }
     };
-    
+
     getUser();
   }, []);
 
   // Check wishlist status for selected variant
   const checkWishlistStatus = async () => {
     if (!userId || !product?.id || !selectedVariant) return;
-    
+
     try {
       const url = `/api/wishlist?check=true&productId=${product.id}&variantId=${selectedVariant.id}`;
       const response = await fetch(url, {
@@ -241,7 +240,7 @@ export const ProductDetail = ({ product }: Props) => {
             'Content-Type': 'application/json',
             'x-user-id': userId,
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             productId: product.id,
             variantId: selectedVariant.id,
             color: selectedColor,
@@ -272,7 +271,7 @@ export const ProductDetail = ({ product }: Props) => {
       alert(`Maximum ${remainingStock} items available (you already have ${cartQuantity} in cart)`);
     }
   };
-  
+
   const decreaseQuantity = () => {
     if (quantity > 1) {
       setQuantity(prev => prev - 1);
@@ -334,7 +333,7 @@ export const ProductDetail = ({ product }: Props) => {
         size: selectedSize,
       });
     }
-    
+
     // Show success message
     setShowSuccessMessage(true);
     setTimeout(() => setShowSuccessMessage(false), 3000);
@@ -408,13 +407,13 @@ export const ProductDetail = ({ product }: Props) => {
   };
 
   const prevImage = () => {
-    setLightboxIndex((prev) => 
+    setLightboxIndex((prev) =>
       prev === 0 ? (product.images?.length || 1) - 1 : prev - 1
     );
   };
 
   const nextImage = () => {
-    setLightboxIndex((prev) => 
+    setLightboxIndex((prev) =>
       prev === (product.images?.length || 1) - 1 ? 0 : prev + 1
     );
   };
@@ -448,16 +447,16 @@ export const ProductDetail = ({ product }: Props) => {
   const formatSubCategory = (product: Product) => {
     if (product.category === 'CLOTHING' && product.clothingType) {
       const map: Record<string, string> = {
-        'CASHMERE':             'Pure Cashmere',
-        'MARINO_WOOL':          'Merino Wool',
+        'CASHMERE': 'Pure Cashmere',
+        'MARINO_WOOL': 'Merino Wool',
         'CASHMERE_MARINO_WOOL': 'Cashmere & Merino',
       };
       return map[product.clothingType] || product.clothingType;
     }
     if (product.category === 'ACCESSORIES' && product.accessoriesType) {
       const map: Record<string, string> = {
-        'MEN':    'Men',
-        'WOMEN':  'Women',
+        'MEN': 'Men',
+        'WOMEN': 'Women',
         'UNISEX': 'Unisex',
       };
       return map[product.accessoriesType] || product.accessoriesType;
@@ -465,21 +464,167 @@ export const ProductDetail = ({ product }: Props) => {
     return null;
   };
 
-  // Debug: Log sizeGuide to console
-  console.log('🔍 [DEBUG] Product sizeGuide from props:', product.sizeGuide);
-  console.log('🔍 [DEBUG] Product sizeGuide type:', typeof product.sizeGuide);
-  console.log('🔍 [DEBUG] Product sizeGuide length:', product.sizeGuide?.length);
+  // Reusable Size Guide block (used in both desktop-left and mobile-main positions)
+  const SizeGuideBlock = ({ wrapperClass = '' }: { wrapperClass?: string }) => (
+    <div className={wrapperClass}>
+      <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+        <button
+          onClick={() => setShowSizeChart(!showSizeChart)}
+          className="flex items-start gap-3 w-full text-left"
+        >
+          <div className="flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                Size Guide
+              </h4>
+              <span className="text-amber-600 text-xl">
+                {showSizeChart ? '−' : '+'}
+              </span>
+            </div>
+
+            {!showSizeChart && (
+              <p className="text-sm text-red-700 font-light mt-1">
+                {product.sizeGuide && product.sizeGuide.trim() !== ''
+                  ? 'Click to view size guide →'
+                  : 'No size guide available for this product'}
+              </p>
+            )}
+          </div>
+        </button>
+
+        {showSizeChart && product.sizeGuide && product.sizeGuide.trim() !== '' && (
+          <div className="mt-4 pt-2">
+            <div className="relative w-full overflow-hidden rounded-lg">
+              <Image
+                src={product.sizeGuide}
+                alt="Size guide"
+                width={800}
+                height={600}
+                className="w-full h-auto object-contain"
+                sizes="(max-width: 768px) 100vw, 800px"
+              />
+            </div>
+            <div className="mt-3 text-xs text-center text-red-700 font-light">
+              <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
+            </div>
+          </div>
+        )}
+
+        {showSizeChart && (!product.sizeGuide || product.sizeGuide.trim() === '') && (
+          <div className="mt-4 p-4 text-center text-red-600 text-sm">
+            No size guide available for this product
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Reusable Care Instructions block
+  const CareBlock = ({ wrapperClass = '' }: { wrapperClass?: string }) => (
+    <div className={wrapperClass}>
+      <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+        <button
+          onClick={() => setShowCareDetails(!showCareDetails)}
+          className="flex items-start gap-3 w-full text-left"
+        >
+          <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h4 className="font-serif font-semibold text-red-900 tracking-wide">
+                Care Instructions for Nepalese Cashmere
+              </h4>
+              <span className="text-amber-600 text-xl">
+                {showCareDetails ? '−' : '+'}
+              </span>
+            </div>
+
+            {!showCareDetails && (
+              <p className="text-sm text-red-700 font-light mt-1">
+                Hand wash cold, lay flat to dry, store folded. Click for full details →
+              </p>
+            )}
+          </div>
+        </button>
+
+        {showCareDetails && (
+          <div className="mt-4 space-y-3 text-sm pl-8">
+            <div>
+              <p className="font-medium text-red-800">🧼 Washing Instructions</p>
+              <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
+            </div>
+            <div>
+              <p className="font-medium text-red-800">🌀 Drying Method</p>
+              <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
+            </div>
+            <div>
+              <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
+              <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
+            </div>
+            <div>
+              <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
+              <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
+            </div>
+            <div>
+              <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
+              <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
+            </div>
+            <div>
+              <p className="font-medium text-red-800">❌ What to Avoid</p>
+              <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
+            </div>
+            <div className="pt-2">
+              <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
+                🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Reusable Shipping & Returns block
+  const ShippingBlock = ({ wrapperClass = '' }: { wrapperClass?: string }) => (
+    <div className={`${wrapperClass} grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100`}>
+      <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+        <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+        <div>
+          <p className="font-serif text-sm text-red-900">Complimentry and Fast Shipping</p>
+          <p className="text-xs text-red-700 font-light">within 5-6 business days</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+        <ArrowPathIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+        <div>
+          <p className="font-serif text-sm text-red-900">Easy Returns</p>
+          <p className="text-xs text-red-700 font-light">14-day policy</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
+        <ShieldCheckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+        <div>
+          <p className="font-serif text-sm text-red-900">Secure Payment</p>
+          <p className="text-xs text-red-700 font-light">100% secure</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-red-50 py-12">
       <div className="container mx-auto px-4">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-amber-100/50">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            {/* Left Column - Product Images with Gallery */}
+            {/* Left Column - Product Images (and desktop-only info blocks) */}
             <div className="bg-gradient-to-br from-amber-50/50 to-rose-50/50 p-8 lg:p-10">
               <div className="space-y-4">
                 {/* Main Image - NOW CLICKABLE */}
-                <div 
+                <div
                   className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-inner border border-amber-100 cursor-zoom-in group"
                   onClick={() => openLightbox(0)}
                 >
@@ -492,7 +637,6 @@ export const ProductDetail = ({ product }: Props) => {
                         className="object-contain transition-transform duration-700 hover:scale-110"
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
-                      {/* Zoom icon overlay */}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
                         <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-amber-700">
@@ -506,7 +650,7 @@ export const ProductDetail = ({ product }: Props) => {
                       <span className="text-amber-300 font-light">Luxury image coming soon</span>
                     </div>
                   )}
-                  
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -537,12 +681,12 @@ export const ProductDetail = ({ product }: Props) => {
                 {/* Thumbnail Images */}
                 <div className="grid grid-cols-4 gap-3">
                   {product.images?.map((image, index) => (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       onClick={() => setMainImage(image)}
                       className={`aspect-square rounded-xl overflow-hidden bg-white cursor-pointer transition-all duration-300 border ${
-                        mainImage === image 
-                          ? 'border-amber-500 ring-2 ring-amber-200 scale-105 shadow-lg' 
+                        mainImage === image
+                          ? 'border-amber-500 ring-2 ring-amber-200 scale-105 shadow-lg'
                           : 'border-amber-100 hover:border-amber-300 hover:shadow-md hover:scale-105'
                       }`}
                     >
@@ -569,193 +713,20 @@ export const ProductDetail = ({ product }: Props) => {
                   </div>
                 )}
 
-                {/* Care Instructions - Only visible on desktop in this position */}
-                <div className="hidden lg:block">
-                  <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                    <button 
-                      onClick={() => setShowCareDetails(!showCareDetails)}
-                      className="flex items-start gap-3 w-full text-left"
-                    >
-                      <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                            Care Instructions for Nepalese Cashmere
-                          </h4>
-                          <span className="text-amber-600 text-xl">
-                            {showCareDetails ? '−' : '+'}
-                          </span>
-                        </div>
-                        
-                        {!showCareDetails && (
-                          <p className="text-sm text-red-700 font-light mt-1">
-                            Hand wash cold, lay flat to dry, store folded. Click for full details →
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                    
-                    {showCareDetails && (
-                      <div className="mt-4 space-y-3 text-sm pl-8">
-                        <div>
-                          <p className="font-medium text-red-800">🧼 Washing Instructions</p>
-                          <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
-                        </div>
-                        
-                        <div>
-                          <p className="font-medium text-red-800">🌀 Drying Method</p>
-                          <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
-                        </div>
-                        
-                        <div>
-                          <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
-                          <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
-                        </div>
-                        
-                        <div>
-                          <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
-                          <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
-                        </div>
-                        
-                        <div>
-                          <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
-                          <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
-                        </div>
-                        
-                        <div>
-                          <p className="font-medium text-red-800">❌ What to Avoid</p>
-                          <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
-                        </div>
-                        
-                        <div className="pt-2">
-                          <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
-                            🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Size Chart Section - FIXED with debug - Only visible on desktop */}
-                <div className="hidden lg:block">
-                  <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                    <button 
-                      onClick={() => setShowSizeChart(!showSizeChart)}
-                      className="flex items-start gap-3 w-full text-left"
-                    >
-                      <div className="flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                            Size Guide
-                          </h4>
-                          <span className="text-amber-600 text-xl">
-                            {showSizeChart ? '−' : '+'}
-                          </span>
-                        </div>
-                        
-                        {!showSizeChart && (
-                          <p className="text-sm text-red-700 font-light mt-1">
-                            {product.sizeGuide && product.sizeGuide.trim() !== '' 
-                              ? 'Click to view size guide →' 
-                              : 'No size guide available for this product'}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                    
-                    {/* Show the image when sizeGuide exists */}
-                    {showSizeChart && product.sizeGuide && product.sizeGuide.trim() !== '' && (
-                      <div className="mt-4 pt-2">
-                        <div className="relative w-full overflow-hidden rounded-lg">
-                          <Image
-                            src={product.sizeGuide}
-                            alt="Size guide"
-                            width={800}
-                            height={600}
-                            className="w-full h-auto object-contain"
-                            sizes="(max-width: 768px) 100vw, 800px"
-                            onError={(e) => {
-                              console.error('❌ [DEBUG] Image failed to load:', product.sizeGuide);
-                              e.currentTarget.style.display = 'none';
-                              // Show error message
-                              const parent = e.currentTarget.parentElement?.parentElement;
-                              if (parent) {
-                                const errorMsg = document.createElement('p');
-                                errorMsg.className = 'text-red-600 text-sm text-center p-4';
-                                errorMsg.textContent = 'Failed to load size guide image';
-                                parent.appendChild(errorMsg);
-                              }
-                            }}
-                            onLoad={() => {
-                              console.log('✅ [DEBUG] Image loaded successfully:', product.sizeGuide);
-                            }}
-                          />
-                        </div>
-                        <div className="mt-3 text-xs text-center text-red-700 font-light">
-                          <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {showSizeChart && (!product.sizeGuide || product.sizeGuide.trim() === '') && (
-                      <div className="mt-4 p-4 text-center text-red-600 text-sm">
-                        No size guide available for this product
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* ✅ MOVED: Product Reviews - Now on left side after care and size guide */}
-                <div className="mt-6">
-                  <ProductReviews productId={product.id} />
-                </div>
-
-                {/* Shipping & Returns - Only visible on desktop */}
-                <div className="hidden lg:grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
-                  <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                    <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="font-serif text-sm text-red-900">Complimentry and Fast Shipping</p>
-                      <p className="text-xs text-red-700 font-light">within 5-6 business days</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                    <ArrowPathIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="font-serif text-sm text-red-900">Easy Returns</p>
-                      <p className="text-xs text-red-700 font-light">14-day policy</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                    <ShieldCheckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <p className="font-serif text-sm text-red-900">Secure Payment</p>
-                      <p className="text-xs text-red-700 font-light">100% secure</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Metadata - Only visible on desktop */}
+                {/* ============ DESKTOP-ONLY INFO BLOCKS ============ */}
+                <CareBlock wrapperClass="hidden lg:block" />
+                <SizeGuideBlock wrapperClass="hidden lg:block" />
+                <ShippingBlock wrapperClass="hidden lg:grid" />
                 {product.metadata && Object.keys(product.metadata).length > 0 && (
                   <div className="hidden lg:block pt-4 border-t border-amber-100">
-                    <h3 className="font-serif text-lg text-red-900 mb-4 tracking-wide">
-                      Details
-                    </h3>
+                    <h3 className="font-serif text-lg text-red-900 mb-4 tracking-wide">Details</h3>
                     <div className="grid grid-cols-2 gap-4">
                       {Object.entries(product.metadata).map(([key, value]) => (
                         <div key={key} className="text-sm p-3 bg-amber-50/50 rounded-lg">
                           <span className="font-serif text-red-800 capitalize block mb-1">
                             {key.replace('_', ' ')}
                           </span>
-                          <span className="text-amber-700 font-light">
-                            {String(value)}
-                          </span>
+                          <span className="text-amber-700 font-light">{String(value)}</span>
                         </div>
                       ))}
                     </div>
@@ -765,12 +736,13 @@ export const ProductDetail = ({ product }: Props) => {
             </div>
 
             {/* Right Column - Product Details */}
-            <div className="p-8 lg:p-10 space-y-6 bg-white">
+            {/* ✅ CHANGED: reduced top padding on mobile so title starts closer to images */}
+            <div className="p-6 sm:p-8 lg:p-10 space-y-6 bg-white pt-4 lg:pt-10">
               <div className="border-b border-amber-100 pb-4">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-red-900 mb-3 tracking-tight">
                   {product.name}
                 </h1>
-                
+
                 <div className="flex items-baseline gap-2">
                   <p className="text-3xl font-serif font-medium text-amber-700">
                     {displayPrice()}
@@ -779,12 +751,12 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               </div>
 
-              {/* MOVED UP: Color Selection */}
+            
+
+              {/* Color Selection */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-serif text-lg text-red-900 tracking-wide">
-                    Colour
-                  </h3>
+                  <h3 className="font-serif text-lg text-red-900 tracking-wide">Colour</h3>
                   <span className="text-sm text-red-950 font-light capitalize">
                     {selectedColor ? (COLOR_MAP[selectedColor]?.name || selectedColor) : "Select"}
                   </span>
@@ -792,8 +764,8 @@ export const ProductDetail = ({ product }: Props) => {
                 <div className="flex flex-wrap gap-4">
                   {dbColors.length > 0 ? (
                     dbColors.map((colorValue) => {
-                      const colorInfo = COLOR_MAP[colorValue] || { 
-                        name: colorValue, 
+                      const colorInfo = COLOR_MAP[colorValue] || {
+                        name: colorValue,
                         class: `bg-${colorValue}-500 border border-amber-300`
                       };
                       return (
@@ -801,8 +773,8 @@ export const ProductDetail = ({ product }: Props) => {
                           key={colorValue}
                           onClick={() => setSelectedColor(colorValue)}
                           className={`relative w-12 h-12 rounded-full ${colorInfo.class} ${
-                            selectedColor === colorValue 
-                              ? 'ring-2 ring-offset-2 ring-amber-500 scale-110 shadow-lg' 
+                            selectedColor === colorValue
+                              ? 'ring-2 ring-offset-2 ring-amber-500 scale-110 shadow-lg'
                               : 'hover:ring-2 hover:ring-offset-2 hover:ring-amber-300 hover:scale-105'
                           } transition-all duration-300`}
                           aria-label={`Select ${colorInfo.name} colour`}
@@ -822,13 +794,11 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               </div>
 
-              {/* MOVED UP: Size Selection */}
+              {/* Size Selection */}
               {product.category !== 'HOME_DECORE' && dbSizes.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-lg text-red-900 tracking-wide">
-                      Size
-                    </h3>
+                    <h3 className="font-serif text-lg text-red-900 tracking-wide">Size</h3>
                     <span className="text-sm text-red-950 font-light uppercase">
                       {selectedSize || "Select"}
                     </span>
@@ -840,7 +810,7 @@ export const ProductDetail = ({ product }: Props) => {
                       const stock = sizeStockMap[sizeLower] ?? 0;
                       const isOutOfStock = stock === 0;
                       const isSelected = selectedSize === sizeLower;
-                      
+
                       return (
                         <button
                           key={sizeValue}
@@ -871,9 +841,7 @@ export const ProductDetail = ({ product }: Props) => {
                   </div>
                   {selectedSize && currentStock > 0 && (
                     <div className="space-y-1">
-                      <p className="text-xs text-green-600">
-                        ✓ {currentStock} items total in stock
-                      </p>
+                      <p className="text-xs text-green-600">✓ Only {currentStock} available , Exclusive small-batch collection </p>
                       {cartQuantity > 0 && (
                         <p className="text-xs text-amber-600">
                           🛒 {cartQuantity} already in cart • {remainingStock} available to add
@@ -882,20 +850,19 @@ export const ProductDetail = ({ product }: Props) => {
                     </div>
                   )}
                   {selectedSize && currentStock === 0 && (
-                    <p className="text-xs text-red-600">
-                      ✗ Out of stock - Please select another size
-                    </p>
+                    <p className="text-xs text-red-600">✗ Out of stock - Please select another size</p>
                   )}
                 </div>
               )}
 
-              {/* MOVED UP: Quantity Selection */}
+              {/* ✅ MOBILE-ONLY: Size Guide right after Size, before Quantity */}
+              <SizeGuideBlock wrapperClass="lg:hidden" />
+
+              {/* Quantity Selection */}
               {selectedSize && currentStock > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-lg text-red-900 tracking-wide">
-                      Quantity
-                    </h3>
+                    <h3 className="font-serif text-lg text-red-900 tracking-wide">Quantity</h3>
                     <span className="text-sm text-amber-600 font-medium">
                       {cartQuantity >= currentStock ? 'Max reached' : `${remainingStock} available to add`}
                     </span>
@@ -910,7 +877,7 @@ export const ProductDetail = ({ product }: Props) => {
                     >
                       <span className="text-xl">–</span>
                     </Button>
-                    
+
                     <input
                       type="number"
                       value={quantity}
@@ -920,7 +887,7 @@ export const ProductDetail = ({ product }: Props) => {
                       disabled={cartQuantity >= currentStock}
                       className="text-2xl font-serif font-medium w-20 text-center text-red-900 border border-amber-200 rounded-lg py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:bg-gray-100 disabled:text-gray-400"
                     />
-                    
+
                     <Button
                       variant="outline"
                       size="icon"
@@ -931,13 +898,13 @@ export const ProductDetail = ({ product }: Props) => {
                       <span className="text-xl">+</span>
                     </Button>
                   </div>
-                  
+
                   {cartQuantity >= currentStock && (
                     <p className="text-xs text-red-600">
                       You've reached the maximum available stock for this size
                     </p>
                   )}
-                  
+
                   {quantity === remainingStock && remainingStock > 0 && cartQuantity < currentStock && (
                     <p className="text-xs text-amber-600">
                       Maximum quantity reached ({remainingStock} items available to add)
@@ -946,26 +913,26 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* MOVED UP: Action Buttons */}
+              {/* Action Buttons */}
               <div className="space-y-4 pt-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     onClick={onAddItem}
                     disabled={!selectedSize || currentStock === 0 || cartQuantity >= currentStock}
-                    className={`flex-1 flex items-center justify-center gap-3 font-medium py-6 text-lg rounded-xl transition-all duration-300 shadow-md hover:shadow-xl group ${
+                    className={`flex-1 flex items-center justify-center gap-3 font-medium py-4 lg:py-6 text-base lg:text-lg rounded-xl transition-all duration-300 shadow-md hover:shadow-xl group ${
                       !selectedSize || currentStock === 0 || cartQuantity >= currentStock
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-amber-600 hover:bg-amber-700 text-white'
                     }`}
                   >
                     <div className="relative">
-                      <ShoppingBagIcon className="h-6 w-6" />
+                      <ShoppingBagIcon className="h-5 w-5 lg:h-6 lg:w-6" />
                       <PlusIcon className="h-3 w-3 absolute -top-1 -right-1" />
                     </div>
                     <span className="tracking-wide">
-                      {!selectedSize ? 'Select Size' : 
-                       currentStock === 0 ? 'Out of Stock' : 
-                       cartQuantity >= currentStock ? 'Max Reached' : 
+                      {!selectedSize ? 'Select Size' :
+                       currentStock === 0 ? 'Out of Stock' :
+                       cartQuantity >= currentStock ? 'Max Reached' :
                        `Add ${quantity > 1 ? `${quantity} × ` : ''}to Cart`}
                     </span>
                   </Button>
@@ -974,7 +941,7 @@ export const ProductDetail = ({ product }: Props) => {
                     onClick={onBuyNow}
                     disabled={!selectedSize || currentStock === 0 || cartQuantity >= currentStock}
                     variant="outline"
-                    className={`flex-1 py-6 text-lg font-medium rounded-xl transition-all duration-300 ${
+                    className={`flex-1 py-4 lg:py-6 text-base lg:text-lg font-medium rounded-xl transition-all duration-300 ${
                       !selectedSize || currentStock === 0 || cartQuantity >= currentStock
                         ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                         : 'border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300'
@@ -1005,7 +972,7 @@ export const ProductDetail = ({ product }: Props) => {
                 )}
               </div>
 
-              {/* MOVED DOWN: Description */}
+              {/* Description */}
               {product.description && (
                 <div className="mt-8 space-y-5 text-stone-700">
                   {product.description
@@ -1039,7 +1006,6 @@ export const ProductDetail = ({ product }: Props) => {
                             className="flex items-start gap-3 border-b border-stone-200/70 pb-3 text-sm leading-6"
                           >
                             <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-red-800" />
-
                             <span>{line.replace(/^•\s*/, "")}</span>
                           </div>
                         );
@@ -1061,205 +1027,27 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* MOBILE: Care Instructions - Only visible on mobile */}
-              <div className="lg:hidden">
-                <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                  <button 
-                    onClick={() => setShowCareDetails(!showCareDetails)}
-                    className="flex items-start gap-3 w-full text-left"
-                  >
-                    <ShieldCheckIcon className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                          Care Instructions for Nepalese Cashmere
-                        </h4>
-                        <span className="text-amber-600 text-xl">
-                          {showCareDetails ? '−' : '+'}
-                        </span>
-                      </div>
-                      
-                      {!showCareDetails && (
-                        <p className="text-sm text-red-700 font-light mt-1">
-                          Hand wash cold, lay flat to dry, store folded. Click for full details →
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                  
-                  {showCareDetails && (
-                    <div className="mt-4 space-y-3 text-sm pl-8">
-                      <div>
-                        <p className="font-medium text-red-800">🧼 Washing Instructions</p>
-                        <p className="text-red-700 font-light">Dry clean only, or hand wash in cold water (below 30°C) using cashmere-specific shampoo. Never rub, wring, or twist the fabric – gently squeeze water through. Rinse thoroughly with cold water.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">🌀 Drying Method</p>
-                        <p className="text-red-700 font-light">After washing, roll in a clean towel to remove excess water. Lay flat on a drying rack away from direct sunlight and heat. Reshape while damp. Never hang – the weight will stretch the cashmere.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">📦 Storage Tips for Portugal</p>
-                        <p className="text-red-700 font-light">Store folded (never hanging) in a breathable cotton bag. Use cedar balls or lavender sachets to naturally repel moths – especially important in humid Portuguese climates. Avoid plastic bags which trap moisture and can cause mildew.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">✨ Pilling Maintenance</p>
-                        <p className="text-red-700 font-light">Natural pilling is normal for premium cashmere and shows authentic fiber quality. Remove pills gently with a cashmere comb or fabric shaver. Never pull pills with fingers as this damages the fibers.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">🌡️ For Portugal's Climate</p>
-                        <p className="text-red-700 font-light">Best worn during cooler months (October-March). Allow sweater to rest 24 hours between wears. Air out after each use to maintain freshness and prevent moisture buildup.</p>
-                      </div>
-                      
-                      <div>
-                        <p className="font-medium text-red-800">❌ What to Avoid</p>
-                        <p className="text-red-700 font-light">Never use fabric softeners, bleach, or regular detergent. Avoid machine washing and tumble drying. Keep away from direct perfume and lotion contact. Never hang on hooks or wire hangers.</p>
-                      </div>
-                      
-                      <div className="pt-2">
-                        <p className="text-xs text-amber-700 font-light italic border-t border-amber-200 pt-3">
-                          🇳🇵 Each sweater is uniquely handcrafted in Kathmandu Valley, Nepal, using traditional techniques passed down through generations. With proper care, your cashmere will develop a beautiful patina and last for decades.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* ✅ MOBILE-ONLY: Care Instructions after Description */}
+              <CareBlock wrapperClass="lg:hidden" />
 
-              {/* MOBILE: Size Chart Section - Only visible on mobile */}
-              <div className="lg:hidden">
-                <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
-                  <button 
-                    onClick={() => setShowSizeChart(!showSizeChart)}
-                    className="flex items-start gap-3 w-full text-left"
-                  >
-                    <div className="flex-shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                          Size Guide
-                        </h4>
-                        <span className="text-amber-600 text-xl">
-                          {showSizeChart ? '−' : '+'}
-                        </span>
-                      </div>
-                      
-                      {!showSizeChart && (
-                        <p className="text-sm text-red-700 font-light mt-1">
-                          {product.sizeGuide && product.sizeGuide.trim() !== '' 
-                            ? 'Click to view size guide →' 
-                            : 'No size guide available for this product'}
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                  
-                  {/* Show the image when sizeGuide exists */}
-                  {showSizeChart && product.sizeGuide && product.sizeGuide.trim() !== '' && (
-                    <div className="mt-4 pt-2">
-                      <div className="relative w-full overflow-hidden rounded-lg">
-                        <Image
-                          src={product.sizeGuide}
-                          alt="Size guide"
-                          width={800}
-                          height={600}
-                          className="w-full h-auto object-contain"
-                          sizes="(max-width: 768px) 100vw, 800px"
-                          onError={(e) => {
-                            console.error('❌ [DEBUG] Image failed to load:', product.sizeGuide);
-                            e.currentTarget.style.display = 'none';
-                            // Show error message
-                            const parent = e.currentTarget.parentElement?.parentElement;
-                            if (parent) {
-                              const errorMsg = document.createElement('p');
-                              errorMsg.className = 'text-red-600 text-sm text-center p-4';
-                              errorMsg.textContent = 'Failed to load size guide image';
-                              parent.appendChild(errorMsg);
-                            }
-                          }}
-                          onLoad={() => {
-                            console.log('✅ [DEBUG] Image loaded successfully:', product.sizeGuide);
-                          }}
-                        />
-                      </div>
-                      <div className="mt-3 text-xs text-center text-red-700 font-light">
-                        <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {showSizeChart && (!product.sizeGuide || product.sizeGuide.trim() === '') && (
-                    <div className="mt-4 p-4 text-center text-red-600 text-sm">
-                      No size guide available for this product
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* MOBILE: Shipping & Returns */}
-              <div className="lg:hidden grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100">
-                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                  <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <p className="font-serif text-sm text-red-900">Complimentry and Fast Shipping</p>
-                    <p className="text-xs text-red-700 font-light">within 5-6 business days</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                  <ArrowPathIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <p className="font-serif text-sm text-red-900">Easy Returns</p>
-                    <p className="text-xs text-red-700 font-light">14-day policy</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-                  <ShieldCheckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <p className="font-serif text-sm text-red-900">Secure Payment</p>
-                    <p className="text-xs text-red-700 font-light">100% secure</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* MOBILE: Metadata */}
-              {product.metadata && Object.keys(product.metadata).length > 0 && (
-                <div className="lg:hidden pt-4 border-t border-amber-100">
-                  <h3 className="font-serif text-lg text-red-900 mb-4 tracking-wide">
-                    Details
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(product.metadata).map(([key, value]) => (
-                      <div key={key} className="text-sm p-3 bg-amber-50/50 rounded-lg">
-                        <span className="font-serif text-red-800 capitalize block mb-1">
-                          {key.replace('_', ' ')}
-                        </span>
-                        <span className="text-amber-700 font-light">
-                          {String(value)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* ✅ MOBILE-ONLY: Shipping after Care */}
+              <ShippingBlock wrapperClass="lg:hidden grid" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* NEW: Lightbox/Modal for full-screen image viewing */}
+        {/* ✅ MOBILE-ONLY: Reviews right after title/price */}
+              <div className="lg:hidden">
+                <ProductReviews productId={product.id} />
+              </div>
+
+      {/* Lightbox */}
       {lightboxOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center"
           onClick={closeLightbox}
         >
-          {/* Close button */}
           <button
             onClick={closeLightbox}
             className="absolute top-4 right-4 z-10 text-white/80 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
@@ -1268,13 +1056,11 @@ export const ProductDetail = ({ product }: Props) => {
             <XMarkIcon className="w-10 h-10" />
           </button>
 
-          {/* Image counter */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-sm font-light bg-black/50 px-4 py-2 rounded-full">
             {lightboxIndex + 1} / {product.images?.length || 1}
           </div>
 
-          {/* Main image */}
-          <div 
+          <div
             className="relative w-full h-full max-w-7xl max-h-[90vh] mx-4"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1294,7 +1080,6 @@ export const ProductDetail = ({ product }: Props) => {
             )}
           </div>
 
-          {/* Navigation buttons - only show if more than 1 image */}
           {product.images && product.images.length > 1 && (
             <>
               <button
@@ -1318,7 +1103,6 @@ export const ProductDetail = ({ product }: Props) => {
                 <ChevronRightIcon className="w-8 h-8" />
               </button>
 
-              {/* Thumbnail strip at bottom */}
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 max-w-[80vw] overflow-x-auto px-4 pb-2">
                 {product.images.map((image, index) => (
                   <button
@@ -1328,8 +1112,8 @@ export const ProductDetail = ({ product }: Props) => {
                       setLightboxIndex(index);
                     }}
                     className={`relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
-                      index === lightboxIndex 
-                        ? 'border-amber-400 scale-110 shadow-lg shadow-amber-400/30' 
+                      index === lightboxIndex
+                        ? 'border-amber-400 scale-110 shadow-lg shadow-amber-400/30'
                         : 'border-white/30 hover:border-white/60'
                     }`}
                   >
@@ -1345,18 +1129,18 @@ export const ProductDetail = ({ product }: Props) => {
             </>
           )}
 
-          {/* Hint text */}
           <div className="absolute bottom-24 left-1/2 -translate-x-1/2 text-white/30 text-xs font-light hidden sm:block">
             Click outside image to close • Use arrow keys to navigate
           </div>
         </div>
       )}
-      {/* ✅ Startup Banner - Above Reviews or Similar Products */}
-            <div className="container mx-auto px-4 py-8 max-w-5xl">
-              <StartupWelcomeBanner />
-            </div>
 
-      <SimilarProducts 
+      {/* Startup Banner */}
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <StartupWelcomeBanner />
+      </div>
+
+      <SimilarProducts
         currentProductId={product.id}
         category={product.category || product.metadata?.category}
       />
