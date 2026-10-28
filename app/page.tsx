@@ -51,7 +51,7 @@ export const revalidate = 300; // Caches for 5 minutes, then refreshes seamlessl
 export default async function Home() {
   const dbProducts = await prisma.product.findMany({
     where: { isActive: true },
-    take: 6,
+    take: 4,
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -90,6 +90,64 @@ export default async function Home() {
   return (
     <div className="bg-[#FAF8F5] text-stone-800 selection:bg-amber-100 selection:text-amber-900 font-sans antialiased">
       
+         {/* 🟢 ADD THIS NEW SECTION HERE: FEATURED PRODUCTS GRID */}
+      <section className="py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="text-center max-w-xl mx-auto mb-12 space-y-3">
+          <span className="text-xs uppercase tracking-[0.25em] text-amber-800 font-medium">
+            Handcrafted in Nepal
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-serif text-stone-900">
+            Limited Cashmere Collection
+          </h2>
+          <p className="text-stone-500 text-sm font-light">
+
+Unique pieces, made for years not for seasons, for comfort and durability        </p>
+          <p className="text-stone-500 text-sm font-light">Free express shipping, easy 14 day return </p>
+
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {formattedProducts.map((product) => {
+            const primaryImage = product.images[0] || "/placeholder.webp";
+            return (
+              <NavigationLink
+                key={product.id}
+                href={`/products/${product.id}`}
+                className="group relative flex flex-col bg-white rounded-2xl overflow-hidden border border-stone-200/70 shadow-sm hover:shadow-xl transition-all duration-300"
+              >
+                <div className="relative aspect-[3/4] bg-stone-100 overflow-hidden">
+                  <Image
+                    src={primaryImage}
+                    alt={product.name}
+                    fill
+                    className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
+                  <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-medium text-stone-900 shadow-sm">
+                    €{product.price.toFixed(2)}
+                  </div>
+                </div>
+                <div className="p-4 flex flex-col flex-grow justify-between space-y-2">
+                  <h3 className="font-serif text-stone-900 text-sm sm:text-base line-clamp-1 group-hover:text-amber-800 transition-colors">
+                    {product.name}
+                  </h3>
+                  <span className="text-xs text-amber-700 tracking-wide font-medium uppercase">
+                    View Details →
+                  </span>
+                </div>
+              </NavigationLink>
+            );
+          })}
+
+          <NavigationLink
+                href="/clothing"
+                className="px-8 py-4 rounded-full text-sm font-medium tracking-wide bg-amber-600 text-white hover:bg-amber-500 transition-all shadow-lg hover:shadow-amber-900/20 hover:-translate-y-0.5"
+              >
+                More
+              </NavigationLink>
+        </div>
+      </section>
+
       {/* 1. HERO SECTION */}
       <section className="relative w-full min-h-[90vh] md:min-h-screen flex items-center justify-center overflow-hidden">
         {/* Grid Background */}
@@ -134,6 +192,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+
+     
 
        {/* 3. CATEGORY COLLECTIONS */}
       <section className="py-12 sm:py-20 px-2 sm:px-6 max-w-7xl mx-auto">

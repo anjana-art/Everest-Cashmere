@@ -1,4 +1,4 @@
-// components/product-detail.tsx - Mobile layout updated
+// components/product-detail.tsx - mobile tweaks
 
 "use client";
 
@@ -74,7 +74,6 @@ export const ProductDetail = ({ product }: Props) => {
 
   const [mainImage, setMainImage] = useState<string>(product.images?.[0] || '');
 
-  // NEW: Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
@@ -101,24 +100,16 @@ export const ProductDetail = ({ product }: Props) => {
   );
 
   const cartQuantity = cartItem ? cartItem.quantity : 0;
-
-  // Get current selected size stock
   const currentStock = sizeStockMap[selectedSize] || 0;
-
-  // Calculate remaining stock after cart items
   const remainingStock = currentStock - cartQuantity;
-
-  // Get current selected variant
   const selectedVariant = variants.find(v => v.color === selectedColor && v.size === selectedSize);
 
-  // Fetch variants
   useEffect(() => {
     if (product?.id) {
       fetchVariants();
     }
   }, [product?.id]);
 
-  // Update size stock map when variants are loaded or color changes
   useEffect(() => {
     if (variants.length > 0 && selectedColor) {
       const stockMap: Record<string, number> = {};
@@ -128,11 +119,7 @@ export const ProductDetail = ({ product }: Props) => {
           stockMap[v.size] = v.stock;
         });
       setSizeStockMap(stockMap);
-
-      // Reset quantity when color/size changes
       setQuantity(1);
-
-      // Auto-select first available size if current size is out of stock
       const firstAvailableSize = Object.entries(stockMap).find(([_, stock]) => stock > 0)?.[0];
       if (selectedSize && stockMap[selectedSize] === 0 && firstAvailableSize) {
         setSelectedSize(firstAvailableSize);
@@ -150,7 +137,6 @@ export const ProductDetail = ({ product }: Props) => {
     }
   };
 
-  // Get user ID on mount
   useEffect(() => {
     const getUser = () => {
       try {
@@ -165,22 +151,16 @@ export const ProductDetail = ({ product }: Props) => {
         console.error('Error parsing user from localStorage:', error);
       }
     };
-
     getUser();
   }, []);
 
-  // Check wishlist status for selected variant
   const checkWishlistStatus = async () => {
     if (!userId || !product?.id || !selectedVariant) return;
-
     try {
       const url = `/api/wishlist?check=true&productId=${product.id}&variantId=${selectedVariant.id}`;
       const response = await fetch(url, {
-        headers: {
-          'x-user-id': userId,
-        },
+        headers: { 'x-user-id': userId },
       });
-
       if (response.ok) {
         const data = await response.json();
         setIsWishlisted(data.isInWishlist);
@@ -190,7 +170,6 @@ export const ProductDetail = ({ product }: Props) => {
     }
   };
 
-  // Re-check wishlist when selected variant changes
   useEffect(() => {
     if (userId && product?.id && selectedVariant) {
       checkWishlistStatus();
@@ -198,33 +177,17 @@ export const ProductDetail = ({ product }: Props) => {
   }, [userId, product?.id, selectedVariant]);
 
   const handleAddToWishlist = async () => {
-    if (!userId) {
-      alert('Please login to add to wishlist');
-      return;
-    }
-
-    if (!product?.id) {
-      alert('Product data incomplete');
-      return;
-    }
-
-    if (!selectedVariant) {
-      alert('Please select a color and size first');
-      return;
-    }
+    if (!userId) { alert('Please login to add to wishlist'); return; }
+    if (!product?.id) { alert('Product data incomplete'); return; }
+    if (!selectedVariant) { alert('Please select a color and size first'); return; }
 
     try {
       setLoadingWishlist(true);
-
       if (isWishlisted) {
-        // Remove specific variant from wishlist
         const response = await fetch(`/api/wishlist?productId=${product.id}&variantId=${selectedVariant.id}`, {
           method: 'DELETE',
-          headers: {
-            'x-user-id': userId,
-          },
+          headers: { 'x-user-id': userId },
         });
-
         if (response.ok) {
           setIsWishlisted(false);
           alert('Removed from wishlist!');
@@ -233,7 +196,6 @@ export const ProductDetail = ({ product }: Props) => {
           throw new Error(errorData.error || 'Failed to remove from wishlist');
         }
       } else {
-        // Add specific variant to wishlist
         const response = await fetch('/api/wishlist', {
           method: 'POST',
           headers: {
@@ -247,7 +209,6 @@ export const ProductDetail = ({ product }: Props) => {
             size: selectedSize
           }),
         });
-
         if (response.ok) {
           setIsWishlisted(true);
           alert('Added to wishlist!');
@@ -293,35 +254,16 @@ export const ProductDetail = ({ product }: Props) => {
   };
 
   const onAddItem = () => {
-    if (!product) {
-      alert('Product data is missing');
-      return;
-    }
-
-    if (!selectedSize) {
-      alert('Please select a size');
-      return;
-    }
-
-    // Check if selected size is in stock
-    if (currentStock <= 0) {
-      alert(`Sorry, ${selectedSize.toUpperCase()} is out of stock`);
-      return;
-    }
-
-    // Check if trying to add more than remaining stock
+    if (!product) { alert('Product data is missing'); return; }
+    if (!selectedSize) { alert('Please select a size'); return; }
+    if (currentStock <= 0) { alert(`Sorry, ${selectedSize.toUpperCase()} is out of stock`); return; }
     if (quantity > remainingStock) {
       alert(`Maximum ${remainingStock} items available. Please reduce quantity.`);
       setQuantity(remainingStock > 0 ? remainingStock : 0);
       return;
     }
+    if (quantity < 1) { alert('Please select at least 1 item'); return; }
 
-    if (quantity < 1) {
-      alert('Please select at least 1 item');
-      return;
-    }
-
-    // Add items based on quantity
     for (let i = 0; i < quantity; i++) {
       addItem({
         id: product.id,
@@ -333,39 +275,20 @@ export const ProductDetail = ({ product }: Props) => {
         size: selectedSize,
       });
     }
-
-    // Show success message
     setShowSuccessMessage(true);
     setTimeout(() => setShowSuccessMessage(false), 3000);
   };
 
   const onBuyNow = () => {
-    if (!product) {
-      alert('Product data is missing');
-      return;
-    }
-
-    if (!selectedSize) {
-      alert('Please select a size');
-      return;
-    }
-
-    if (currentStock <= 0) {
-      alert(`Sorry, ${selectedSize.toUpperCase()} is out of stock`);
-      return;
-    }
-
-    // Check if trying to buy more than remaining stock
+    if (!product) { alert('Product data is missing'); return; }
+    if (!selectedSize) { alert('Please select a size'); return; }
+    if (currentStock <= 0) { alert(`Sorry, ${selectedSize.toUpperCase()} is out of stock`); return; }
     if (quantity > remainingStock) {
       alert(`Maximum ${remainingStock} items available. Please reduce quantity.`);
       setQuantity(remainingStock > 0 ? remainingStock : 0);
       return;
     }
-
-    if (quantity < 1) {
-      alert('Please select at least 1 item');
-      return;
-    }
+    if (quantity < 1) { alert('Please select at least 1 item'); return; }
 
     for (let i = 0; i < quantity; i++) {
       addItem({
@@ -378,7 +301,6 @@ export const ProductDetail = ({ product }: Props) => {
         size: selectedSize,
       });
     }
-
     router.push('/checkout');
   };
 
@@ -394,7 +316,6 @@ export const ProductDetail = ({ product }: Props) => {
     return `€${price.toFixed(2).replace('.', ',')}`;
   };
 
-  // NEW: Lightbox navigation functions
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
@@ -418,7 +339,6 @@ export const ProductDetail = ({ product }: Props) => {
     );
   };
 
-  // Keyboard navigation for lightbox
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!lightboxOpen) return;
@@ -464,42 +384,25 @@ export const ProductDetail = ({ product }: Props) => {
     return null;
   };
 
-  // Reusable Size Guide block (used in both desktop-left and mobile-main positions)
   const SizeGuideBlock = ({ wrapperClass = '' }: { wrapperClass?: string }) => (
     <div className={wrapperClass}>
-      <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
+      <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-lg p-3 border border-amber-100">
         <button
           onClick={() => setShowSizeChart(!showSizeChart)}
-          className="flex items-start gap-3 w-full text-left"
+          className="flex items-center gap-2 w-full text-left"
         >
-          <div className="flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 text-amber-600 mt-0.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h4 className="font-serif font-semibold text-red-900 tracking-wide">
-                Size Guide
-              </h4>
-              <span className="text-amber-600 text-xl">
-                {showSizeChart ? '−' : '+'}
-              </span>
-            </div>
-
-            {!showSizeChart && (
-              <p className="text-sm text-red-700 font-light mt-1">
-                {product.sizeGuide && product.sizeGuide.trim() !== ''
-                  ? 'Click to view size guide →'
-                  : 'No size guide available for this product'}
-              </p>
-            )}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-4 w-4 text-amber-600 flex-shrink-0">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+          </svg>
+          <div className="flex-1 flex items-center justify-between">
+            <span className="font-serif text-sm text-red-900 tracking-wide">Size Guide</span>
+            <span className="text-amber-600 text-base">{showSizeChart ? '−' : '+'}</span>
           </div>
         </button>
 
         {showSizeChart && product.sizeGuide && product.sizeGuide.trim() !== '' && (
-          <div className="mt-4 pt-2">
-            <div className="relative w-full overflow-hidden rounded-lg">
+          <div className="mt-2 pt-2 border-t border-amber-100">
+            <div className="relative w-full overflow-hidden rounded">
               <Image
                 src={product.sizeGuide}
                 alt="Size guide"
@@ -509,22 +412,16 @@ export const ProductDetail = ({ product }: Props) => {
                 sizes="(max-width: 768px) 100vw, 800px"
               />
             </div>
-            <div className="mt-3 text-xs text-center text-red-700 font-light">
-              <p>Measurements in centimeters (cm). For best fit, measure your chest and compare with our chart.</p>
-            </div>
           </div>
         )}
 
         {showSizeChart && (!product.sizeGuide || product.sizeGuide.trim() === '') && (
-          <div className="mt-4 p-4 text-center text-red-600 text-sm">
-            No size guide available for this product
-          </div>
+          <div className="mt-2 text-center text-red-600 text-xs">No size guide available</div>
         )}
       </div>
     </div>
   );
 
-  // Reusable Care Instructions block
   const CareBlock = ({ wrapperClass = '' }: { wrapperClass?: string }) => (
     <div className={wrapperClass}>
       <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-xl p-5 border border-amber-100">
@@ -588,28 +485,28 @@ export const ProductDetail = ({ product }: Props) => {
     </div>
   );
 
-  // Reusable Shipping & Returns block
+  // ✅ Shipping block — horizontal on mobile (3 columns), same on desktop
   const ShippingBlock = ({ wrapperClass = '' }: { wrapperClass?: string }) => (
-    <div className={`${wrapperClass} grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-amber-100`}>
-      <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-        <TruckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+    <div className={`${wrapperClass} grid grid-cols-3 gap-2 lg:gap-4 pt-4 border-t border-amber-100`}>
+      <div className="flex flex-col lg:flex-row items-center lg:items-center gap-1 lg:gap-3 text-red-800 text-center lg:text-left p-1 lg:p-3 rounded-xl transition-all">
+        <TruckIcon className="h-5 w-5 text-amber-600 flex-shrink-0" />
         <div>
-          <p className="font-serif text-sm text-red-900">Complimentry and Fast Shipping</p>
-          <p className="text-xs text-red-700 font-light">within 5-6 business days</p>
+          <p className="font-serif text-[10px] lg:text-sm text-red-900 leading-tight">Free Shipping</p>
+          <p className="text-[9px] lg:text-xs text-red-700 font-light leading-tight">5-6 days</p>
         </div>
       </div>
-      <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-        <ArrowPathIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+      <div className="flex flex-col lg:flex-row items-center lg:items-center gap-1 lg:gap-3 text-red-800 text-center lg:text-left p-1 lg:p-3 rounded-xl transition-all">
+        <ArrowPathIcon className="h-5 w-5 text-amber-600 flex-shrink-0" />
         <div>
-          <p className="font-serif text-sm text-red-900">Easy Returns</p>
-          <p className="text-xs text-red-700 font-light">14-day policy</p>
+          <p className="font-serif text-[10px] lg:text-sm text-red-900 leading-tight">Easy Returns</p>
+          <p className="text-[9px] lg:text-xs text-red-700 font-light leading-tight">14 days</p>
         </div>
       </div>
-      <div className="flex items-center gap-3 text-red-800 group hover:bg-amber-50 p-3 rounded-xl transition-all">
-        <ShieldCheckIcon className="h-5 w-5 text-amber-600 group-hover:scale-110 transition-transform" />
+      <div className="flex flex-col lg:flex-row items-center lg:items-center gap-1 lg:gap-3 text-red-800 text-center lg:text-left p-1 lg:p-3 rounded-xl transition-all">
+        <ShieldCheckIcon className="h-5 w-5 text-amber-600 flex-shrink-0" />
         <div>
-          <p className="font-serif text-sm text-red-900">Secure Payment</p>
-          <p className="text-xs text-red-700 font-light">100% secure</p>
+          <p className="font-serif text-[10px] lg:text-sm text-red-900 leading-tight">Secure Pay</p>
+          <p className="text-[9px] lg:text-xs text-red-700 font-light leading-tight">100% secure</p>
         </div>
       </div>
     </div>
@@ -620,10 +517,9 @@ export const ProductDetail = ({ product }: Props) => {
       <div className="container mx-auto px-4">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden border border-amber-100/50">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-            {/* Left Column - Product Images (and desktop-only info blocks) */}
+            {/* Left Column - Product Images */}
             <div className="bg-gradient-to-br from-amber-50/50 to-rose-50/50 p-8 lg:p-10">
               <div className="space-y-4">
-                {/* Main Image - NOW CLICKABLE */}
                 <div
                   className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-inner border border-amber-100 cursor-zoom-in group"
                   onClick={() => openLightbox(0)}
@@ -678,7 +574,7 @@ export const ProductDetail = ({ product }: Props) => {
                   )}
                 </div>
 
-                {/* Thumbnail Images */}
+                {/* Thumbnails */}
                 <div className="grid grid-cols-4 gap-3">
                   {product.images?.map((image, index) => (
                     <div
@@ -701,19 +597,18 @@ export const ProductDetail = ({ product }: Props) => {
                   ))}
                 </div>
 
-                {/* Share button */}
-                <div className="flex items-center justify-between pt-2">
+                {/* ❌ Mobile share removed from here — moved way below */}
+                {/* Desktop share (original) */}
+                <div className="hidden lg:flex items-center justify-between pt-2">
                   <ProductShare product={product} />
                 </div>
 
-                {/* Success Message */}
                 {showSuccessMessage && (
                   <div className="fixed bottom-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-in slide-in-from-right duration-300">
                     ✅ Added {quantity} item{quantity > 1 ? 's' : ''} to cart!
                   </div>
                 )}
 
-                {/* ============ DESKTOP-ONLY INFO BLOCKS ============ */}
                 <CareBlock wrapperClass="hidden lg:block" />
                 <SizeGuideBlock wrapperClass="hidden lg:block" />
                 <ShippingBlock wrapperClass="hidden lg:grid" />
@@ -736,8 +631,8 @@ export const ProductDetail = ({ product }: Props) => {
             </div>
 
             {/* Right Column - Product Details */}
-            {/* ✅ CHANGED: reduced top padding on mobile so title starts closer to images */}
-            <div className="p-6 sm:p-8 lg:p-10 space-y-6 bg-white pt-4 lg:pt-10">
+            {/* ✅ Removed top padding on mobile so title sits right against image */}
+            <div className="p-6 sm:p-8 lg:p-10 space-y-6 bg-white pt-0 lg:pt-10">
               <div className="border-b border-amber-100 pb-4">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-red-900 mb-3 tracking-tight">
                   {product.name}
@@ -751,10 +646,83 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               </div>
 
-            
+              {/* ✅ MOBILE-ONLY: Size and Colour inline horizontally */}
+              <div className="lg:hidden space-y-3">
+                {/* Size row */}
+                {product.category !== 'HOME_DECORE' && dbSizes.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-serif text-red-900 tracking-wide flex-shrink-0 w-12">Size</span>
+                    <div className="flex flex-wrap gap-1.5 flex-1">
+                      {dbSizes.map((sizeValue) => {
+                        const size = sizeValue.toUpperCase();
+                        const sizeLower = sizeValue.toLowerCase();
+                        const stock = sizeStockMap[sizeLower] ?? 0;
+                        const isOutOfStock = stock === 0;
+                        const isSelected = selectedSize === sizeLower;
 
-              {/* Color Selection */}
-              <div className="space-y-4">
+                        return (
+                          <button
+                            key={sizeValue}
+                            onClick={() => !isOutOfStock && setSelectedSize(sizeLower)}
+                            disabled={isOutOfStock}
+                            className={`py-1.5 px-2.5 text-xs text-center rounded-md border font-medium transition-all min-w-[40px] relative ${
+                              isSelected && !isOutOfStock
+                                ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                                : isOutOfStock
+                                ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 line-through'
+                                : 'bg-white text-red-800 border-amber-200 hover:bg-amber-50 hover:border-amber-300'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Colour row */}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-serif text-red-900 tracking-wide flex-shrink-0 w-12">Colour</span>
+                  <div className="flex flex-wrap gap-2 flex-1 items-center">
+                    {dbColors.length > 0 ? (
+                      dbColors.map((colorValue) => {
+                        const colorInfo = COLOR_MAP[colorValue] || {
+                          name: colorValue,
+                          class: `bg-${colorValue}-500 border border-amber-300`
+                        };
+                        return (
+                          <button
+                            key={colorValue}
+                            onClick={() => setSelectedColor(colorValue)}
+                            className={`relative w-7 h-7 rounded-full ${colorInfo.class} ${
+                              selectedColor === colorValue
+                                ? 'ring-2 ring-offset-2 ring-amber-500 scale-110'
+                                : 'hover:ring-2 hover:ring-offset-1 hover:ring-amber-300'
+                            } transition-all duration-200`}
+                            aria-label={`Select ${colorInfo.name} colour`}
+                            title={colorInfo.name}
+                          >
+                            {selectedColor === colorValue && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-white rounded-full shadow-sm"></div>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <p className="text-red-600 text-xs font-light">No colours available</p>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-red-950 font-light capitalize truncate max-w-[80px]">
+                    {selectedColor ? (COLOR_MAP[selectedColor]?.name || selectedColor) : ""}
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop Color */}
+              <div className="hidden lg:block space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-serif text-lg text-red-900 tracking-wide">Colour</h3>
                   <span className="text-sm text-red-950 font-light capitalize">
@@ -794,9 +762,9 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               </div>
 
-              {/* Size Selection */}
+              {/* Desktop Size */}
               {product.category !== 'HOME_DECORE' && dbSizes.length > 0 && (
-                <div className="space-y-4">
+                <div className="hidden lg:block space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-serif text-lg text-red-900 tracking-wide">Size</h3>
                     <span className="text-sm text-red-950 font-light uppercase">
@@ -855,27 +823,39 @@ export const ProductDetail = ({ product }: Props) => {
                 </div>
               )}
 
-              {/* ✅ MOBILE-ONLY: Size Guide right after Size, before Quantity */}
+              {/* Mobile stock indicator */}
+              {selectedSize && currentStock > 0 && (
+                <div className="lg:hidden space-y-0.5">
+                  <p className="text-[11px] text-green-600">✓ Only {currentStock} available</p>
+                  {cartQuantity > 0 && (
+                    <p className="text-[11px] text-amber-600">🛒 {cartQuantity} in cart • {remainingStock} available</p>
+                  )}
+                </div>
+              )}
+              {selectedSize && currentStock === 0 && (
+                <p className="lg:hidden text-[11px] text-red-600">✗ Out of stock - Please select another size</p>
+              )}
+
               <SizeGuideBlock wrapperClass="lg:hidden" />
 
-              {/* Quantity Selection */}
+              {/* ✅ Quantity — smaller buttons & text on mobile */}
               {selectedSize && currentStock > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-3 lg:space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-lg text-red-900 tracking-wide">Quantity</h3>
-                    <span className="text-sm text-amber-600 font-medium">
-                      {cartQuantity >= currentStock ? 'Max reached' : `${remainingStock} available to add`}
+                    <h3 className="font-serif text-sm lg:text-lg text-red-900 tracking-wide">Quantity</h3>
+                    <span className="text-[11px] lg:text-sm text-amber-600 font-medium">
+                      {cartQuantity >= currentStock ? 'Max reached' : `${remainingStock} available`}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2.5 lg:space-x-4">
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={decreaseQuantity}
                       disabled={quantity <= 1 || cartQuantity >= currentStock}
-                      className="h-12 w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-8 w-8 lg:h-12 lg:w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <span className="text-xl">–</span>
+                      <span className="text-sm lg:text-xl">–</span>
                     </Button>
 
                     <input
@@ -885,7 +865,7 @@ export const ProductDetail = ({ product }: Props) => {
                       min="1"
                       max={remainingStock}
                       disabled={cartQuantity >= currentStock}
-                      className="text-2xl font-serif font-medium w-20 text-center text-red-900 border border-amber-200 rounded-lg py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:bg-gray-100 disabled:text-gray-400"
+                      className="text-base lg:text-2xl font-serif font-medium w-14 lg:w-20 text-center text-red-900 border border-amber-200 rounded-lg py-1 lg:py-2 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 disabled:bg-gray-100 disabled:text-gray-400"
                     />
 
                     <Button
@@ -893,9 +873,9 @@ export const ProductDetail = ({ product }: Props) => {
                       size="icon"
                       onClick={increaseQuantity}
                       disabled={quantity >= remainingStock || cartQuantity >= currentStock}
-                      className="h-12 w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-8 w-8 lg:h-12 lg:w-12 border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <span className="text-xl">+</span>
+                      <span className="text-sm lg:text-xl">+</span>
                     </Button>
                   </div>
 
@@ -914,20 +894,20 @@ export const ProductDetail = ({ product }: Props) => {
               )}
 
               {/* Action Buttons */}
-              <div className="space-y-4 pt-4">
-                <div className="flex flex-col sm:flex-row gap-4">
+              <div className="space-y-3 pt-4">
+                <div className="flex gap-2 lg:gap-4">
                   <Button
                     onClick={onAddItem}
                     disabled={!selectedSize || currentStock === 0 || cartQuantity >= currentStock}
-                    className={`flex-1 flex items-center justify-center gap-3 font-medium py-4 lg:py-6 text-base lg:text-lg rounded-xl transition-all duration-300 shadow-md hover:shadow-xl group ${
+                    className={`flex-1 flex items-center justify-center gap-2 lg:gap-3 font-medium py-3 lg:py-6 text-sm lg:text-lg rounded-lg lg:rounded-xl transition-all duration-300 shadow-md hover:shadow-xl group ${
                       !selectedSize || currentStock === 0 || cartQuantity >= currentStock
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-amber-600 hover:bg-amber-700 text-white'
                     }`}
                   >
                     <div className="relative">
-                      <ShoppingBagIcon className="h-5 w-5 lg:h-6 lg:w-6" />
-                      <PlusIcon className="h-3 w-3 absolute -top-1 -right-1" />
+                      <ShoppingBagIcon className="h-4 w-4 lg:h-6 lg:w-6" />
+                      <PlusIcon className="h-2.5 w-2.5 lg:h-3 lg:w-3 absolute -top-1 -right-1" />
                     </div>
                     <span className="tracking-wide">
                       {!selectedSize ? 'Select Size' :
@@ -941,7 +921,7 @@ export const ProductDetail = ({ product }: Props) => {
                     onClick={onBuyNow}
                     disabled={!selectedSize || currentStock === 0 || cartQuantity >= currentStock}
                     variant="outline"
-                    className={`flex-1 py-4 lg:py-6 text-base lg:text-lg font-medium rounded-xl transition-all duration-300 ${
+                    className={`flex-1 py-3 lg:py-6 text-sm lg:text-lg font-medium rounded-lg lg:rounded-xl transition-all duration-300 ${
                       !selectedSize || currentStock === 0 || cartQuantity >= currentStock
                         ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                         : 'border-amber-200 text-red-900 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300'
@@ -951,7 +931,6 @@ export const ProductDetail = ({ product }: Props) => {
                   </Button>
                 </div>
 
-                {/* Cart Status */}
                 {cartQuantity > 0 && (
                   <div className="bg-amber-50/80 backdrop-blur-sm border border-amber-200 rounded-xl p-4 text-center">
                     <p className="text-amber-700 font-medium">
@@ -972,75 +951,116 @@ export const ProductDetail = ({ product }: Props) => {
                 )}
               </div>
 
-              {/* Description */}
+              {/* Description — dropdown on mobile with preview */}
               {product.description && (
-                <div className="mt-8 space-y-5 text-stone-700">
-                  {product.description
-                    .split("\n")
-                    .map((line) => line.trim())
-                    .filter(Boolean)
-                    .map((line, index) => {
-                      const isHeading = [
-                        "Product details",
-                        "Fit and styling",
-                        "Care",
-                      ].includes(line);
+                <>
+                  <details className="lg:hidden group mt-4">
+                    <summary className="flex items-center justify-between cursor-pointer list-none py-3 border-y border-amber-100">
+                      <span className="font-serif text-base text-red-900 tracking-wide">Description</span>
+                      <span className="text-amber-600 text-xl transition-transform group-open:rotate-45">+</span>
+                    </summary>
 
-                      const isBullet = line.startsWith("•");
-
-                      if (isHeading) {
-                        return (
-                          <h3
-                            key={index}
-                            className="pt-4 text-sm font-semibold uppercase tracking-[0.18em] text-stone-900"
-                          >
-                            {line}
-                          </h3>
-                        );
-                      }
-
-                      if (isBullet) {
-                        return (
-                          <div
-                            key={index}
-                            className="flex items-start gap-3 border-b border-stone-200/70 pb-3 text-sm leading-6"
-                          >
-                            <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-red-800" />
-                            <span>{line.replace(/^•\s*/, "")}</span>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <p
-                          key={index}
-                          className={
-                            index === 0
-                              ? "font-serif text-xl leading-8 text-stone-900"
-                              : "text-[15px] font-light leading-7"
+                    <div className="pt-3 group-open:hidden">
+                      {product.description
+                        .split("\n")
+                        .map(l => l.trim())
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((line, i) => {
+                          const isBullet = line.startsWith("•");
+                          if (isBullet) {
+                            return (
+                              <div key={i} className="flex items-start gap-2 text-[13px] leading-6 text-stone-700">
+                                <span className="mt-[8px] h-1 w-1 shrink-0 rounded-full bg-red-800" />
+                                <span>{line.replace(/^•\s*/, "")}</span>
+                              </div>
+                            );
                           }
-                        >
-                          {line}
-                        </p>
-                      );
-                    })}
-                </div>
+                          return (
+                            <p key={i} className={i === 0 ? "font-serif text-sm leading-6 text-stone-900" : "text-[13px] font-light leading-6 text-stone-700"}>
+                              {line}
+                            </p>
+                          );
+                        })}
+                      <p className="text-[11px] text-amber-700 italic mt-1">Tap to read more ↓</p>
+                    </div>
+
+                    <div className="pt-3 hidden group-open:block space-y-3 text-stone-700">
+                      {product.description
+                        .split("\n")
+                        .map((line) => line.trim())
+                        .filter(Boolean)
+                        .map((line, index) => {
+                          const isHeading = ["Product details", "Fit and styling", "Care"].includes(line);
+                          const isBullet = line.startsWith("•");
+                          if (isHeading) {
+                            return <h3 key={index} className="pt-2 text-sm font-semibold uppercase tracking-[0.18em] text-stone-900">{line}</h3>;
+                          }
+                          if (isBullet) {
+                            return (
+                              <div key={index} className="flex items-start gap-3 border-b border-stone-200/70 pb-3 text-sm leading-6">
+                                <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-red-800" />
+                                <span>{line.replace(/^•\s*/, "")}</span>
+                              </div>
+                            );
+                          }
+                          return (
+                            <p key={index} className={index === 0 ? "font-serif text-lg leading-7 text-stone-900" : "text-[15px] font-light leading-7"}>
+                              {line}
+                            </p>
+                          );
+                        })}
+                    </div>
+                  </details>
+
+                  <div className="hidden lg:block mt-8 space-y-5 text-stone-700">
+                    {product.description
+                      .split("\n")
+                      .map((line) => line.trim())
+                      .filter(Boolean)
+                      .map((line, index) => {
+                        const isHeading = ["Product details", "Fit and styling", "Care"].includes(line);
+                        const isBullet = line.startsWith("•");
+                        if (isHeading) {
+                          return <h3 key={index} className="pt-4 text-sm font-semibold uppercase tracking-[0.18em] text-stone-900">{line}</h3>;
+                        }
+                        if (isBullet) {
+                          return (
+                            <div key={index} className="flex items-start gap-3 border-b border-stone-200/70 pb-3 text-sm leading-6">
+                              <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-red-800" />
+                              <span>{line.replace(/^•\s*/, "")}</span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <p key={index} className={index === 0 ? "font-serif text-xl leading-8 text-stone-900" : "text-[15px] font-light leading-7"}>
+                            {line}
+                          </p>
+                        );
+                      })}
+                  </div>
+                </>
               )}
 
-              {/* ✅ MOBILE-ONLY: Care Instructions after Description */}
               <CareBlock wrapperClass="lg:hidden" />
 
-              {/* ✅ MOBILE-ONLY: Shipping after Care */}
+              {/* ✅ Mobile: Shipping/Returns/Secure HORIZONTAL */}
               <ShippingBlock wrapperClass="lg:hidden grid" />
+
+              {/* ✅ Mobile: Share moved way below */}
+              <div className="lg:hidden flex items-center justify-center pt-4 border-t border-amber-100">
+                <div className="scale-90">
+                  <ProductShare product={product} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-        {/* ✅ MOBILE-ONLY: Reviews right after title/price */}
-              <div className="lg:hidden">
-                <ProductReviews productId={product.id} />
-              </div>
+      <div className="lg:hidden">
+        <ProductReviews productId={product.id} />
+      </div>
 
       {/* Lightbox */}
       {lightboxOpen && (
@@ -1135,7 +1155,6 @@ export const ProductDetail = ({ product }: Props) => {
         </div>
       )}
 
-      {/* Startup Banner */}
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <StartupWelcomeBanner />
       </div>
